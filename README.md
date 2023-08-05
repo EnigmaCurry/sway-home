@@ -1,6 +1,6 @@
 # sway-home
 
-These are the dotfiles I use on the x13s.
+These are the dotfiles I use on most laptops.
 
 ## Setup
 
