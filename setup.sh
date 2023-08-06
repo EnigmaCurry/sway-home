@@ -25,4 +25,5 @@ link_dir config ${HOME}/.config
 link_dir bin ${HOME}/bin
 link bash_profile ${HOME}/.bash_profile
 link bashrc ${HOME}/.bashrc
+link inputrc ${HOME}/.inputrc
 

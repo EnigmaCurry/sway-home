@@ -7,6 +7,7 @@
 
 PS1='[\u@\h \W]\$ '
 PATH=${PATH}:${HOME}/bin
+EDITOR=emacsclient
 
 eval $(keychain --eval --quiet)
 
