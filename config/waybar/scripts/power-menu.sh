@@ -1,16 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-entries="Logout Suspend Reboot Shutdown"
+op=$( echo -e " Poweroff\n Reboot\n Suspend\n Lock\n Logout" | wofi -i --dmenu | awk '{print tolower($2)}' )
 
-selected=$(printf '%s\n' $entries | wofi --conf=$HOME/.config/wofi/config.power --style=$HOME/.config/wofi/style.widgets.css | awk '{print tolower($1)}')
-
-case $selected in
-  logout)
-    swaymsg exit;;
-  suspend)
-    exec systemctl suspend;;
-  reboot)
-    exec systemctl reboot;;
-  shutdown)
-    exec systemctl poweroff -i;;
+case $op in 
+    poweroff)
+    ;&
+    reboot)
+    ;&
+    suspend)
+        systemctl $op
+        ;;
+    lock)
+		swaylock -c 000000
+        ;;
+    logout)
+        swaymsg exit
+        ;;
 esac

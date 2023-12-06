@@ -1,0 +1,4 @@
+# man 5 wofi
+gtk_dark=true
+location=2
+lines=10
