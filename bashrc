@@ -14,7 +14,7 @@ eval $(keychain --eval --quiet)
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias bb='rlwrap bb'
-
+alias ec="${HOME}/git/vendor/enigmacurry/emacs/ec"
 
 vterm_printf() {
     if [ -n "$TMUX" ] && ([ "${TERM%%-*}" = "tmux" ] || [ "${TERM%%-*}" = "screen" ]); then
