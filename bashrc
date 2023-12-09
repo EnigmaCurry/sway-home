@@ -6,7 +6,7 @@
 [[ $- != *i* ]] && return
 
 PS1='[\u@\h \W]\$ '
-PATH=${PATH}:${HOME}/bin
+PATH=${PATH}:${HOME}/bin:${HOME}/.cargo/bin
 EDITOR=emacsclient
 
 eval $(keychain --eval --quiet)
@@ -37,3 +37,13 @@ vterm_prompt_end(){
     vterm_printf "51;A$(whoami)@$(hostname):$(pwd)"
 }
 PS1=$PS1'\[$(vterm_prompt_end)\]'
+
+
+#### To enable Bash shell completion support for d.rymcg.tech,
+#### add the following lines into your ~/.bashrc ::
+if [[ -d ${HOME}/git/vendor/enigmacurry/d.rymcg.tech ]]; then
+    export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
+   eval "$(d.rymcg.tech completion bash)"
+   ## Example project alias: creates a shorter command used just for the Traefik project:
+   __d.rymcg.tech_project_alias traefik
+fi

@@ -48,3 +48,5 @@ for_window [app_id="firefox" title="Firefox — Sharing Indicator"] kill
 # Inhibit idle
 for_window [app_id="firefox"] inhibit_idle fullscreen
 for_window [app_id="Chromium"] inhibit_idle fullscreen
+
+for_window [app_id="org.libretro.RetroArch"] fullscreen
