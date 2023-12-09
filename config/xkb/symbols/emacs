@@ -1,0 +1,72 @@
+// https://emacsnotes.wordpress.com/2022/10/30/use-xkb-to-setup-full-spectrum-of-modifiers-meta-alt-super-and-hyper-for-use-with-emacs/
+
+default partial modifier_keys
+
+// Default Configuration
+// - RALT  generates Alt
+// - LALT  generates Meta
+// - LWIN  generates Super
+// - CAPS  generates Control
+// - LCTL generates Hyper
+xkb_symbols "default" {
+    include "emacs(ctrl_caps)"
+    include "emacs(alt_ralt)"
+    include "emacs(meta_lalt)"
+    include "emacs(super_lwin)"
+    include "emacs(hyper_lctrl)"
+    include "emacs(modifier_mapping)"
+    };
+
+// CONTROL
+partial modifier_keys
+xkb_symbols "ctrl_caps" {
+  replace key <CAPS> { [Control_L, Control_R] };
+  include "emacs(modifier_mapping)"
+};
+
+// ALT
+partial modifier_keys
+xkb_symbols "alt_ralt" {
+  replace key <RALT> { [Alt_L, Alt_R] };
+  include "emacs(modifier_mapping)"
+};
+
+// META
+partial modifier_keys
+xkb_symbols "meta_lalt" {
+  replace key <LALT> { [Meta_L, Meta_R] };
+  include "emacs(modifier_mapping)"
+};
+
+// SUPER
+partial modifier_keys
+xkb_symbols "super_lwin" {
+  replace key <LWIN> { [Super_L, Super_R] };
+  include "emacs(modifier_mapping)"
+};
+
+// HYPER
+partial modifier_keys
+xkb_symbols "hyper_lctrl" {
+  replace key <LCTL> { [Hyper_L]  };
+  include "emacs(modifier_mapping)"
+};
+
+partial modifier_keys
+xkb_symbols "modifier_mapping" {
+  modifier_map Control  { <CAPS>        , Control_L     , Control_R     };
+  modifier_map Mod1     { <ALT>         , Alt_L         , Alt_R         };
+  modifier_map Mod2     { <META>        , Meta_L        , Meta_R        };
+  modifier_map Mod3     { <SUPR>        , Super_L       , Super_R       };
+  modifier_map Mod4     { <LCTL>        , Hyper_L       , Hyper_R       };
+};
+
+// None
+partial modifier_keys
+xkb_symbols "none" {
+
+};
+
+// Local Variables:
+// mode: c
+// End:
