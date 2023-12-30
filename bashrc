@@ -9,6 +9,7 @@ PS1='[\u@\h \W]\$ '
 PATH=${PATH}:${HOME}/bin:${HOME}/.cargo/bin
 export EDITOR=emacsclient
 export ENIGMACURRY_EMACS_DEV=true
+#export GTK_THEME=adwaita-dark
 
 eval $(keychain --eval --quiet)
 
@@ -79,3 +80,12 @@ yt-audio() {
     STREAM=$1; [[ "$STREAM" == "" ]] && read -e -p "Enter stream: " STREAM
     yt-dlp -x --audio-format mp3 $STREAM
 }
+
+screen-record() {
+    mkdir -p ~/Screencasts
+    DESCRIPTION="$@"
+    wf-recorder -a -f ~/Screencasts/$(date +%Y-%m-%d-%H%M)-"$DESCRIPTION".mkv
+}
+
+## Run local (unversioned) config:
+test -f ~/.bashrc.local && source ~/.bashrc.local

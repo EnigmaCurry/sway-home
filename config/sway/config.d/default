@@ -55,7 +55,7 @@ exec swayidle -w\
     bindsym $mod+d exec $menu
 
     # Activities
-    bindsym $mod+p exec ~/.config/wofi/windows.py
+    #bindsym $mod+p exec ~/.config/wofi/windows.py
 
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
@@ -220,8 +220,8 @@ bindsym $mod+r mode "resize"
 #
 # Screenshots
 #
-    bindsym print exec /usr/share/sway/scripts/grimshot --notify save output
-    bindsym Shift+print exec ~/.config/sway/scripts/screenshot.sh
+    bindsym print exec /usr/bin/grimshot --notify save active
+#    bindsym Shift+print exec ~/.config/sway/scripts/screenshot.sh
 #
 # Keybindings List
 #

@@ -1,0 +1,7 @@
+profile {
+	output "Unknown Unknown Unknown" enable scale 1 transform 90
+}
+
+profile {
+	output HDMI-A-1 enable scale 1
+}
