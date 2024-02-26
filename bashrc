@@ -9,6 +9,7 @@ PS1='[\u@\h \W]\$ '
 PATH=${PATH}:${HOME}/bin:${HOME}/.cargo/bin
 export EDITOR=emacsclient
 export ENIGMACURRY_EMACS_DEV=true
+unset USERNAME
 #export GTK_THEME=adwaita-dark
 
 eval $(keychain --eval --quiet)
