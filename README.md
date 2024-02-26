@@ -17,15 +17,13 @@ The keys labled on a modern PC keyboards do not have the same names in
 Emacs, nor on the original Space Cadet keyboard. This configuiration
 remaps the keys in the following manner:
 
- * The PC `Alt` key on the right side of the spacebar, is remapped
-   to the old style `Alt` key, also known as `Mod1` in i3/sway.
- * The PC `Alt` key on the left side of the spacebar, uses the default
-   map of `Meta`, also known as `Mod2` in i3/sway.
+ * The PC `Caps lock` key is remapped to function as `Control`.
  * The PC `Windows Logo` key uses the default map of `Super`, but is
-   remapped as `Mod3` in i3/sway.
- * The PC `Control` key on the left side, is remapped to the old
-   `Hyper` key, also known as `Mod4` in i3/sway.
- * The PC `Caps lock` key is remapped to the left `Control` key.
+   remapped as `Mod3` in i3/sway, and is hidden from all other apps.
+ * The PC `Control` key on the left side, is remapped to `Hyper`, also
+   known as `Mod4` in i3/sway. (Note: Emacs 29 falsely recognizes this
+   key as `Super`, but since the real `Super` key is masked by Sway,
+   this works out fine.)
  
 Sway uses the following xkb files to perform the remapping of the
 keyboard:

@@ -4,7 +4,7 @@ default partial modifier_keys
 
 // Default Configuration
 // - RALT  generates Alt
-// - LALT  generates Meta
+// - LALT  generates Alt (used to be Meta before emacs 29.2)
 // - LWIN  generates Super
 // - CAPS  generates Control
 // - LCTL generates Hyper
@@ -34,10 +34,13 @@ xkb_symbols "alt_ralt" {
 // META
 partial modifier_keys
 xkb_symbols "meta_lalt" {
-  replace key <LALT> { [Meta_L, Meta_R] };
+//// This is broken in emacs 29.2, Mod2 / Meta is no longer recognized?!?
+  //replace key <LALT> { [Meta_L, Meta_R] };
+  /// In emacs 29 Alt is recognized as Meta:
+  replace key <LALT> { [Alt_L, Alt_R] };
   include "emacs(modifier_mapping)"
 };
-
+ 
 // SUPER
 partial modifier_keys
 xkb_symbols "super_lwin" {
