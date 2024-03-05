@@ -1,13 +1,33 @@
 # sway-home
 
-These are the dotfiles I use on most laptops.
+These are the dotfiles I use on most workstations.
+
+## Install Fedora Sway Atomic
+
+[Fedora Sway Atomic](https://fedoraproject.org/atomic-desktops/sway/)
+is a good base layer to start with. It includes the basic essential
+binaries:
+
+ * Sway
+ * Waybar
+ * Rofi
+ * Foot
+ * Grimshot
 
 ## Setup
 
 ```
+## Rename existing configs to .orig, for posterity:
+mv ~/.config ~/.config.orig
+mv ~/.bashrc ~/.bashrc.orig
+mv ~/.bash_profile ~/.bash_profile.orig
+
+## Clone the new config repo:
 git clone https://github.com/enigmacurry/sway-home \
    ~/git/vendor/enigmacurry/sway-home
 cd ~/git/vendor/enigmacurry/sway-home
+
+## Run setup script:
 ./setup.sh
 ```
 
@@ -32,6 +52,5 @@ keyboard:
  * [xkb/symbols/emacs](config/xkb/symbols/emacs)
  
 This is a modification from the [emacsnotes xkb
-    guide](https://emacsnotes.wordpress.com/2022/10/30/use-xkb-to-setup-full-spectrum-of-modifiers-meta-alt-super-and-hyper-for-use-with-emacs/),
-    Thank you!
-
+guide](https://emacsnotes.wordpress.com/2022/10/30/use-xkb-to-setup-full-spectrum-of-modifiers-meta-alt-super-and-hyper-for-use-with-emacs/),
+Thank you!

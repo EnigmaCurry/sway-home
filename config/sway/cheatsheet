@@ -24,7 +24,7 @@ important ones are listed at the bottom of the document. Waybar is also document
 # kill focused window
 +q
 
-# Application menu - wofi:
+# Application menu - rofi:
 +d
 
 # Activities:

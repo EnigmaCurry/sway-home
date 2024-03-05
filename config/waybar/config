@@ -206,7 +206,7 @@
 
     "custom/launcher": {
         "format":" ",
-        "on-click": "exec wofi -c ~/.config/wofi/config -I",
+        "on-click": "exec rofi -show drun",
         "tooltip": false,
     },
 
