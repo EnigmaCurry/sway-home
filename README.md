@@ -2,6 +2,8 @@
 
 These are the dotfiles I use on most workstations.
 
+I am writing a book on how I use this with [Fedora Atomic Sway](https://book.rymcg.tech/linux-workstation/introduction/index.html).
+
 ## Install Fedora Sway Atomic
 
 [Fedora Sway Atomic](https://fedoraproject.org/atomic-desktops/sway/)
