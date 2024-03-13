@@ -13,7 +13,8 @@ unset USERNAME
 export GTK_THEME=Adwaita:dark
 export QT_QPA_PLATFORMTHEME=qt5ct
 
-eval $(keychain --eval --quiet)
+which keychain 2>/dev/null && \
+    eval $(keychain --eval --quiet)
 
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
