@@ -14,7 +14,7 @@ link_dir() {
 }
 
 link() {
-    SRC=$(realpath ${1}); DEST=${2};
+    SRC=$(realpath ${1}); DEST=$(realpath ${2});
     (
         set -x
         ln -sf "${SRC}" "${DEST}"
