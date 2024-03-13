@@ -6,6 +6,7 @@ link_dir() {
     mkdir -p "${DEST}"
     for file in ${SRC_DIR}/${SRC}/*; do
         file_dest="${DEST}"/$(basename ${file})
+        test -e ${file_dest} && continue
         (
             set -x
             ln -sf "${file}" "${file_dest}"
