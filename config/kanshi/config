@@ -1,7 +1,4 @@
 profile {
-	output "Unknown Unknown Unknown" enable scale 1 transform 90
-}
-
-profile {
-	output HDMI-A-1 enable scale 1
+    output DP-3 enable mode 2560x1440 position 3840,0 scale 1
+	output DP-4 enable mode 3840x2160 position 1920,360 scale 2
 }
