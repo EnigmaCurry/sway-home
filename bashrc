@@ -25,6 +25,36 @@ alias ec="${HOME}/git/vendor/enigmacurry/emacs/ec"
 ## On a new machine, you should run rustup-init first.
 test -f "$HOME/.cargo/env" && source "$HOME/.cargo/env"
 
+## PS1 adapted from https://gist.github.com/xenji/2292341
+ps1_generator() {
+    # docker context inspect --format '{{ .Name }}'
+    Time12h="\T"; Time12a="\@"; ShortHost="\h"; Username="\u";
+    PathShort="\W"; PathFull="\w"; NewLine="\n"; Jobs="\j";
+    test -f ~/.config/git-prompt.sh || \
+        curl -L https://raw.github.com/git/git/master/contrib/completion/git-prompt.sh \
+             > ~/.config/git-prompt.sh
+    source ~/.config/git-prompt.sh
+    Color_Off="\033[0m"; IBlack="\033[0;90m"; BWhite="\033[1;37m"; BGreen="\033[1;32m";
+    BIRed="\033[1;91m"; BIWhite="\033[1;97m"; 
+    MyPS1=$IBlack$Username@$ShortHost$Color_Off'$(git branch &>/dev/null;\
+if [ $? -eq 0 ]; then \
+  echo "$(echo `git status` | grep "nothing to commit" > /dev/null 2>&1; \
+  HEADREV=`git log --pretty=%h -n 1`; 
+  echo "|'$BWhite'$HEADREV" | tr -d "\n"; \
+  if [ "$?" -eq "0" ]; then \
+    # @4 - Clean repository - nothing to commit
+    echo "|'$BGreen'"$(__git_ps1 "(%s)"); \
+  else \
+    # @5 - Changes to working tree
+    echo "|'$BIRed'"$(__git_ps1 "{%s}"); \
+  fi)'$Color_Off'|'$BWhite$PathShort$Color_Off'"; \
+else \
+  # @2 - Prompt when not in GIT repo
+  echo "|'$BWhite$PathShort$Color_Off'"; \
+fi)'
+    export PS1="[$MyPS1 \$] "
+}
+
 ## Emacs vterm hooks:
 vterm_printf() {
     if [ -n "$TMUX" ] && ([ "${TERM%%-*}" = "tmux" ] || [ "${TERM%%-*}" = "screen" ]); then
