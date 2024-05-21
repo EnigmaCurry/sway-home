@@ -62,7 +62,7 @@ fi)'
     fi
     USER_PS1=${BIPurple}${Username}'@'${ShortHost}${Color_Off}
     PATH_PS1='|'${BWhite}${PathShort}${Color_Off}
-    export PS1='['${USER_PS1}${GIT_PS1}${DOCKER_PS1}${PATH_PS1}'] $ '
+    export PS1='['${USER_PS1}${GIT_PS1}${DOCKER_PS1}${PATH_PS1}']\n$ '
 }
 ps1_generator && unset -f ps1_generator
 
