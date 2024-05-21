@@ -21,6 +21,10 @@ alias grep='grep --color=auto'
 alias bb='rlwrap bb'
 alias ec="${HOME}/git/vendor/enigmacurry/emacs/ec"
 
+# Use bash-completion, if available
+[[ $PS1 && -f /usr/share/bash-completion/bash_completion ]] && \
+    . /usr/share/bash-completion/bash_completion
+
 ## Rustup cargo environment
 ## On a new machine, you should run rustup-init first.
 test -f "$HOME/.cargo/env" && source "$HOME/.cargo/env"
