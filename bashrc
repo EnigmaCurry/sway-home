@@ -59,8 +59,6 @@ function toolbox_name() {
     fi
 }
 export PS1_HOSTNAME=$(toolbox_name)
-unset is_toolbox
-unset toolbox_name
 
 ## PS1 generator
 ## adapted from https://gist.github.com/xenji/2292341
@@ -98,7 +96,29 @@ fi)'
     PATH_PS1='|'${BWhite}${PathShort}${Color_Off}
     export PS1='['${USER_PS1}${GIT_PS1}${DOCKER_PS1}${PATH_PS1}']\n$ '
 }
-ps1_generator && unset -f ps1_generator
+# Set prompt specific to various distributions:
+set_prompt() {
+    if [ -f /etc/os-release ]; then
+        local os_id="$(grep -Po "^ID=\K.*" /etc/os-release)"
+        local variant_id="$(grep -Po "^VARIANT_ID=\K.*" /etc/os-release)"
+        if [[ "${os_id}" == "fedora" ]] && [[ "${variant_id}" == *"-atomic"* ]]; then
+            # Fedora Atomic
+            # Only set fancy PS1 if we are in a toolbox container:
+            if is_toolbox >/dev/null; then
+                ps1_generator
+            fi
+        else
+            ps1_generator
+        fi
+    else
+        ps1_generator
+    fi    
+}
+if is_toolbox >/dev/null; then
+    export TOOLBOX_CONTAINER=$(is_toolbox)
+fi
+set_prompt
+unset -f is_toolbox toolbox_name ps1_generator set_prompt
 
 ## Emacs vterm hooks:
 if [[ "$INSIDE_EMACS" == 'vterm' ]]; then
