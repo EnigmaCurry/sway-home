@@ -13,6 +13,12 @@ unset USERNAME
 export GTK_THEME=Adwaita:dark
 export QT_QPA_PLATFORMTHEME=qt5ct
 
+# Set TERM, but only for specific terminals we know about:
+case "$TERM" in
+    xterm) export TERM=xterm-256color;;
+    foot) export TERM=xterm-256color;;
+esac
+
 which keychain 2>/dev/null >&2 && \
     eval $(keychain --eval --quiet)
 
@@ -29,10 +35,38 @@ alias ec="${HOME}/git/vendor/enigmacurry/emacs/ec"
 ## On a new machine, you should run rustup-init first.
 test -f "$HOME/.cargo/env" && source "$HOME/.cargo/env"
 
-## PS1 adapted from https://gist.github.com/xenji/2292341
+## Detect if shell is in toolbox container.
+## If so, modify the PS1 to show the current toolbox name:
+function is_toolbox() {
+	if [ -f "/run/.toolboxenv" ]
+	then
+		echo "$(cat /run/.containerenv | grep -E '^name="' | cut -d \" -f 2)"
+    else
+        return 1
+	fi
+}
+function toolbox_name() {
+    local name="$(is_toolbox)"
+    if [ -n "${name}" ]; then
+        if command -v host-spawn >/dev/null; then
+            local host="$(host-spawn hostname | tr -d '\r')"
+            echo "${host}-${name}"
+        else
+            echo "${name}"
+        fi
+    else
+        echo "${HOSTNAME}"
+    fi
+}
+export PS1_HOSTNAME=$(toolbox_name)
+unset is_toolbox
+unset toolbox_name
+
+## PS1 generator
+## adapted from https://gist.github.com/xenji/2292341
 ps1_generator() {
     # docker context inspect --format '{{ .Name }}'
-    Time12h="\T"; Time12a="\@"; ShortHost="\h"; Username="\u";
+    Time12h="\T"; Time12a="\@"; ShortHost="${PS1_HOSTNAME:-\h}"; Username="\u";
     PathShort="\W"; PathFull="\w"; NewLine="\n"; Jobs="\j";
     test -f ~/.config/git-prompt.sh || \
         curl -L https://raw.github.com/git/git/master/contrib/completion/git-prompt.sh \
@@ -67,27 +101,27 @@ fi)'
 ps1_generator && unset -f ps1_generator
 
 ## Emacs vterm hooks:
-vterm_printf() {
-    if [ -n "$TMUX" ] && ([ "${TERM%%-*}" = "tmux" ] || [ "${TERM%%-*}" = "screen" ]); then
-        # Tell tmux to pass the escape sequences through
-        printf "\ePtmux;\e\e]%s\007\e\\" "$1"
-    elif [ "${TERM%%-*}" = "screen" ]; then
-        # GNU screen (screen, screen-256color, screen-256color-bce)
-        printf "\eP\e]%s\007\e\\" "$1"
-    else
-        printf "\e]%s\e\\" "$1"
-    fi
-}
-if [[ "$INSIDE_EMACS" = 'vterm' ]]; then
+if [[ "$INSIDE_EMACS" == 'vterm' ]]; then
+    vterm_printf() {
+        if [ -n "$TMUX" ] && ([ "${TERM%%-*}" = "tmux" ] || [ "${TERM%%-*}" = "screen" ]); then
+            # Tell tmux to pass the escape sequences through
+            printf "\ePtmux;\e\e]%s\007\e\\" "$1"
+        elif [ "${TERM%%-*}" = "screen" ]; then
+            # GNU screen (screen, screen-256color, screen-256color-bce)
+            printf "\eP\e]%s\007\e\\" "$1"
+        else
+            printf "\e]%s\e\\" "$1"
+        fi
+    }
     function clear() {
         vterm_printf "51;Evterm-clear-scrollback";
         tput clear;
     }
+    function vterm_prompt_end(){
+        vterm_printf "51;A$(whoami)@$(hostname):$(pwd)"
+    }
+    PS1=$PS1'\[$(vterm_prompt_end)\]'
 fi
-vterm_prompt_end(){
-    vterm_printf "51;A$(whoami)@$(hostname):$(pwd)"
-}
-PS1=$PS1'\[$(vterm_prompt_end)\]'
 
 #### To enable Bash shell completion support for d.rymcg.tech,
 #### add the following lines into your ~/.bashrc ::

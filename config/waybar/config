@@ -64,7 +64,7 @@
     "clock": {
         "interval": 10,
         "format-alt": " {:%e %b %Y}", // Icon: calendar-alt
-        "format": "{:%H:%M}",
+        "format": "{:%I:%M}", // for 24 hour use "{:%H:%M}"
         "tooltip-format": "{:%e %B %Y}"
     },
 
@@ -92,7 +92,7 @@
 
     "memory": {
         "interval": 5,
-        "format": " {:2}%", // Icon: memory
+        "format": "RAM {:2}%",
         "on-click": "kitty -o font_size=9 btop",
         "states": {
             "warning": 70,
