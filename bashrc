@@ -201,7 +201,7 @@ git-vendor() {
         echo "help: git-vendor URL [symlink]"
         return 1
     fi
-    local REPO="$(echo ${CLONE_URL} | sed 's/\.git$//' | grep -Po '(.*/)?\K.+/.+')"
+    local REPO="$(echo ${CLONE_URL} | sed 's/\.git$//' | grep -Po '(.*[/:])?\K.+/.+')"
     if [[ -z "$REPO" ]]; then
         echo "Error: Invalid repository URL."
         return 1
