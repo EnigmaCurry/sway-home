@@ -6,6 +6,7 @@
 
 # Bash config is split into modules, loaded in the order listed below:
 modules=(
+    funcs
     bugs
     path
     terminal
@@ -20,6 +21,7 @@ modules=(
     rust
     video
     local
+    unset_funcs
 )
 for mod in "${modules[@]}"; do
     source ~/.config/bash/"${mod}.sh"
