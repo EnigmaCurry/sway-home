@@ -72,7 +72,13 @@ BCT_WRAP=0
 
 # Only print time when its greater than BCT_THRESHOLD seconds:
 # Set to 0 to always print it.
-BCT_THRESHOLD=2
+BCT_LOG_THRESHOLD=2
+
+# Perform this action when commands complete and that take longer than BCT_ACTION_THRESHOLD seconds.
+BCT_ACTION_MSG='Command completed on ${HOSTNAME} :: ${output_str}'
+BCT_ACTION_COMMAND='echo -n ""'
+BCT_ACTION_COMMAND='matrix-alert "Command completed on ${HOSTNAME} :: ${output_str}"'
+BCT_ACTION_THRESHOLD=-1
 
 # IMPLEMENTATION
 # ==============
@@ -168,7 +174,8 @@ function BCTPostCommand() {
   local num_mins=$(($command_time % $HOUR / $MIN))
   local num_secs=$(($command_time % $MIN / $SEC))
   local num_msecs=$(($command_time % $SEC / $MSEC))
-  local threshold=$(($BCT_THRESHOLD * $SEC))
+  local threshold=$(($BCT_LOG_THRESHOLD * $SEC))
+  local action_threshold=$(($BCT_ACTION_THRESHOLD * $SEC))
   local time_str=""
   if [ $num_days -gt 0 ]; then
     time_str="${time_str}${num_days}d "
@@ -214,6 +221,12 @@ function BCTPostCommand() {
       # Finally, print output.
       echo -e "${output_str_colored}"
   fi
+
+  if (( ${action_threshold} >= 0 )) && (( "$command_time" > ${action_threshold} )); then
+      export output_str
+      local cmd="$(echo "${BCT_ACTION_COMMAND}" | envsubst '$HOSTNAME$output_str')"
+      (eval "${cmd}" >/dev/null 2>&1)
+  fi
 }
 
 
@@ -250,3 +263,47 @@ else
 fi
 unset -f BCTRegisterCallbacksWithBashPreexec
 unset -f BCTRegisterCallbacksDirectly
+
+notify-completion() {
+    ARG="$1"; shift
+    if [[ -z "$ARG" ]]; then
+        echo "### Send Matrix notifications after command completion:"
+        echo "## Help:"
+        echo "##  notify-completion on   ## Always notify on completion"
+        echo "##  notify-completion 300  ## Notify for commands that take longer than 300 seconds"
+        echo "##  notify-completion off  ## Turn off all notifications"
+        echo
+        case "${BCT_ACTION_THRESHOLD}" in
+            -1) echo "Bash command timer matrix notifications are DISABLED.";;
+            *) echo "Bash command timer matrix notifications are ENABLED."
+               echo "# BCT_ACTION_THRESHOLD=${BCT_ACTION_THRESHOLD}"
+               echo "Notifiction threshold (seconds): ${BCT_ACTION_THRESHOLD}";;
+        esac
+        return
+    elif [[ "$ARG" == "off" ]]; then
+        BCT_ACTION_THRESHOLD=-1
+        echo "Bash command timer matrix notifications disabled."
+        echo "To enable notifications, provide the TIME argument: notify-completion 300"
+        return
+    elif [[ -z "${MATRIX_ALERT_WEBHOOK}" ]]; then
+        echo "You need to configure MATRIX_ALERT_WEBHOOK (in ~/.bashrc.local)" >/dev/stderr
+        echo "## # MATRIX_ALERT_WEBHOOK=https://matrix.example.com/hookshot/...."
+        return 1
+    elif [[ "${BCT_ACTION_COMMAND}" == 'echo -n ""' ]]; then
+        echo "You need to configure BCT_ACTION_COMMAND (in ~/.bashrc.local)" >/dev/stderr
+        echo "## BCT_ACTION_COMMAND='matrix-alert "Command completed on \${HOSTNAME} :: \${output_str}"'"
+        return 1
+    elif [[ "$ARG" == "on" ]]; then
+        BCT_ACTION_THRESHOLD=0
+    else
+        if ! [[ "${ARG}" =~ ^[0-9]+$ ]] ; then
+            echo "Error: TIME is not a number." >/dev/stderr
+            return
+        else
+            BCT_ACTION_THRESHOLD="${ARG}"
+        fi
+    fi
+    echo "# BCT_ACTION_THRESHOLD=${BCT_ACTION_THRESHOLD}"
+    echo "Bash command timer matrix notifications are ENABLED."
+    echo "Notifiction threshold (seconds): ${BCT_ACTION_THRESHOLD}"
+}

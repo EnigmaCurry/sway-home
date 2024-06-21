@@ -10,17 +10,18 @@ modules=(
     bugs
     path
     terminal
-    prompt-basic
-    prompt
-    bash_command_timer
     keychain
     completion
+    prompt-basic
+    prompt
     theme
     alias
     editor
     git
     rust
     video
+    matrix
+    bash_command_timer
     local
     unset_funcs
 )
