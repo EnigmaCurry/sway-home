@@ -6,7 +6,7 @@
 
 matrix-alert() {
     if [[ -n "${MATRIX_ALERT_WEBHOOK}" ]]; then
-        (set -x; curl -X POST "${MATRIX_ALERT_WEBHOOK}" --json '{"text":"'"$*"'"}' >/dev/null 2>&1)
+        curl -X POST "${MATRIX_ALERT_WEBHOOK}" --json '{"text":"'"$*"'"}' >/dev/null 2>&1
     else
         echo "Missing MATRIX_ALERT_WEBHOOK env var." >/dev/stderr
         return 1
