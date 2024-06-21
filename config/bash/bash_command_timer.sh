@@ -64,13 +64,15 @@ BCT_TIME_FORMAT='%b %d %I:%M%p'
 # Whether to print command timings up to millisecond precision.
 #
 # If set to 0, will print up to seconds precision.
-BCT_MILLIS=1
+BCT_MILLIS=0
 
 # Wheter to wrap to the next line if the output string would overlap with
 # characters of last command's output
 BCT_WRAP=0
 
-
+# Only print time when its greater than BCT_THRESHOLD seconds:
+# Set to 0 to always print it.
+BCT_THRESHOLD=2
 
 # IMPLEMENTATION
 # ==============
@@ -166,6 +168,7 @@ function BCTPostCommand() {
   local num_mins=$(($command_time % $HOUR / $MIN))
   local num_secs=$(($command_time % $MIN / $SEC))
   local num_msecs=$(($command_time % $SEC / $MSEC))
+  local threshold=$(($BCT_THRESHOLD * $SEC))
   local time_str=""
   if [ $num_days -gt 0 ]; then
     time_str="${time_str}${num_days}d "
@@ -181,9 +184,10 @@ function BCTPostCommand() {
     local num_msecs_pretty=$(printf '%03d' $num_msecs)
   fi
   time_str="${time_str}${num_secs}s${num_msecs_pretty}"
+  start_str=$(BCTPrintTime $(($command_start_time / $SEC)))
   now_str=$(BCTPrintTime $(($command_end_time / $SEC)))
-  if [ -n "$now_str" ]; then
-    local output_str="[ $time_str | $now_str ]"
+  if [ -n "$now_str" ] && [ -n "$start_str" ]; then
+    local output_str="[ $time_str | $start_str > $now_str ]"
   else
     local output_str="[ $time_str ]"
   fi
@@ -201,13 +205,15 @@ function BCTPostCommand() {
     local wrap_space_prefix=""
   fi
 
-  # Move to the end of the line. This will NOT wrap to the next line
-  # unless you have BCT_WRAP == 1
-  echo -ne "$wrap_space_prefix\033[${COLUMNS}C"
-  # Move back (length of output_str) columns.
-  echo -ne "\033[${#output_str}D"
-  # Finally, print output.
-  echo -e "${output_str_colored}"
+  if (( "$command_time" > ${threshold} )); then
+      # Move to the end of the line. This will NOT wrap to the next line
+      # unless you have BCT_WRAP == 1
+      echo -ne "$wrap_space_prefix\033[${COLUMNS}C"
+      # Move back (length of output_str) columns.
+      echo -ne "\033[${#output_str}D"
+      # Finally, print output.
+      echo -e "${output_str_colored}"
+  fi
 }
 
 

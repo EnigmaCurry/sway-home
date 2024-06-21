@@ -12,6 +12,7 @@ modules=(
     terminal
     prompt-basic
     prompt
+    bash_command_timer
     keychain
     completion
     theme
