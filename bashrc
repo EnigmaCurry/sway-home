@@ -20,6 +20,7 @@ modules=(
     git
     rust
     video
+    music
     matrix
     bash_command_timer
     local
