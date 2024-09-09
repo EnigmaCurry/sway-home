@@ -23,10 +23,32 @@ yt-download() {
     STREAM=$1; [[ "$STREAM" == "" ]] && read -e -p "Enter stream: " STREAM
     yt-dlp -f bestvideo+bestaudio "$STREAM" --merge-output-format mp4
 }
-## Download youtube audio only
+## Download youtube audio only, supports playlists:
 yt-audio() {
     STREAM=$1; [[ "$STREAM" == "" ]] && read -e -p "Enter stream: " STREAM
-    yt-dlp -x --audio-format mp3 $STREAM
+    FOLDER=$(mktemp -d)  # Create a temporary folder to store individual audio files
+    yt-dlp -f bestaudio --extract-audio --audio-format mp3 --postprocessor-args "-threads $(nproc)" -o "$FOLDER/%(title)s.%(ext)s" $STREAM
+    # Count the number of mp3 files
+    MP3_FILES=("$FOLDER"/*.mp3)
+    MP3_COUNT=${#MP3_FILES[@]}
+    # If only one track, simply rename it to the output file
+    if [[ "$MP3_COUNT" -eq 1 ]]; then
+        OUTPUT_FILE=$(basename "${MP3_FILES[0]}" .mp3).mp3
+        mv "${MP3_FILES[0]}" "$OUTPUT_FILE"
+        echo "Single track downloaded and saved as '$OUTPUT_FILE'."
+    else
+        # Extract the common prefix of the downloaded file names
+        COMMON_PREFIX=$(ls "$FOLDER"/*.mp3 | sed 's#.*/##' | sed -e 's/\.mp3$//' | awk 'NR==1{prefix=$0; next} {while(substr($0,1,length(prefix))!=prefix) {prefix=substr(prefix,1,length(prefix)-1)}} END{print prefix}')
+        # Create a list of mp3 files to concatenate
+        CONCAT_LIST="$FOLDER/concat_list.txt"
+        find "$FOLDER" -type f -name "*.mp3" | sort | sed "s/^/file '/; s/$/'/" > "$CONCAT_LIST"
+        # Use ffmpeg to concatenate all mp3 files without re-encoding
+        OUTPUT_FILE="${COMMON_PREFIX}.mp3"
+        ffmpeg -f concat -safe 0 -i "$CONCAT_LIST" -c copy "$OUTPUT_FILE"  
+        echo "All tracks have been merged into '$OUTPUT_FILE'."
+    fi    
+    # Clean up the temporary folder
+    rm -rf "$FOLDER"
 }
 
 screen-record() {
