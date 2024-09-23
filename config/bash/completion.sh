@@ -11,3 +11,6 @@ if [[ -d ${HOME}/git/vendor/enigmacurry/d.rymcg.tech ]]; then
    __d.rymcg.tech_cli_alias d
    __d.rymcg.tech_project_alias traefik
 fi
+
+# https://github.com/casey/just
+command -v just >/dev/null && source <(just --completions bash)
