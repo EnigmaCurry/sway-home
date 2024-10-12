@@ -7,6 +7,7 @@
 # Bash config is split into modules, loaded in the order listed below:
 modules=(
     funcs
+    vars
     bugs
     path
     terminal
@@ -22,6 +23,7 @@ modules=(
     video
     music
     matrix
+    tts
     bash_command_timer
     local
     unset_funcs
