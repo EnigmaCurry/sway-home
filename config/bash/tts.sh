@@ -12,13 +12,12 @@ say() {
     local LOG=${LOG:-false}
     local MODEL_FILE="${MODEL_DIR}/${MODEL}.onnx"
     local MODEL_JSON="${MODEL_FILE}.json"
-    local AUDIO_RATE=${AUDIO_RATE:-11025}
     if [[ $MODEL == *"-high"* ]]; then
-        AUDIO_RATE=11025
+        local AUDIO_RATE=${AUDIO_RATE:-11025}
     elif [[ $MODEL == *"-medium"* ]]; then
-        AUDIO_RATE=11025
+        local AUDIO_RATE=${AUDIO_RATE:-11025}
     elif [[ $MODEL == *"-low"* ]]; then
-        AUDIO_RATE=8192
+        local AUDIO_RATE=${AUDIO_RATE:-8192}
     fi
     declare -A MODEL_URLS=(
         ["ar_JO-kareem-low"]="https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/ar/ar_JO/kareem/low/ar_JO-kareem-low.onnx"
