@@ -6,7 +6,7 @@ say() {
     local MODEL_DIR=${MODEL_DIR:-~/ai/piper/model}
     local MODEL=${MODEL:-en_US-lessac-high}
     local IMAGE_NAME="piper"
-    local AUDIO_RATE=11250
+    local AUDIO_RATE=11025
     local SPEED=${SPEED:-1}
     local LOG=${LOG:-false}
     local MODEL_FILE="${MODEL_DIR}/${MODEL}.onnx"
