@@ -8,6 +8,8 @@ say() {
     local IMAGE_NAME="piper"
     local AUDIO_RATE=11025
     local SPEED=${SPEED:-1}
+    local SILENCE=${SILENCE:-0.2}
+    local NOISE=${NOISE:-0.8}
     local LOG=${LOG:-false}
     local MODEL_FILE="${MODEL_DIR}/${MODEL}.onnx"
     local MODEL_JSON="${MODEL_FILE}.json"
@@ -103,14 +105,28 @@ EOF
         -e PULSE_SERVER=unix:/run/user/$(id -u)/pulse/native \
         -v ${MODEL_DIR}:/model:Z \
         ${IMAGE_NAME} \
-        sh -c "piper -m /model/${MODEL}.onnx --length_scale ${SPEED} --output_raw $@" 2>${LOG} | \
+        sh -c "piper -m /model/${MODEL}.onnx --length_scale ${SPEED} --sentence_silence ${SILENCE} --noise_w ${NOISE} --output_raw $@" 2>${LOG} | \
         paplay --raw --rate=${AUDIO_RATE} --channels=2;
 }
 
+say_wrapped() {
+    python3 -c "
+import sys
+
+text = sys.stdin.buffer.read().decode('utf-8', errors='ignore')
+paragraphs = text.split('\n\n')
+unwrapped_paragraphs = [' '.join(paragraph.splitlines()) for paragraph in paragraphs]
+print('\n\n'.join(unwrapped_paragraphs))
+" | say
+}
+
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    say $@
+    CMD=$1; shift
+    ${CMD} $@
 else
     unset say
-    alias say="bash ${BASH_SOURCE[0]}"
+    unset say_wrapped
+    alias say="bash ${BASH_SOURCE[0]} say"
+    alias say_wrapped="bash ${BASH_SOURCE[0]} say_wrapped"
     alias piper=say
 fi
