@@ -222,9 +222,6 @@ EOF
     else
         LOG=/dev/null
     fi
-    if [ "$#" -eq 0 ] && [ -t 0 ]; then
-        echo "## Enter text - Press Ctrl-D to quit"
-    fi
     if [ "$#" -gt 0 ]; then
         echo " " "$@"
     else
