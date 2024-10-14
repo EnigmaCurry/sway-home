@@ -42,5 +42,6 @@ sudo dnf install -y "${packages[@]}"
 sudo dnf groupinstall -y "Development Tools" "Development Libraries"
 
 sudo ln -sf /usr/bin/flatpak-xdg-open /usr/local/bin/xdg-open
-
- 
+sudo ln -sf /usr/bin/host-spawn /usr/local/bin/toolbox
+sudo ln -sf /usr/bin/host-spawn /usr/local/bin/podman
+sudo ln -sf /usr/bin/host-spawn /usr/local/bin/flatpak
