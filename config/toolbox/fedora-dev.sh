@@ -14,6 +14,7 @@ confirm no "This will configure a fresh Fedora development environment"
 set -x
 packages=(
     bash
+    bind-utils
     curl
     emacs
     flatpak-xdg-utils
@@ -45,3 +46,8 @@ sudo ln -sf /usr/bin/flatpak-xdg-open /usr/local/bin/xdg-open
 sudo ln -sf /usr/bin/host-spawn /usr/local/bin/toolbox
 sudo ln -sf /usr/bin/host-spawn /usr/local/bin/podman
 sudo ln -sf /usr/bin/host-spawn /usr/local/bin/flatpak
+
+
+if ! command -v docker >/dev/null; then
+    curl -sSL https://get.docker.com | sh
+fi
