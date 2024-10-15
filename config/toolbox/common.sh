@@ -37,7 +37,6 @@ check_os_id() {
     )
 }
 
-
 setup_host_spawn() {
     if [[ ! -f /usr/bin/host-spawn ]]; then
         echo
@@ -116,6 +115,7 @@ main() {
         fi
     else
         # Create a new container:
+        check_wizard
         if [[ -z "${NAME}" ]]; then
             ask_no_blank "What do you want to name the container?" NAME ${IMAGE}
         fi

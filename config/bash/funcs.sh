@@ -9,7 +9,21 @@ trim_leading_whitespace() { sed -e 's/^[[:space:]]*//'; }
 trim_whitespace() { trim_leading_whitespace | trim_trailing_whitespace; }
 upper_case() { tr '[:lower:]' '[:upper:]'; }
 lower_case() { tr '[:upper:]' '[:lower:]'; }
-wizard() { ~/.cargo/bin/script-wizard "$@"; }
+check_wizard() {
+    if ! command -v script-wizard && [[ ! -f ~/.cargo/bin/script-wizard ]]; then
+        stderr "script-wizard not found. See https://github.com/EnigmaCurry/script-wizard"
+        fault "Run: cargo install script-wizard"
+    fi
+}
+wizard() {
+    if command -v script-wizard; then
+        script-wizard "$@"
+    elif test -f ~/.cargo/bin/script-wizard; then
+        ~/.cargo/bin/script-wizard "$@"
+    else
+        check_wizard
+    fi
+}
 check_var(){
     local __missing=false
     local __vars="$@"
