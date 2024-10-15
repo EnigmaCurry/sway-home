@@ -93,7 +93,13 @@ main() {
     fi
     if is_container; then
         # Running in a container ..
-        check_var NAME
+        if [[ -z "${NAME}" ]]; then
+            if command -v host-spawn &>/dev/null; then
+                (set -x; host-spawn $2)
+            else
+                fault "host-spawn not found. You cannot run this script inside the container without host-spawn."
+            fi
+        fi
         echo "## Detected container environment"
         NO_CONFIRM=${NO_CONFIRM:-false}
         # if [[ "${NO_CONFIRM}" != "true" ]]; then
