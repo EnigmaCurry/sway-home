@@ -9,7 +9,7 @@ trim_leading_whitespace() { sed -e 's/^[[:space:]]*//'; }
 trim_whitespace() { trim_leading_whitespace | trim_trailing_whitespace; }
 upper_case() { tr '[:lower:]' '[:upper:]'; }
 lower_case() { tr '[:upper:]' '[:lower:]'; }
-wizard() { ${BIN}/script-wizard "$@"; }
+wizard() { ~/.cargo/bin/script-wizard "$@"; }
 check_var(){
     local __missing=false
     local __vars="$@"
