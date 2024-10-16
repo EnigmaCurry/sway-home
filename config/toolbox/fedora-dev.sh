@@ -26,6 +26,7 @@ PACKAGES=(
     w3m
     wireguard-tools
     xdg-utils
+    ffmpeg-free
 )
 
 setup_fedora() {

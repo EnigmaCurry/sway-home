@@ -2,17 +2,19 @@
 set -e
 IMAGE=arch
 PACKAGES=(
-    docker
-    inetutils
-    less 
-    git
     base-devel
+    chromium
+    docker
+    gimp
+    git
     go
+    inetutils
+    keychain
+    less 
     noto-fonts
     noto-fonts-cjk
     noto-fonts-emoji
     noto-fonts-extra
-    chromium
 )
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
@@ -93,9 +95,12 @@ setup_yay() {
 
 setup_arch() {
     check_os_id "arch"
+    sudo pacman -Sy --noconfirm archlinux-keyring
+    sudo pacman-key --init
+    sudo pacman-key --populate archlinux
     sudo pacman -Syu --noconfirm
     sudo pacman -S --noconfirm "${PACKAGES[@]}"
-
+    
     arch_setup_host_spawn
 
     setup_yay
