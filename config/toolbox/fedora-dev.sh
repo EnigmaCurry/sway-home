@@ -27,6 +27,20 @@ PACKAGES=(
     wireguard-tools
     xdg-utils
     ffmpeg-free
+    poppler-glib
+    libpng
+    zlib
+    libpng-devel
+    poppler-devel
+    poppler-glib-devel
+    zlib-devel
+    pkgconf
+    texlive-collection-basic
+    texlive-latex
+    texlive-latex-bin
+    texlive-texliveonfly
+    texlive-unicode-math
+    mpv
 )
 
 setup_fedora() {
