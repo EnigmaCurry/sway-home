@@ -35,12 +35,13 @@ PACKAGES=(
     poppler-glib-devel
     zlib-devel
     pkgconf
-    texlive-collection-basic
-    texlive-latex
-    texlive-latex-bin
-    texlive-texliveonfly
-    texlive-unicode-math
+#    texlive-collection-basic
+#    texlive-latex
+#    texlive-latex-bin
+#    texlive-texliveonfly
+#    texlive-unicode-math
     mpv
+    python-black
 )
 
 setup_fedora() {

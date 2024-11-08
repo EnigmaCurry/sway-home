@@ -46,6 +46,7 @@ setup_host_spawn() {
         sudo ln -sf /usr/bin/flatpak-xdg-open /usr/local/bin/xdg-open
     fi
     sudo ln -sf /usr/bin/host-spawn /usr/local/bin/toolbox
+    sudo ln -s /usr/bin/host-spawn /usr/local/bin/distrobox
     sudo ln -sf /usr/bin/host-spawn /usr/local/bin/podman
     sudo ln -sf /usr/bin/host-spawn /usr/local/bin/flatpak
 }
@@ -80,6 +81,15 @@ create_toolbox_container() {
     run_container_script ${NAME} ${SCRIPT}
 }
 
+create_distrobox_container() {
+    local NAME=$1; shift
+    local SCRIPT=$1; shift
+    local IMAGE_ARG="$@"
+    check_var NAME SCRIPT
+    distrobox create "${NAME}" ${IMAGE_ARG}  --additional-flags "--volume /run/user/$(id -u)/wayland-1:/run/user/$(id -u)/wayland-1:Z --volume /dev/dri:/dev/dri"
+    set -x
+    run_container_script ${NAME} ${SCRIPT}
+}
 
 main() {
     local CALLBACK=$1
@@ -130,13 +140,14 @@ main() {
                     # Update the existing container
                     echo "Updating existing container ..."
                     debug_var SCRIPT
+                    set -x
                     run_container_script "${NAME}" "${SCRIPT}"
                     ;;
                 1)
                     # Remote the container and create a new one
                     echo "Removing container ..."
                     podman rm -f "${NAME}"
-                    create_toolbox_container "${NAME}" "${SCRIPT}" "${IMAGE_ARG}"
+                    create_distrobox_container "${NAME}" "${SCRIPT}" "${IMAGE_ARG}"
                     ;;
                 2)
                     # Quit
@@ -148,7 +159,7 @@ main() {
             esac
         else
             confirm yes "This will create a new container named ${NAME}"
-            create_toolbox_container "${NAME}" "${SCRIPT}" "${IMAGE_ARG}"
+            create_distrobox_container "${NAME}" "${SCRIPT}" "${IMAGE_ARG}"
         fi
     fi
 }

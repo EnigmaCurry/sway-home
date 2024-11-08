@@ -1,1 +1,1 @@
-export EDITOR=emacsclient
+export EDITOR="emacsclient -q"

@@ -28,10 +28,13 @@ build_image() {
 ## http://book.rymcg.tech/linux-workstation/config/toolbox/#arch-linux-toolbox
 FROM docker.io/archlinux/archlinux:latest
 LABEL com.github.containers.toolbox="true" name=${IMAGE}-toolbox
-RUN pacman -Syu --noconfirm \
-    && pacman  -S --noconfirm sudo \
-    && pacman -Scc --noconfirm \
-    && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
+RUN pacman -Sy --noconfirm archlinux-keyring && \
+    pacman-key --init && \
+    pacman-key --populate archlinux && \
+    pacman -Syu --noconfirm && \
+    pacman  -S --noconfirm sudo && \
+    pacman -Scc --noconfirm && \
+    echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
 CMD ["bash"]
 EOF
      podman build -t ${IMAGE} .
@@ -93,17 +96,42 @@ setup_yay() {
     fi
 }
 
+enable_multilib() {
+  local pacman_conf="/etc/pacman.conf"
+
+  if ! grep -q "^\[multilib\]" "$pacman_conf"; then
+    echo "Adding [multilib] repository to $pacman_conf..."
+    sudo tee -a "$pacman_conf" > /dev/null << EOF
+
+[multilib]
+Include = /etc/pacman.d/mirrorlist
+EOF
+    echo "[multilib] repository added successfully."
+    echo "Updating package database..."
+    sudo pacman -Syu
+  else
+    echo "[multilib] repository is already present."
+  fi
+}
+
+enable_radeon_graphics() {
+  if lspci | grep -iq "vga.*amd" || lspci | grep -iq "vga.*radeon"; then
+    echo "AMD Radeon graphics card detected. Installing vulkan-radeon..."
+    sudo pacman -S vulkan-radeon lib32-vulkan-radeon --noconfirm
+  else
+    echo "No AMD Radeon graphics card detected."
+  fi
+}
+
 setup_arch() {
     check_os_id "arch"
-    sudo pacman -Sy --noconfirm archlinux-keyring
-    sudo pacman-key --init
-    sudo pacman-key --populate archlinux
     sudo pacman -Syu --noconfirm
     sudo pacman -S --noconfirm "${PACKAGES[@]}"
-    
     arch_setup_host_spawn
 
     setup_yay
+    enable_multilib
+    enable_radeon_graphics
 }
 
 if ! is_container; then
