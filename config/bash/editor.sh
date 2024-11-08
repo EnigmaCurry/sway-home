@@ -28,7 +28,6 @@ else
     fi
     if [ "$initial_checksum" = "$final_checksum" ]; then
         echo "## File not saved." >/dev/stderr
-        exit 1
     else
         echo "## File saved." >/dev/stderr
     fi
