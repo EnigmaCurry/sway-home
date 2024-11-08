@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Hardcode your preferred editor here:
-preferred_editor="emacsclient   -q"
+preferred_editor="emacsclient -q" # -q to keep stdout clean (no "Waiting for Emacs..")
 
 if [ "$0" != "$BASH_SOURCE" ]; then
     # Sourcing this file..
@@ -9,6 +9,27 @@ if [ "$0" != "$BASH_SOURCE" ]; then
     export VISUAL=${EDITOR}
 else
     # Running this file as a script:
-    notify-send "Opening file" "Opening '$1' in $EDITOR_COMMAND"
-    exec $preferred_editor "$1"
+    unset initial_checksum
+    unset final_checksum
+    if [[ -e "$1" ]]; then
+        initial_checksum=$(sha256sum "$1" | awk '{ print $1 }')
+    fi
+    # Write meta message to stderr to keep stdout clean:
+    echo "## Opening '$1' in ${preferred_editor%% *}." >/dev/stderr
+    if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+        notify-send "Opening your editor" "Opening '$1' in ${preferred_editor%% *}"
+    fi
+
+    # Open editor:
+    $preferred_editor "$1"
+
+    if [[ -e "$1" ]]; then
+        final_checksum=$(sha256sum "$1" | awk '{ print $1 }')
+    fi
+    if [ "$initial_checksum" = "$final_checksum" ]; then
+        echo "## File not saved." >/dev/stderr
+        exit 1
+    else
+        echo "## File saved." >/dev/stderr
+    fi
 fi
