@@ -15,6 +15,7 @@ PACKAGES=(
     noto-fonts-cjk
     noto-fonts-emoji
     noto-fonts-extra
+    direnv
 )
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"

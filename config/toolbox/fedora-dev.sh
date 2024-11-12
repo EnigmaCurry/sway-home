@@ -35,6 +35,7 @@ PACKAGES=(
     poppler-glib-devel
     zlib-devel
     pkgconf
+    direnv
 #    texlive-collection-basic
 #    texlive-latex
 #    texlive-latex-bin
