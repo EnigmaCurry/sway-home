@@ -60,4 +60,5 @@ link_dir bin ${HOME}/bin
 link bash_profile ${HOME}/.bash_profile
 link bashrc ${HOME}/.bashrc
 link inputrc ${HOME}/.inputrc
+link psqlrc ${HOME}/.psqlrc
 git_config
