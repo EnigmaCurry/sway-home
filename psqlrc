@@ -6,6 +6,7 @@
 
 \pset null '¤'
 \pset linestyle 'unicode'
+\pset pager on
 
 \pset unicode_border_linestyle single
 \pset unicode_column_linestyle single
@@ -14,5 +15,6 @@
 set intervalstyle to 'postgres_verbose';
 
 \setenv LESS '-iMFXSx4R'
+\setenv PAGER 'less -S'
 
 \unset QUIET
