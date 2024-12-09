@@ -34,10 +34,9 @@ xkb_symbols "alt_ralt" {
 // META
 partial modifier_keys
 xkb_symbols "meta_lalt" {
-//// This is broken in emacs 29.2, Mod2 / Meta is no longer recognized?!?
-  //replace key <LALT> { [Meta_L, Meta_R] };
-  /// In emacs 29 Alt is recognized as Meta:
-  replace key <LALT> { [Alt_L, Alt_R] };
+  replace key <LALT> { [Meta_L, Meta_R] };
+  /// old real alt
+  //replace key <LALT> { [Alt_L, Alt_R] };
   include "emacs(modifier_mapping)"
 };
  
