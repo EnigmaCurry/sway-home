@@ -43,6 +43,7 @@ PACKAGES=(
 #    texlive-unicode-math
     mpv
     python-black
+    libtool
 )
 
 setup_fedora() {
