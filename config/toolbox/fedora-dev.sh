@@ -46,6 +46,7 @@ PACKAGES=(
     libtool
     cmake
     @development-tools
+    openssl-devel
 )
 
 setup_fedora() {
