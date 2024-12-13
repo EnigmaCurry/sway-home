@@ -50,7 +50,7 @@ setup_fedora() {
     check_os_id "fedora"
     sudo dnf upgrade -y
     sudo dnf install -y "${PACKAGES[@]}"
-    sudo dnf groupinstall -y "Development Tools" "Development Libraries"
+    sudo dnf install -y @development-tools
     setup_host_spawn
     get_docker
 }
