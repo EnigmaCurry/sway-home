@@ -49,13 +49,15 @@ PACKAGES=(
     mesa-libGL-devel
     jack-audio-connection-kit-devel
     libXcursor-devel
+    cmake
+    @development-tools
+    openssl-devel
 )
 
 setup_fedora() {
     check_os_id "fedora"
     sudo dnf upgrade -y
     sudo dnf install -y "${PACKAGES[@]}"
-    sudo dnf groupinstall -y "Development Tools" "Development Libraries"
     setup_host_spawn
     get_docker
 }

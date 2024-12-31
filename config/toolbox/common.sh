@@ -46,7 +46,7 @@ setup_host_spawn() {
         sudo ln -sf /usr/bin/flatpak-xdg-open /usr/local/bin/xdg-open
     fi
     sudo ln -sf /usr/bin/host-spawn /usr/local/bin/toolbox
-    sudo ln -s /usr/bin/host-spawn /usr/local/bin/distrobox
+    sudo ln -sf /usr/bin/host-spawn /usr/local/bin/distrobox
     sudo ln -sf /usr/bin/host-spawn /usr/local/bin/podman
     sudo ln -sf /usr/bin/host-spawn /usr/local/bin/flatpak
 }
