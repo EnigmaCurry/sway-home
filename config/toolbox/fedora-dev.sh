@@ -44,6 +44,11 @@ PACKAGES=(
     mpv
     python-black
     libtool
+    hidapi-devel
+    libusb1-devel
+    mesa-libGL-devel
+    jack-audio-connection-kit-devel
+    libXcursor-devel
 )
 
 setup_fedora() {
