@@ -34,9 +34,9 @@ xkb_symbols "alt_ralt" {
 // META
 partial modifier_keys
 xkb_symbols "meta_lalt" {
-  replace key <LALT> { [Meta_L, Meta_R] };
+  //replace key <LALT> { [Meta_L, Meta_R] };
   /// old real alt
-  //replace key <LALT> { [Alt_L, Alt_R] };
+  replace key <LALT> { [Alt_L, Alt_R] };
   include "emacs(modifier_mapping)"
 };
  

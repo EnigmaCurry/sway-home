@@ -10,6 +10,7 @@ PACKAGES=(
     gettext
     gettext
     git
+    git-lfs
     go
     host-spawn
     htop
@@ -52,6 +53,7 @@ PACKAGES=(
     cmake
     @development-tools
     openssl-devel
+    xcb-util-wm-devel
 )
 
 setup_fedora() {
