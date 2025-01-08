@@ -52,6 +52,8 @@ PACKAGES=(
     cmake
     @development-tools
     openssl-devel
+    qrencode
+    guile30
 )
 
 setup_fedora() {
