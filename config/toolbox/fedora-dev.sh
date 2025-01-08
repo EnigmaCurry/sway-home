@@ -10,6 +10,7 @@ PACKAGES=(
     gettext
     gettext
     git
+    git-lfs
     go
     host-spawn
     htop
@@ -54,6 +55,7 @@ PACKAGES=(
     openssl-devel
     qrencode
     guile30
+    xcb-util-wm-devel
 )
 
 setup_fedora() {
