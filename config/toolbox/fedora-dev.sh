@@ -54,6 +54,10 @@ PACKAGES=(
     @development-tools
     openssl-devel
     xcb-util-wm-devel
+    gcc-aarch64-linux-gnu
+    sysroot-aarch64-fc41-glibc
+    ghostscript-tools-dvipdf
+    sqlite-devel
 )
 
 setup_fedora() {
