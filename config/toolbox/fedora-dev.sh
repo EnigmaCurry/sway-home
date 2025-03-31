@@ -57,6 +57,10 @@ PACKAGES=(
     guile30
     xcb-util-wm-devel
     typescript
+    gcc-aarch64-linux-gnu
+    sysroot-aarch64-fc41-glibc
+    ghostscript-tools-dvipdf
+    sqlite-devel
 )
 
 setup_fedora() {
