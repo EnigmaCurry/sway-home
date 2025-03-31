@@ -56,6 +56,7 @@ PACKAGES=(
     qrencode
     guile30
     xcb-util-wm-devel
+    typescript
 )
 
 setup_fedora() {
