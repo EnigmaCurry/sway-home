@@ -1,1 +1,3 @@
 bindsym $mod+x exec killall -SIGUSR1 waybar
+bindsym $mod+F9 exec obs-do toggle-record
+bindsym $mod+Shift+F9 exec obs-do toggle-pause
