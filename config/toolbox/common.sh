@@ -131,12 +131,14 @@ main() {
         fi
         if podman container inspect ${NAME} >/dev/null 2>&1; then
             stderr ""
-            local CHOSEN=$(choose -n "Container '${NAME}' already exists. How do you want to proceed?" \
+            local CHOSEN=$(script-wizard choose -n "Container '${NAME}' already exists. How do you want to proceed?" \
                            "Update the existing container." \
                            "Remove the container and create a new one from scratch." \
                            "Cancel.")
+	    debug_var CHOSEN
             case "$CHOSEN" in
                 0)
+		    echo umm
                     # Update the existing container
                     echo "Updating existing container ..."
                     debug_var SCRIPT

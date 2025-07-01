@@ -12,4 +12,5 @@ alias arch-dev='distrobox enter arch'
 alias arch-dev-install="${HOME}/.config/toolbox/arch-dev.sh"
 alias ironwail="ironwail -basedir ~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Quake/rerelease/"
 alias quake=ironwail
+alias k=kubectl
 vars() { set -o posix; set | cut -d= -f1 | column; }

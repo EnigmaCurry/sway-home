@@ -53,3 +53,8 @@ create_cd_alias() {
 create_cd_alias cdd "${HOME}/git/vendor/enigmacurry/d.rymcg.tech"
 create_cd_alias cdg "${HOME}/git/vendor/enigmacurry"
 create_cd_alias cdv "${HOME}/git/vendor"
+
+if command -v kubectl &>/dev/null; then
+  source <(kubectl completion bash)
+  complete -o default -F __start_kubectl k
+fi

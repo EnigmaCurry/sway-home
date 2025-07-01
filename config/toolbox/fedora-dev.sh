@@ -66,7 +66,7 @@ PACKAGES=(
 setup_fedora() {
     check_os_id "fedora"
     sudo dnf upgrade -y
-    sudo dnf install -y "${PACKAGES[@]}"
+    sudo dnf install --skip-unavailable -y "${PACKAGES[@]}"
     setup_host_spawn
     get_docker
 }
