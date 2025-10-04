@@ -6,8 +6,8 @@
 set -Eeuo pipefail
 
 # -------- defaults --------
-ROWS=24
-COLS=99
+ROWS=20
+COLS=80
 NAME="${NAME:-}"                    # can be set via env; CLI -n or positional overrides
 OUT_PATH=""
 OUT_DIR="${HOME}/casts"
@@ -142,6 +142,7 @@ EGL_LOG_LEVEL=fatal MESA_DEBUG=silent /usr/bin/time -f "[cast] Recorded (%E)" "$
   --config 'hide_tab_bar_if_only_one_tab=true' \
   --config 'window_decorations="NONE"' \
   --config "font_size=${FONT_SIZE}" \
+  --config 'default_cursor_style="SteadyBlock"' \
   start --class "${CLASS}" -- \
   env OUT="$OUT_PATH" ROWS="$ROWS" COLS="$COLS" START_CWD="$CALLER_PWD" \
   bash --noprofile --norc -c "$HELPER"
