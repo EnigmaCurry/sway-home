@@ -255,5 +255,5 @@ else
     unset say_wrapped
     alias say="bash ${BASH_SOURCE[0]} say"
     alias say_wrapped="bash ${BASH_SOURCE[0]} say_wrapped"
-    alias piper=say
+    #alias piper=say
 fi

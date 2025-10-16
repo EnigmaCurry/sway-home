@@ -3,6 +3,7 @@
 # Launch a floating WezTerm window at COLSxROWS and record with asciinema (quiet),
 # while loading your normal shell profile/rc inside the recording.
 # Default inner command: bash -i (override with -s 'your command')
+# Optional: -t <session> to run the command inside a tmux session.
 
 set -Eeuo pipefail
 
@@ -11,7 +12,7 @@ ROWS=20
 COLS=80
 NAME="${NAME:-}"                    # can be set via env; CLI -n or positional overrides
 OUT_PATH=""
-OUT_DIR="${HOME}/casts"
+OUT_DIR="${HOME}/casts}"
 CLASS=""
 EXIT_BEHAVIOR="CloseOnCleanExit"    # Hold | Close | CloseOnCleanExit
 WEZTERM_BIN="${WEZTERM_BIN:-}"
@@ -19,6 +20,7 @@ FONT_SIZE="24.0"
 WINDOW_X=0
 WINDOW_Y=42
 SHELL_CMD="${SHELL_CMD:-bash -i}"   # default inner command; override with -s
+TMUX_SESSION=""                     # set via -t to enable tmux wrapping
 
 usage() {
   cat <<EOF
@@ -32,7 +34,8 @@ Options:
   -d DIR         Output directory (default: ${OUT_DIR})
   -k CLASS       WezTerm/Hyprland app class (default: CAST-RECORD)
   -b BEHAVIOR    WezTerm exit behavior: Hold | Close | CloseOnCleanExit (default: ${EXIT_BEHAVIOR})
-  -s CMD         Inner shell/command to run inside the recording (default: "bash -i")
+  -s CMD         Inner command to run inside the recording (default: "bash -i")
+  -t SESSION     Run inside tmux SESSION (create or attach). If omitted, no tmux is used.
   -h             Show help
 
 Positional:
@@ -43,12 +46,13 @@ Examples:
   cast foo
   cast ./out.cast
   cast -s 'bash -il' foo
-  cast -s 'zsh -i' -r 24 -c 100
+  cast -s 'zsh -i' -t demo
+  cast -r 24 -c 100
 EOF
 }
 
 # -------- parse flags --------
-while getopts ":r:c:n:o:d:k:b:s:h" opt; do
+while getopts ":r:c:n:o:d:k:b:s:t:h" opt; do
   case "$opt" in
     r) ROWS="${OPTARG}" ;;
     c) COLS="${OPTARG}" ;;
@@ -58,6 +62,7 @@ while getopts ":r:c:n:o:d:k:b:s:h" opt; do
     k) CLASS="${OPTARG}" ;;
     b) EXIT_BEHAVIOR="${OPTARG}" ;;
     s) SHELL_CMD="${OPTARG}" ;;
+    t) TMUX_SESSION="${OPTARG}" ;;
     h) usage; exit 0 ;;
     \?) echo "Invalid option: -$OPTARG" >&2; usage; exit 2 ;;
     :)  echo "Option -$OPTARG requires an argument." >&2; usage; exit 2 ;;
@@ -106,7 +111,11 @@ if [[ "$OUT_PATH" != /* ]]; then
 fi
 mkdir -p "$(dirname "$OUT_PATH")"
 
-echo "[cast] size=${COLS}x${ROWS}  cmd=${SHELL_CMD}"
+if [[ -n "$TMUX_SESSION" ]]; then
+  echo "[cast] size=${COLS}x${ROWS}  cmd=${SHELL_CMD}  tmux=${TMUX_SESSION}"
+else
+  echo "[cast] size=${COLS}x${ROWS}  cmd=${SHELL_CMD}"
+fi
 echo "[cast] Now recording: ${OUT_PATH}"
 
 # Float + absolute position on Hyprland if present
@@ -127,6 +136,7 @@ cat >"$HELPER" <<'REC'
 set -Eeuo pipefail
 : "${OUT:?}"; : "${ROWS:=24}"; : "${COLS:=80}"
 : "${START_CWD:=}"; : "${RUN_CMD:=bash -i}"
+: "${TMUX_SESSION:=}"
 
 # Start in the caller's working directory if provided
 if [[ -n "$START_CWD" && -d "$START_CWD" ]]; then
@@ -135,6 +145,16 @@ fi
 
 # Ensure the PTY grid asciinema sees matches your requested size
 stty rows "$ROWS" cols "$COLS" 2>/dev/null || true
+
+# If -t SESSION was provided, wrap the inner command in a tmux session.
+if [[ -n "$TMUX_SESSION" ]]; then
+  if ! command -v tmux >/dev/null 2>&1; then
+    echo "[cast] ERROR: -t specified but 'tmux' not found on PATH." >&2
+    exit 127
+  fi
+  # Build a safe shell command: tmux new-session -A -s SESSION bash -lc "RUN_CMD"
+  printf -v RUN_CMD 'tmux new-session -A -s %q bash -lc %q' "$TMUX_SESSION" "$RUN_CMD"
+fi
 
 # Run your chosen command *inside* the recording, quietly
 exec asciinema rec -q -c "$RUN_CMD" "$OUT"
@@ -151,7 +171,7 @@ EGL_LOG_LEVEL=fatal MESA_DEBUG=silent /usr/bin/time -f "[cast] Recorded (%E)" "$
   --config "font_size=${FONT_SIZE}" \
   --config 'default_cursor_style="SteadyBlock"' \
   start --class "${CLASS}" -- \
-  env OUT="$OUT_PATH" ROWS="$ROWS" COLS="$COLS" START_CWD="$CALLER_PWD" RUN_CMD="$SHELL_CMD" \
+  env OUT="$OUT_PATH" ROWS="$ROWS" COLS="$COLS" START_CWD="$CALLER_PWD" RUN_CMD="$SHELL_CMD" TMUX_SESSION="$TMUX_SESSION" \
   bash --noprofile --norc -c "$HELPER"
 
 echo "[cast] Finished recording: ${OUT_PATH}"
