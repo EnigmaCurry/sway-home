@@ -23,4 +23,5 @@ with pkgs; [
   ripgrep
 	git
   waybar
+  keychain
 ]
