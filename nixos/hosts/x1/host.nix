@@ -1,0 +1,4 @@
+{ ... }:
+{
+  my.unstablePackages = [ "emacs" ];
+}
