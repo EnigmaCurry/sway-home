@@ -1,0 +1,98 @@
+{
+  "nodes": {
+    "home-manager_25_11": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs_25_11"
+        ]
+      },
+      "locked": {
+        "lastModified": 1767280655,
+        "narHash": "sha256-YmaYMduV5ko8zURUT1VLGDbVC1L/bxHS0NsiPoZ6bBM=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "d49d2543f02dbd789ed032188c84570d929223cb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "release-25.11",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "home-manager_unstable": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs_unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1767437240,
+        "narHash": "sha256-OA0dBHhccdupFXp+/eaFfb8K1dQxk61in4aF5ITGVX8=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "1cfa305fba94468f665de1bd1b62dddf2e0cb012",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "nixpkgs_25_11": {
+      "locked": {
+        "lastModified": 1767325753,
+        "narHash": "sha256-yA/CuWyqm+AQo2ivGy6PlYrjZBQm7jfbe461+4HF2fo=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "64049ca74d63e971b627b5f3178d95642e61cedd",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-25.11",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs_unstable": {
+      "locked": {
+        "lastModified": 1767379071,
+        "narHash": "sha256-EgE0pxsrW9jp9YFMkHL9JMXxcqi/OoumPJYwf+Okucw=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "fb7944c166a3b630f177938e478f0378e64ce108",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-unstable",
+        "type": "indirect"
+      }
+    },
+    "root": {
+      "inputs": {
+        "home-manager_25_11": "home-manager_25_11",
+        "home-manager_unstable": "home-manager_unstable",
+        "nixpkgs_25_11": "nixpkgs_25_11",
+        "nixpkgs_unstable": "nixpkgs_unstable",
+        "sway-home": "sway-home"
+      }
+    },
+    "sway-home": {
+      "flake": false,
+      "locked": {
+        "path": "..",
+        "type": "path"
+      },
+      "original": {
+        "path": "..",
+        "type": "path"
+      },
+      "parent": []
+    }
+  },
+  "root": "root",
+  "version": 7
+}
