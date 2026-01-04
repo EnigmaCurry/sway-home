@@ -24,4 +24,7 @@ with pkgs; [
 	git
   waybar
   keychain
+  s3cmd
+  quickemu
+  just
 ]

@@ -69,6 +69,7 @@
     git
     ripgrep
     jq
+    just
   ];
 
   fonts.packages = with pkgs; [
