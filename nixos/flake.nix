@@ -26,7 +26,6 @@
           unstablePkgs = unstableNixpkgs.legacyPackages.${system};
 
           hardwareModule = host.hardwareModule or null;
-          hostModule = host.hostModule or null;
           hostUnstablePackages = host.unstablePackages or [];
           hostExtraPackages = host.extraPackages or [];
           userName = host.userName;
@@ -40,7 +39,6 @@
 
             modules =
               (stableNixpkgs.lib.optional (hardwareModule != null) hardwareModule)
-              ++ (stableNixpkgs.lib.optional (hostModule != null) hostModule)
               ++ [
                 ./modules/unstable-overlay.nix
 
