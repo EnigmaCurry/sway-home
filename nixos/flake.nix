@@ -19,34 +19,33 @@
 
       mkHost = host:
         let
-          nixpkgs = inputs.${host.nixpkgsInput};
+          stableNixpkgs = inputs.${host.nixpkgsInput};
+          unstableNixpkgs = inputs.nixpkgs_unstable;
           system = host.system or "x86_64-linux";
 
-          # This is what unstable-overlay.nix expects:
-          pkgsUnstable = inputs.nixpkgs_unstable.legacyPackages.${system};
+          unstablePkgs = unstableNixpkgs.legacyPackages.${system};
 
           hardwareModule = host.hardwareModule or null;
           hostModule = host.hostModule or null;
-
-          extraPackages = host.extraPackages or [];
-          unstablePackages = host.unstablePackages or [];
+          hostUnstablePackages = host.unstablePackages or [];
+          hostExtraPackages = host.extraPackages or [];
           userName = host.userName;
         in
-          nixpkgs.lib.nixosSystem {
+          stableNixpkgs.lib.nixosSystem {
             inherit system;
 
             specialArgs = {
-              inherit inputs pkgsUnstable;
+              inherit inputs unstablePkgs;
             };
 
             modules =
-              (nixpkgs.lib.optional (hardwareModule != null) hardwareModule)
-              ++ (nixpkgs.lib.optional (hostModule != null) hostModule)
+              (stableNixpkgs.lib.optional (hardwareModule != null) hardwareModule)
+              ++ (stableNixpkgs.lib.optional (hostModule != null) hostModule)
               ++ [
                 ./modules/unstable-overlay.nix
 
                 # Drive the overlay from hosts.nix
-                ({ ... }: { my.unstablePackages = unstablePackages; })
+                ({ ... }: { my.unstablePkgs = hostUnstablePackages; })
 
                 ./modules/configuration.nix
                 { networking.hostName = host.hostName; }
@@ -62,8 +61,8 @@
                     users.${userName} = { ... }: {
                       _module.args = {
                         inherit inputs userName;
-                        extraPackages = extraPackages;
-                        unstablePackages = unstablePackages;
+                        unstablePackages = hostUnstablePackages;
+                        extraPackages = hostExtraPackages;
                       };
                       imports = [ ./modules/home.nix ];
                     };
