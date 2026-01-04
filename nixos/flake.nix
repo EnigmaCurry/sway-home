@@ -10,16 +10,7 @@
       inputs.nixpkgs.follows = "nixpkgs_25_11";
     };
 
-    # optional; keep if you want it around
-    home-manager_unstable = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs_unstable";
-    };
-
-    sway-home = {
-      url = "path:..";
-      flake = false;
-    };
+    sway-home = { url = "path:.."; flake = false; };
   };
 
   outputs = inputs@{ self, ... }:
@@ -29,22 +20,21 @@
       mkHost = host:
         let
           nixpkgs = inputs.${host.nixpkgsInput};
-          home-manager = inputs.${host.homeManagerInput};
-
-          # recommended: define per-host system in hosts.nix
           system = host.system or "x86_64-linux";
 
-          # unstable packages for the same system
+          # This is what unstable-overlay.nix expects:
           pkgsUnstable = inputs.nixpkgs_unstable.legacyPackages.${system};
 
           hardwareModule = host.hardwareModule or null;
           hostModule = host.hostModule or null;
+
+          extraPackages = host.extraPackages or [];
+          unstablePackages = host.unstablePackages or [];
           userName = host.userName;
         in
           nixpkgs.lib.nixosSystem {
             inherit system;
 
-            # make these available to ALL NixOS modules
             specialArgs = {
               inherit inputs pkgsUnstable;
             };
@@ -53,14 +43,16 @@
               (nixpkgs.lib.optional (hardwareModule != null) hardwareModule)
               ++ (nixpkgs.lib.optional (hostModule != null) hostModule)
               ++ [
-                # provides option: my.unstablePackages = [ "emacs" ... ];
                 ./modules/unstable-overlay.nix
+
+                # Drive the overlay from hosts.nix
+                ({ ... }: { my.unstablePackages = unstablePackages; })
 
                 ./modules/configuration.nix
                 { networking.hostName = host.hostName; }
                 (import ./modules/user.nix { inherit userName; })
 
-                home-manager.nixosModules.home-manager
+                inputs.home-manager_25_11.nixosModules.home-manager
                 ({ ... }: {
                   home-manager = {
                     useGlobalPkgs = true;
@@ -68,8 +60,11 @@
                     backupFileExtension = "backup";
 
                     users.${userName} = { ... }: {
-                      # force args for home.nix
-                      _module.args = { inherit inputs userName; };
+                      _module.args = {
+                        inherit inputs userName;
+                        extraPackages = extraPackages;
+                        unstablePackages = unstablePackages;
+                      };
                       imports = [ ./modules/home.nix ];
                     };
                   };

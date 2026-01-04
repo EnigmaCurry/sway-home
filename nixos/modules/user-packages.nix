@@ -19,10 +19,8 @@ with pkgs; [
   uv
   distrobox
 	jq
-	just
 	ruff
   ripgrep
 	git
   waybar
-  minicom
 ]

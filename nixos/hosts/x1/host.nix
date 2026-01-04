@@ -1,4 +1,0 @@
-{ ... }:
-{
-  my.unstablePackages = [ "emacs-pgtk" ];
-}

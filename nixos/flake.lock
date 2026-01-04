@@ -21,26 +21,6 @@
         "type": "github"
       }
     },
-    "home-manager_unstable": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs_unstable"
-        ]
-      },
-      "locked": {
-        "lastModified": 1767437240,
-        "narHash": "sha256-OA0dBHhccdupFXp+/eaFfb8K1dQxk61in4aF5ITGVX8=",
-        "owner": "nix-community",
-        "repo": "home-manager",
-        "rev": "1cfa305fba94468f665de1bd1b62dddf2e0cb012",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "home-manager",
-        "type": "github"
-      }
-    },
     "nixpkgs_25_11": {
       "locked": {
         "lastModified": 1767325753,
@@ -74,7 +54,6 @@
     "root": {
       "inputs": {
         "home-manager_25_11": "home-manager_25_11",
-        "home-manager_unstable": "home-manager_unstable",
         "nixpkgs_25_11": "nixpkgs_25_11",
         "nixpkgs_unstable": "nixpkgs_unstable",
         "sway-home": "sway-home"
