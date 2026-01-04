@@ -1,7 +1,7 @@
 { pkgs }:
 
 with pkgs; [
-  emacs
+  emacs-pgtk
   libtool
   openssl.dev
   foot

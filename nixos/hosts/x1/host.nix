@@ -1,4 +1,4 @@
 { ... }:
 {
-  my.unstablePackages = [ "emacs" ];
+  my.unstablePackages = [ "emacs-pgtk" ];
 }

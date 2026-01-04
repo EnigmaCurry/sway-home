@@ -9,6 +9,9 @@ help:
 switch:
     cd nixos; sudo nixos-rebuild switch --flake .#${HOSTNAME}
 
+list-unstable-packages:
+    cd nixos; nix eval --raw .#nixosConfigurations.${HOSTNAME}._module.args.pkgsUnstable.path && echo
+
 # Update flake.lock
 update:
     cd nixos; nix flake update
