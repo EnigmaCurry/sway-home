@@ -42,9 +42,21 @@
               ++ [
                 ./modules/unstable-overlay.nix
 
-                # Drive the overlay from hosts.nix
                 ({ ... }: { my.unstablePkgs = hostUnstablePackages; })
 
+                ({ pkgs, ... }:
+                  let
+                    toPkgs = names: map (name:
+                      if builtins.hasAttr name pkgs
+                      then builtins.getAttr name pkgs
+                      else throw "hosts.nix packages: pkgs has no attribute '${name}'"
+                    ) names;
+                  in
+                    {
+                      environment.systemPackages =
+                        toPkgs (hostExtraPackages ++ hostUnstablePackages);
+                    }
+                )
                 ./modules/configuration.nix
                 { networking.hostName = host.hostName; }
                 (import ./modules/user.nix { inherit userName; })
@@ -57,11 +69,7 @@
                     backupFileExtension = "backup";
 
                     users.${userName} = { ... }: {
-                      _module.args = {
-                        inherit inputs userName;
-                        unstablePackages = hostUnstablePackages;
-                        extraPackages = hostExtraPackages;
-                      };
+                      _module.args = { inherit inputs userName; };
                       imports = [ ./modules/home.nix ];
                     };
                   };

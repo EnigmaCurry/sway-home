@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, userName, extraPackages ? [], unstablePackages ? [], ... }:
+{ config, pkgs, inputs, userName, ... }:
 
 let
   myBashrc = inputs.sway-home + "/bashrc";
@@ -8,9 +8,6 @@ let
     then builtins.getAttr name pkgs
     else throw "hosts.nix packages: pkgs has no attribute '${name}'"
   ) names;
-
-  hostUnstablePkgs = toPkgs unstablePackages;
-  hostExtraPkgs = toPkgs extraPackages;
 in
 {
   home.username = userName;
@@ -19,10 +16,8 @@ in
 
   programs.git.enable = true;
   home.packages =
-    (import ./user-packages.nix { inherit pkgs; })
-    ++ hostUnstablePkgs
-    ++ hostExtraPkgs;
-  
+    (import ./user-packages.nix { inherit pkgs; });
+
   programs.bash = {
     enable = true;
     # ~/.bashrc imports sway-home bashrc:
