@@ -1,10 +1,11 @@
 # Install NixOS in a VM
 
 Using [quickemu](https://github.com/quickemu-project/quickemu), you
-can create a NixOS VM for testing purposes. If you are installing to a
-real machine, skip to the [Install NixOS](#install-nixos) section and
-skip the part about the serial port, its the same instructions
-otherwise.
+can create a NixOS VM for testing purposes. 
+
+Once you've installed NixOS on the VM, head back to
+[NIXOS.md](NIXOS.md#bootstrap-the-config) to finish the bootstrapping
+steps.
 
 ## Install quickemu
 
