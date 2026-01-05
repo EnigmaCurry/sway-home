@@ -1,8 +1,12 @@
 # Sway-Home on NixOS
 
-The NixOS specific config is in the [nixos](nixos) directory, and it
-references the non-nix config files in the root directory
-([config](config), [bashrc](bashrc), etc.)
+These are the instructions for installing NixOS and configuring it
+with [sway-home](README.md).
+
+All of the NixOS specific config is in the [nixos](nixos) directory.
+The non-nix specific config files in the root directory
+([config](config), [bashrc](bashrc), etc.) are imported by the nix
+config.
 
 You can install this on a real machine, but you may want to test it
 out in a VM first. See [NIXOS_VM.md](NIXOS_VM.md) for instructions.
@@ -10,17 +14,20 @@ out in a VM first. See [NIXOS_VM.md](NIXOS_VM.md) for instructions.
 ## Install NixOS
 
 Follow the [NixOS manual](https://nixos.org/manual/nixos/stable/) and
-use the graphical installer to install NixOS on your host, or in a VM.
+use the graphical installer to install NixOS on your host (or in a
+VM).
 
- * During install, you should select the option for `No desktop`.
+ * During the install, you should select the option for `No desktop`,
+   because this setting will be overriden anyway.
 
 Special instructions *only if you are using a VM*:
 
  * After the install, you should **shut down** (not reboot) the VM.
- * Once shutdown, create a snapshot so you can come back to the
-   initial state at any time. 
+ * Once shutdown, create an initial snapshot so you can reset to a
+   fresh state.
  * Make sure to set up the serial console, so that you can easily copy
-   and paste the following commands.
+   and paste the following commands (otherwise you'll need to type
+   them by hand).
 
 ## Bootstrap the config
 
