@@ -36,10 +36,9 @@ Run the following commands on your freshly installed NixOS machine:
  * Clone this repository:
 
 ```bash
-nix-shell -p git --run 'bash -lc "
-  git clone https://github.com/EnigmaCurry/sway-home.git \
-    ~/git/vendor/enigmacurry/sway-home
-"'
+GIT_URL=https://github.com/EnigmaCurry/sway-home.git
+GIT_REPO=~/git/vendor/enigmacurry/sway-home
+nix-shell -p git --run "git clone ${GIT_URL} ${GIT_REPO}"
 ```
 
  * Create the host configuration:
