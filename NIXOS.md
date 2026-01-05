@@ -181,3 +181,13 @@ Available recipes:
    file for your host has been saved in git, you may delete the
    original `/etc/nixos/hardware-configuration.nix`, because it's no
    longer being used.
+
+ * There is an alternative `minimal` .iso image you can use instead of
+   the `graphical` one, but I find the `graphical` one to be easier to
+   bootstrap with. There is a boot menu option to enable a serial
+   console, but it is not the default, so a graphical display appears
+   to be required anyway. If I could figure out a way to enable the
+   serial console during the install without needing the display to do
+   it, then the `minimal` installer might be preferable to me, but if
+   a virtual display (`gtk` window) is going to required anyway, I
+   might as well just use the `graphical` installer.
