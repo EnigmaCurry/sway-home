@@ -4,8 +4,8 @@ These are the instructions for installing NixOS and configuring it
 with [sway-home](README.md).
 
 All of the NixOS specific config is in the [nixos](nixos) directory.
-The non-nix specific config files in the root directory
-([config](config), [bashrc](bashrc), etc.) are imported by the nix
+The non-nix specific config files are in the root directory
+([config](config), [bashrc](bashrc), etc.) and are imported by the nix
 config.
 
 You can install this on a real machine, but you may want to test it
@@ -49,6 +49,11 @@ GIT_REPO=~/git/vendor/enigmacurry/sway-home
 JUST_JUSTFILE=${GIT_REPO}/Justfile \
     nix-shell -p just -p python3 -p git --run "just add-host && git -C $GIT_REPO add nixos/hosts"
 ```
+
+(This creates a new entry in the [hosts.nix](nixos/modules/hosts.nix)
+module. You can create this yourself by copying/editing the `x1`
+example. Make sure the config has the same name as your NixOS
+hostname.)
 
  * Apply the configuration:
 
@@ -157,3 +162,22 @@ Available recipes:
    older normal generation that was made by `just switch` (by default,
    it will reboot into the latest generation from *before you ran
    `just test`*. ).
+
+ * This configuration is designed to support the config of multiple
+   machines that you own/control. The [add-host.sh] script handles the
+   per-host config creation. Here's how it works: Each host should
+   have a host-specific config directory in this repository in
+   [`./nixos/hosts/${HOSTNAME}`](nixos/hosts). Each host (e.g, `x1`)
+   should copy its hardware configuration (i.e., the one created by
+   the installer: `/etc/nixos/hardware-configuration.nix`) into that
+   directory (e.g,
+   [`./nixos/hosts/x1/hardware.nix`](nixos/hosts/x1/hardware.nix)). In
+   this same directory you may also place `storage.nix` (e.g.,
+   [`./nixos/hosts/x1/storage.nix`](nixos/hosts/x1/storage.nix)) where
+   you can write the configuration for the swap device ID (optional).
+   The real reason for `storage.nix` to exist is only because of the
+   warning at the top of the `hardware.nix` that it shouldn't be
+   edited by the user. At your preference, once the `hardware.nix`
+   file for your host has been saved in git, you may delete the
+   original `/etc/nixos/hardware-configuration.nix`, because it's no
+   longer being used.

@@ -1,11 +1,14 @@
 { config, pkgs, ... }:
 
 {
+  # Opt-in for "experimental" flakes support (defacto standard, but possibly unstable)
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  # Boot loader
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Enable networking
+  # Networking
   networking.networkmanager.enable = true;
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -33,14 +36,13 @@
     #media-session.enable = true;
   };
 
-  # Programs
+  # System programs and packages
   programs.firefox.enable = true;
   programs.sway.enable = true;
   virtualisation.podman = {
     enable = true;
     defaultNetwork.settings.dns_enabled = true;
   };
-
   environment.systemPackages = with pkgs; [
     tuigreet
     git
@@ -48,7 +50,6 @@
     jq
     just
   ];
-
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
   ];
