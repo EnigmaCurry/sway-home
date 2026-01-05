@@ -122,28 +122,38 @@ Available recipes:
 
 ## Important concepts and reminders
 
+ * You need to keep your config files safe by commiting it with `git`
+   and pushing it, often, to a remote host. NixOS lets you reboot into
+   previous generations (state), but you are responsible for
+   maintaining the history of the declarative config, and so you need
+   to prevent their corruption or accidental deletion by archiving it
+   remotely in `git`.
+
  * When working on any of these config files, remember to `git add` /
-   `git commit` your changes your changes *before* running `just
-   switch`. If you forget, you will see warnings like `warning: Git
-   tree '/home/ryan/git/vendor/enigmacurry/sway-home' is dirty`.
-   That's just a reminder to you that you should cancel the operation
-   with `Ctrl-C` and you need commit your changes before you
+   `git commit` your changes *before* running `just switch`. If you
+   forget, you will see warnings like `warning: Git tree
+   '/home/ryan/git/vendor/enigmacurry/sway-home' is dirty`. That's
+   just a reminder to you that you should cancel the operation with
+   `Ctrl-C` and you should add and commit your changes before you
    reattempt. (Therefore its recommended to always be working in a
    story branch when trying out new configs, not `master`.) It may not
    seem like it's always necessary to commit your changes, but
    sometimes files will be ignored by nix if they are not at least
    staged for commit.
 
- * All of the files in `~/.config` (and indeed all of `/usr/bin`) are
-   actually symlinks into `/nix/store/...`. All of `/nix/store` is
-   read-only, so that means you cannot edit your dot files directly.
-   You must edit their source in this repository and re-apply with
-   `just switch` to get them into `/nix/store/....`.
+ * All of the files that end up in `~/.config` (and indeed all of
+   `/usr/bin` too) are actually symlinks into `/nix/store/...`. All of
+   `/nix/store` is read-only, so that means you cannot edit your dot
+   files directly. You must edit their source in this repository and
+   re-apply with `just switch` to get them into `/nix/store/....`.
+   This is a minor pain point, but this enforced ritual will ensure
+   that your config remains declarative and reproducible.
 
  * If you don't want to make permanent changes to your system (e.g.,
    you are working in a git story branch for some experiments), you
    can use `just test` instead of `just switch`. When using `just
    test`, all new generations are *temporary* and will not be added to
-   your boot menu. If you do reboot, you will be forced to choose a
-   generation that you made with `just switch` (by default, it will
-   reboot to the latest generation *before you ran `just test`*. ).
+   your boot menu. If you do reboot, you will be forced to choose an
+   older normal generation that was made by `just switch` (by default,
+   it will reboot into the latest generation from *before you ran
+   `just test`*. ).
