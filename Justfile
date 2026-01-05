@@ -1,6 +1,10 @@
 # Optional but recommended: use bash + fail fast
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
+
+HOSTNAME := env_var_or_default("HOSTNAME", `hostname -s`)
+USERNAME := env_var_or_default("USERNAME", `whoami`)
+
 # print help for Just targets
 help:
     @just -l
@@ -33,3 +37,6 @@ prune-everything:
 # Show flake inputs
 metadata:
     cd nixos; nix flake metadata
+
+add-host:
+    ./nixos/_scripts/add-host.sh "{{HOSTNAME}}" "{{USERNAME}}"
