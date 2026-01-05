@@ -38,15 +38,16 @@ nix-shell -p git --run 'bash -lc "
  * Create the host configuration:
 
 ```bash
-GIT_REPO=~/git/vendor/enigmacurry/sway-home/
-JUST_JUSTFILE=${GIT_REPO}//Justfile \
+GIT_REPO=~/git/vendor/enigmacurry/sway-home
+JUST_JUSTFILE=${GIT_REPO}/Justfile \
     nix-shell -p just -p python3 -p git --run "just add-host && git -C $GIT_REPO add nixos/hosts"
 ```
 
  * Apply the configuration:
 
 ```bash
-JUST_JUSTFILE=~/git/vendor/enigmacurry/sway-home/Justfile \
+GIT_REPO=~/git/vendor/enigmacurry/sway-home
+JUST_JUSTFILE=${GIT_REPO}/Justfile \
     nix-shell -p just --run 'just switch'
 ```
 
