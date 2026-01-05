@@ -6,11 +6,13 @@ can create a NixOS VM for testing purposes.
 Once you've created the VM, head back to
 [NIXOS.md](NIXOS.md#install-nixos) to finish the installation.
 
+This guide was tested with quickemu version 4.9.7.
+
 ## Install quickemu
 
-See
-[Installation](https://github.com/quickemu-project/quickemu/wiki/01-Installation).
-This guide was tested with quickemu version 4.9.7.
+Reference the quickemu
+[Installation](https://github.com/quickemu-project/quickemu/wiki/01-Installation)
+wiki page.
 
 ## Create the VM
 
@@ -18,54 +20,32 @@ Ordinarily, you should be able to use `quickget` to automatically
 create the VM config. However, I found this to be buggy and it would
 not download the correct `.iso` image. To work around this bug, I just
 needed to create the config file and download the `.iso` file
-manually.
+manually. I have wrapped this fix into a script inside
+[create-vm.sh](nixos/_scripts/create-vm.sh).
 
 Create the VM config file:
 
 ```bash
-CHANNEL="nixos-25.11"
-mkdir -p ~/VMs/${CHANNEL}
-
-cat <<EOF > ~/VMs/${CHANNEL}.conf
-#!/usr/bin/env quickemu --vm
-guest_os="linux"
-disk_img="${CHANNEL}/disk.qcow2"
-iso="${CHANNEL}/latest-nixos-graphical-x86_64-linux.iso"
-disk_size="50G"
-display="gtk"
-EOF
+just vm-create
 ```
 
-Edit whatever settings you need in `nixos-25.11.conf` [according to
-the
+Edit whatever settings you need in `~/VMs/nixos-25.11.conf` [according
+to the
 docs](https://github.com/quickemu-project/quickemu/wiki/05-Advanced-quickemu-configuration)
 (all command line arguments are also valid config file parameters).
-
-Download the NixOS `.iso` image:
-
-```bash
-CHANNEL=nixos-25.11
-ISO=latest-nixos-graphical-x86_64-linux.iso
-curl -C - -L https://channels.nixos.org/${CHANNEL}/${ISO} \
-     --output ~/VMs/${CHANNEL}/${ISO}
-
-# Verify image
-curl -L https://channels.nixos.org/${CHANNEL}/${ISO}.sha256 \
-  --output ~/VMs/${CHANNEL}/${ISO}.sha256
-echo "Verifying image ..."
-(cd ~/VMs/${CHANNEL}; sed "s#  .*#  $ISO#" ${ISO}.sha256 | sha256sum -c -)
-```
 
 ## Start the VM
 
 ```bash
-quickemu --vm ~/VMs/nixos-25.11.conf
+just vm-start
 ```
 
-The default settings will open a GTK display window for the VM, which
-is good if you need to use a desktop, or for the initial installer.
-
-After installation, **shut down** the VM.
+The default `display` setting will open a GTK display window for the
+VM, which is good if you want to use a desktop, or for the initial
+installer. However, the drawback is that it is not possible to copy
+and paste text between the graphical terminal and your workstation. An
+alternative serial interface may be setup to fascilitate connecting
+from your worksation's terminal.
 
 ## Stop the VM
 
@@ -75,7 +55,7 @@ inside the VM or use the **Machine** / **Power Down** menu action.
 If you need to kill it, you can run this command:
 
 ```bash
-quickemu --vm ~/VMs/nixos-25.11.conf --kill
+just vm-kill
 ```
 
 ## Create and Restore Snapshots
@@ -83,7 +63,7 @@ quickemu --vm ~/VMs/nixos-25.11.conf --kill
 Create a snapshot named `initial`:
 
 ```bash
-quickemu --vm ~/VMs/nixos-25.11.conf --snapshot create initial
+just vm-snapshot initial
 ```
 
 (Note: the VM must be shutdown to create a snapshot.)
@@ -91,13 +71,7 @@ quickemu --vm ~/VMs/nixos-25.11.conf --snapshot create initial
 You may restore the snapshot like this:
 
 ```bash
-quickemu --vm ~/VMs/nixos-25.11.conf --snapshot apply initial
-```
-
-## Restart the VM
-
-```bash
-quickemu --vm ~/VMs/nixos-25.11.conf
+just vm-restore initial
 ```
 
 ## Configure serial console
@@ -106,27 +80,28 @@ It may be more convenient to interact with the VM via serial console.
 This can facilitate remote login through your normal terminal emulator
 and allow you to copy and paste the rest of the commands.
 
-Log in to the VM console, and then start the getty service:
+Start the VM, and log into the VM console, and then start the getty
+service (you'll need to type this manually into the VM console):
 
 ```bash
 sudo systemctl start serial-getty@ttyS0.service
 ```
 
 (Note: this setting will **not** persist between reboots. To make it
-permanent, you will need to add this service to your Nix
+permanent, you will need to add this service later on, in your own Nix
 configuration.)
 
-To connect to the VM from your host, run `socat`:
+To connect to the VM from your host via serial connection:
 
 ```bash
-socat STDIO,raw,echo=0,escape=0x11 UNIX-CONNECT:$HOME/VMs/nixos-25.11/nixos-25.11-serial.socket
+just vm-connect
 ```
 
 (Press Enter and you should now see a login prompt.)
 
 To exit the session press `Ctrl-Q`.
 
-Log in to the account you created.
+Log into the account you created with the installer.
 
 ## Finish installation
 
@@ -138,6 +113,6 @@ section and follow the rest of the steps from that point.
 After installation, you can restart the VM without a display, if you want:
 
 ```bash
-quickemu --vm ~/VMs/nixos-25.11.conf --display none
+VM_DISPLAY=none just vm-start
 ```
 
