@@ -20,7 +20,7 @@ if [[ -z "${HOST}" || -z "${USER_NAME}" ]]; then
   exit 2
 fi
 
-HOSTS_FILE="./nixos/modules/hosts.nix"
+HOSTS_FILE="./nixos/hosts/hosts.nix"
 SRC_HW="/etc/nixos/hardware-configuration.nix"
 DEST_DIR="./nixos/hosts/${HOST}"
 DEST_HW="${DEST_DIR}/hardware.nix"
@@ -142,6 +142,10 @@ ENTRY=$(cat <<EOF
       variant = "";
       options = "ctrl:nocaps";
       consoleUseXkbConfig = true;
+    };
+    emacs = {
+      enable = true;
+      input = "emacs_enigmacurry";
     };
   };
 

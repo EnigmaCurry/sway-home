@@ -49,7 +49,7 @@ JUST_JUSTFILE=${GIT_REPO}/Justfile \
     nix-shell -p just -p python3 -p git --run "just add-host && git -C $GIT_REPO add nixos/hosts"
 ```
 
-(This creates a new entry in the [hosts.nix](nixos/modules/hosts.nix)
+(This creates a new entry in the [hosts.nix](nixos/hosts/hosts.nix)
 module. You can create this yourself by copying/editing the `x1`
 example. Make sure the config has the same name as your NixOS
 hostname.)

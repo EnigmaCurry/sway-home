@@ -11,11 +11,12 @@
     };
 
     sway-home = { url = "path:.."; flake = false; };
+    emacs_enigmacurry = { url = "github:EnigmaCurry/emacs"; flake = false; };
   };
 
   outputs = inputs@{ self, ... }:
     let
-      hosts = import ./modules/hosts.nix;
+      hosts = import ./hosts/hosts.nix;
 
       mkHost = host:
         let
@@ -48,7 +49,7 @@
                     xkb = host.xkb or {};
                   };
                 })
-
+                ({ ... }: { _module.args.host = host; })
                 ({ ... }: { my.unstablePkgs = hostUnstablePackages; })
 
                 ({ pkgs, ... }:
@@ -73,10 +74,13 @@
                     useGlobalPkgs = true;
                     useUserPackages = true;
                     backupFileExtension = "backup";
-                    extraSpecialArgs = { inherit inputs userName; };
+                    extraSpecialArgs = { inherit inputs userName host; };
                     users.${userName} = { pkgs, ... }: {
-                      imports = [ ./modules/home.nix ];
-                      home.packages = import ./modules/user-packages.nix { inherit pkgs; };
+                      imports = [
+                        ./modules/home/home.nix
+                        ./modules/home/emacs.nix
+                      ];
+                      home.packages = import ./modules/home/packages.nix { inherit pkgs; };
                     };
                   };
                 })

@@ -30,4 +30,5 @@ with pkgs; [
   rofi
   socat
   yt-dlp
+  ispell
 ]
