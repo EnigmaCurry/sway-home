@@ -83,17 +83,42 @@ After editing configs, to apply the new generation:
 just switch
 ```
 
+See the list of generations:
+
+```
+just list-generations
+```
+
 See the other commands via the help command:
 
 ```
 just help
 ```
 
-See the list of generations:
+```
+Available recipes:
+    add-host
+    help                     # print help for Just targets
+    list-generations         # List all OS generations
+    list-unstable-packages   # List the packages configured to pull from unstable nixpkgs
+    metadata                 # Show flake inputs
+    prune                    # Delete old generations except for the last 10.
+    prune-everything         # Delete all generations except for the current one.
+    switch                   # Rebuild NixOS and switch to the new generation
+    test                     # Rebuild NixOS and test the new generation (ALL config reverts on reboot)
+    update                   # Update flake.lock
+    vm-connect               # Connect to VM serial port (See NIXOS_VM.md)
+    vm-create                # Create test VM (See NIXOS_VM.md)
+    vm-delete-disk           # Delete just the VM disk (See NIXOS_VM.md)
+    vm-delete-snapshot *args # Delete VM snapshot by name (See NIXOS_VM.md)
+    vm-destroy               # Delete the test VM AND its configuration (See NIXOS_VM.md)
+    vm-kill                  # Kill the test VM (See NIXOS_VM.md)
+    vm-list-snapshots *args  # List VM snapshots (See NIXOS_VM.md)
+    vm-restore *args         # Restore VM snapshot by name (See NIXOS_VM.md)
+    vm-snapshot *args        # Create VM snapshot by name (See NIXOS_VM.md)
+    vm-start                 # Start the test VM (See NIXOS_VM.md)
+```
 
-```
-just list-generations
-```
 
 ## Important concepts and reminders
 

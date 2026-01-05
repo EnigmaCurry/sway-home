@@ -18,6 +18,7 @@ switch:
 test:
     cd nixos; sudo nixos-rebuild test --flake .#${HOSTNAME}
 
+# List the packages configured to pull from unstable nixpkgs
 list-unstable-packages:
     cd nixos; nix eval --raw .#nixosConfigurations.${HOSTNAME}._module.args.pkgsUnstable.path && echo
 
