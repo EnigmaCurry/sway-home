@@ -20,7 +20,7 @@ not download the correct `.iso` image. To work around this bug, I just
 needed to create the config file and download the `.iso` file
 manually.
 
-Run:
+Create the VM config file:
 
 ```bash
 CHANNEL="nixos-25.11"
@@ -36,6 +36,13 @@ display="gtk"
 EOF
 ```
 
+Edit whatever settings you need in `nixos-25.11.conf` [according to
+the
+docs](https://github.com/quickemu-project/quickemu/wiki/05-Advanced-quickemu-configuration)
+(all command line arguments are also valid config file parameters).
+
+Download the NixOS `.iso` image:
+
 ```bash
 CHANNEL=nixos-25.11
 ISO=latest-nixos-graphical-x86_64-linux.iso
@@ -48,8 +55,6 @@ curl -L https://channels.nixos.org/${CHANNEL}/${ISO}.sha256 \
 echo "Verifying image ..."
 (cd ~/VMs/${CHANNEL}; sed "s#  .*#  $ISO#" ${ISO}.sha256 | sha256sum -c -)
 ```
-
-Edit whatever settings you need in `nixos-25.11.conf`.
 
 ## Start the VM
 
