@@ -10,5 +10,9 @@
     hardwareModule = ../hosts/x1/storage.nix;
     unstablePackages = [ "just" "quickemu" ];
     extraPackages = [ "minicom" ];
+    locale = {
+      timeZone = "America/Denver";
+      defaultLocale = "en_US.UTF-8";
+    };
   };
 }
