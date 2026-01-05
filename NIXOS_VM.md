@@ -14,7 +14,11 @@ This guide was tested with quickemu version 4.9.7.
 
 ## Create the VM
 
-Ordinarily, you can use `quickget` to automatically create the VM config. However, I found this to be buggy and it would not download the correct `.iso` image. To work around this bug, you just need to create the config file and download the `.iso` file manually.
+Ordinarily, you should be able to use `quickget` to automatically
+create the VM config. However, I found this to be buggy and it would
+not download the correct `.iso` image. To work around this bug, I just
+needed to create the config file and download the `.iso` file
+manually.
 
 Run:
 
@@ -29,7 +33,7 @@ guest_os="linux"
 disk_img="${CHANNEL}/disk.qcow2"
 iso="${CHANNEL}/latest-nixos-graphical-x86_64-linux.iso"
 disk_size="50G"
-display="gtk"  
+display="gtk"
 EOF
 ```
 
