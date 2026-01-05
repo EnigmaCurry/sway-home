@@ -45,6 +45,72 @@ fi
 
 cp "${SRC_HW}" "${DEST_HW}"
 
+# --- Generate storage.nix (swapDevices override) -----------------------------
+
+STORAGE_NIX="${DEST_DIR}/storage.nix"
+
+if [[ -e "${STORAGE_NIX}" ]]; then
+  echo >&2 "ERROR: ${STORAGE_NIX} already exists (won't overwrite)"
+  exit 1
+fi
+
+python3 - "${DEST_HW}" "${STORAGE_NIX}" <<'PY'
+import sys, re
+
+hw_path = sys.argv[1]
+out_path = sys.argv[2]
+text = open(hw_path, "r", encoding="utf-8").read()
+
+def extract_swap_block(src: str):
+    # Find: swapDevices = [ ... ];
+    m = re.search(r'(?ms)^\s*swapDevices\s*=\s*\[', src)
+    if not m:
+        return None
+
+    # Walk forward to the matching closing ']'
+    i = m.start()
+    j = m.end() - 1  # index at '['
+    depth = 0
+    k = j
+    while k < len(src):
+        c = src[k]
+        if c == '[':
+            depth += 1
+        elif c == ']':
+            depth -= 1
+            if depth == 0:
+                # Expect following '];' (allow whitespace/newlines)
+                tail = src[k:]
+                mm = re.match(r'(?s)\]\s*;', tail)
+                if not mm:
+                    raise SystemExit("ERROR: swapDevices block found, but missing closing '];'")
+                end = k + mm.end()
+                return src[i:end]
+        k += 1
+    raise SystemExit("ERROR: unterminated swapDevices block")
+
+swap_block = extract_swap_block(text)
+
+if swap_block is None:
+    forced = "  swapDevices = lib.mkForce [ ];\n"
+else:
+    # Indent nicely and convert `swapDevices = ...` into `swapDevices = lib.mkForce ...`
+    swap_block = swap_block.strip()
+    swap_block = re.sub(r'(?m)^\s*swapDevices\s*=\s*', '  swapDevices = lib.mkForce ', swap_block)
+    # Ensure trailing semicolon + newline
+    forced = swap_block.rstrip(';') + ";\n"
+    if not forced.endswith("\n"):
+        forced += "\n"
+
+storage = f"""{{ lib, ... }}:
+
+{{
+{forced}}}
+"""
+open(out_path, "w", encoding="utf-8").write(storage)
+print(f"OK: wrote {out_path}")
+PY
+
 # --- Insert host entry into hosts.nix ---------------------------------------
 
 ENTRY=$(cat <<EOF

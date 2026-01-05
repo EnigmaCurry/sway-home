@@ -4,7 +4,10 @@
     userName = "ryan";
     system = "x86_64-linux";
     nixpkgsInput = "nixpkgs_25_11";
-    hardwareModule = ../hosts/x1/hardware.nix;
+    ## Point the hardwareModule to the installer generated (pristine) hardware.nix,
+    ## or point to storage.nix if you need to postprocess it with your own config:
+    ## (storage.nix is used to configure the swap device uuid).
+    hardwareModule = ../hosts/x1/storage.nix;
     unstablePackages = [ "just" "quickemu" ];
     extraPackages = [ "minicom" ];
   };

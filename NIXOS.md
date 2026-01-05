@@ -81,6 +81,12 @@ See the other commands via the help command:
 just help
 ```
 
+See the list of generations:
+
+```
+just list-generations
+```
+
 ## Important concepts and reminders
 
  * When working on any of these config files, remember to `git add` /
@@ -89,8 +95,11 @@ just help
    tree '/home/ryan/git/vendor/enigmacurry/sway-home' is dirty`.
    That's just a reminder to you that you should cancel the operation
    with `Ctrl-C` and you need commit your changes before you
-   reattempt. (therefore its recommended to always be working in a
-   story branch when trying out new configs, not `master`.)
+   reattempt. (Therefore its recommended to always be working in a
+   story branch when trying out new configs, not `master`.) It may not
+   seem like it's always necessary to commit your changes, but
+   sometimes files will be ignored by nix if they are not at least
+   staged for commit.
 
  * All of the files in `~/.config` (and indeed all of `/usr/bin`) are
    actually symlinks into `/nix/store/...`. All of `/nix/store` is
