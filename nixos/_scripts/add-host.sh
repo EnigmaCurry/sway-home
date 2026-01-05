@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env nix-shell
+#!nix-shell -i bash -p python3
+
 set -euo pipefail
 
 # Usage:
@@ -45,7 +47,7 @@ fi
 
 cp "${SRC_HW}" "${DEST_HW}"
 
-# --- Generate storage.nix (swapDevices override) -----------------------------
+# --- Generate storage.nix (wrap hardware + optional swap override) ------------
 
 STORAGE_NIX="${DEST_DIR}/storage.nix"
 
@@ -92,12 +94,11 @@ def extract_swap_block(src: str):
 swap_block = extract_swap_block(text)
 
 if swap_block is None:
-    forced = "  swapDevices = lib.mkForce [ ];\n"
+    forced = "  # No swapDevices found in hardware.nix; override to none.\n  swapDevices = lib.mkForce [ ];\n"
 else:
-    # Indent nicely and convert `swapDevices = ...` into `swapDevices = lib.mkForce ...`
+    # Convert `swapDevices = ...` into `swapDevices = lib.mkForce ...`
     swap_block = swap_block.strip()
     swap_block = re.sub(r'(?m)^\s*swapDevices\s*=\s*', '  swapDevices = lib.mkForce ', swap_block)
-    # Ensure trailing semicolon + newline
     forced = swap_block.rstrip(';') + ";\n"
     if not forced.endswith("\n"):
         forced += "\n"
@@ -105,6 +106,10 @@ else:
 storage = f"""{{ lib, ... }}:
 
 {{
+  # Wrapper module so you can add host-specific storage tweaks
+  # without editing the generated hardware.nix.
+  imports = [ ./hardware.nix ];
+
 {forced}}}
 """
 open(out_path, "w", encoding="utf-8").write(storage)
@@ -119,9 +124,25 @@ ENTRY=$(cat <<EOF
     userName = "${USER_NAME}";
     system = "${ARCH}";
     nixpkgsInput = "${CHANNEL}";
-    hardwareModule = ../hosts/${HOST}/hardware.nix;
+    # Use storage.nix so you can override storage bits (swap, luks, etc.)
+    # while still importing the generated hardware.nix.
+    hardwareModule = ../hosts/${HOST}/storage.nix;
     unstablePackages = [ ];
     extraPackages = [ ];
+    # Per-host schema consumed by modules/host-locale.nix
+    locale = {
+      timeZone = "America/Denver";
+      defaultLocale = "en_US.UTF-8";
+      # extraLocaleSettings = {
+      #   LC_TIME = "en_US.UTF-8";
+      # };
+    };
+    xkb = {
+      layout = "us";
+      variant = "";
+      options = "ctrl:nocaps";
+      consoleUseXkbConfig = true;
+    };
   };
 
 EOF
@@ -161,4 +182,5 @@ cp "${TMP}" "${HOSTS_FILE}"
 rm -f "${TMP}"
 
 echo "OK: wrote ${DEST_HW}"
+echo "OK: wrote ${STORAGE_NIX}"
 echo "OK: added '${HOST}' to ${HOSTS_FILE}"
