@@ -50,7 +50,7 @@ echo "Verifying image ..."
 (cd ~/VMs/${CHANNEL}; sed "s#  .*#  $ISO#" ${ISO}.sha256 | sha256sum -c -)
 ```
 
-Edit whatever settings you need in `nixos-25.11-gnome.conf`.
+Edit whatever settings you need in `nixos-25.11.conf`.
 
 ## Start the VM
 
@@ -58,13 +58,15 @@ Edit whatever settings you need in `nixos-25.11-gnome.conf`.
 quickemu --vm ~/VMs/nixos-25.11.conf
 ```
 
-The default settings will open a GNOME display window for the VM, which is good if you need to use a desktop, or for the initial installer.
+The default settings will open a GTK display window for the VM, which
+is good if you need to use a desktop, or for the initial installer.
 
 After installation, **shut down** the VM.
 
 ## Stop the VM
 
-To cleanly shut down the VM, you should run the `shutdown` command inside the VM or use the **Machine** / **Power Down** menu action.
+To cleanly shut down the VM, you should run the `shutdown` command
+inside the VM or use the **Machine** / **Power Down** menu action.
 
 If you need to kill it, you can run this command:
 
@@ -96,7 +98,9 @@ quickemu --vm ~/VMs/nixos-25.11.conf
 
 ## Configure serial console
 
-It may be more convenient to interact with the VM via serial console. This can facilitate remote login through your normal terminal emulator and allow you to copy and paste the rest of the commands.
+It may be more convenient to interact with the VM via serial console.
+This can facilitate remote login through your normal terminal emulator
+and allow you to copy and paste the rest of the commands.
 
 Log in to the VM console, and then start the getty service:
 
@@ -104,7 +108,9 @@ Log in to the VM console, and then start the getty service:
 sudo systemctl start serial-getty@ttyS0.service
 ```
 
-(Note: this setting will **not** persist between reboots. To make it permanent, you will need to add this service to your Nix configuration.)
+(Note: this setting will **not** persist between reboots. To make it
+permanent, you will need to add this service to your Nix
+configuration.)
 
 To connect to the VM from your host, run `socat`:
 
