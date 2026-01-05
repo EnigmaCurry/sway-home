@@ -1,35 +1,40 @@
-{ config, pkgs, inputs, userName, ... }:
+{ config, pkgs, lib, inputs, userName, ... }:
 
 let
-  myBashrc = inputs.sway-home + "/bashrc";
+ myBashrc = inputs.sway-home + "/bashrc";
   myBashProfile = inputs.sway-home + "/bash_profile";
-  toPkgs = names: map (name:
-    if builtins.hasAttr name pkgs
-    then builtins.getAttr name pkgs
-    else throw "hosts.nix packages: pkgs has no attribute '${name}'"
-  ) names;
-in
-{
+
+  swayConfigDir = inputs.sway-home + "/config";
+  swayConfigTree = builtins.readDir swayConfigDir;
+
+in {
   home.username = userName;
   home.homeDirectory = "/home/${userName}";
   home.stateVersion = "25.11";
 
   programs.git.enable = true;
-  home.packages =
-    (import ./user-packages.nix { inherit pkgs; });
 
   programs.bash = {
     enable = true;
-    # ~/.bashrc imports sway-home bashrc:
     bashrcExtra = ''
       source "${myBashrc}"
     '';
-    # ~/.bash_profile import sway-home bash_profile:
     profileExtra = ''
       source "${myBashProfile}"
     '';
-    # shellAliases = {
-    #   btw = "echo i use nixos, btw";
-    # };
   };
+
+  # Symlink sway-home/config/* into ~/.config/*
+  xdg.enable = true;
+  xdg.configFile =
+    lib.mapAttrs'
+      (name: kind:
+        lib.nameValuePair name (
+          if kind == "directory" then
+            { source = swayConfigDir + "/${name}"; recursive = true; }
+          else
+            { source = swayConfigDir + "/${name}"; }
+        )
+      )
+      swayConfigTree;
 }
