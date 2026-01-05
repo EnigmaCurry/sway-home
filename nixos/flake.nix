@@ -60,17 +60,16 @@
                 ./modules/configuration.nix
                 { networking.hostName = host.hostName; }
                 (import ./modules/user.nix { inherit userName; })
-
                 inputs.home-manager_25_11.nixosModules.home-manager
                 ({ ... }: {
                   home-manager = {
                     useGlobalPkgs = true;
                     useUserPackages = true;
                     backupFileExtension = "backup";
-
-                    users.${userName} = { ... }: {
-                      _module.args = { inherit inputs userName; };
+                    extraSpecialArgs = { inherit inputs userName; };
+                    users.${userName} = { pkgs, ... }: {
                       imports = [ ./modules/home.nix ];
+                      home.packages = import ./modules/user-packages.nix { inherit pkgs; };
                     };
                   };
                 })
