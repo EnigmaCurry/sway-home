@@ -29,7 +29,6 @@
           hostUnstablePackages = host.unstablePackages or [];
           hostExtraPackages = host.extraPackages or [];
           userName = host.userName;
-          hostLocale = host.locale or {};
         in
           stableNixpkgs.lib.nixosSystem {
             inherit system;
@@ -42,6 +41,13 @@
               (stableNixpkgs.lib.optional (hardwareModule != null) hardwareModule)
               ++ [
                 ./modules/unstable-overlay.nix
+                ./modules/host-locale.nix
+                ({ ... }: {
+                  my.host = {
+                    locale = host.locale or {};
+                    xkb = host.xkb or {};
+                  };
+                })
 
                 ({ ... }: { my.unstablePkgs = hostUnstablePackages; })
 
@@ -58,12 +64,6 @@
                         toPkgs (hostExtraPackages ++ hostUnstablePackages);
                     }
                 )
-                ({ lib, ... }: {
-                  # Host locale from hosts.nix
-                  time.timeZone = lib.mkDefault (hostLocale.timeZone or "UTC");
-                  i18n.defaultLocale = lib.mkDefault (hostLocale.defaultLocale or "en_US.UTF-8");
-                  i18n.extraLocaleSettings = hostLocale.extraLocaleSettings or {};
-                })
                 ./modules/configuration.nix
                 { networking.hostName = host.hostName; }
                 (import ./modules/user.nix { inherit userName; })

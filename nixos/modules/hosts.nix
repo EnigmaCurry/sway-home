@@ -14,5 +14,11 @@
       timeZone = "America/Denver";
       defaultLocale = "en_US.UTF-8";
     };
+    xkb = {
+      layout = "us";
+      variant = "";
+      options = "ctrl:nocaps";
+      consoleUseXkbConfig = true;
+    };
   };
 }
