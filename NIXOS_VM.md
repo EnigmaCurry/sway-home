@@ -3,9 +3,8 @@
 Using [quickemu](https://github.com/quickemu-project/quickemu), you
 can create a NixOS VM for testing purposes. 
 
-Once you've installed NixOS on the VM, head back to
-[NIXOS.md](NIXOS.md#bootstrap-the-config) to finish the bootstrapping
-steps.
+Once you've created the VM, head back to
+[NIXOS.md](NIXOS.md#install-nixos) to finish the installation.
 
 ## Install quickemu
 
@@ -57,13 +56,17 @@ quickemu --vm ~/VMs/nixos-25.11.conf
 
 The default settings will open a GNOME display window for the VM, which is good if you need to use a desktop, or for the initial installer.
 
-## Install NixOS
-
-Inside the graphical window that pops up, install NixOS as you normally would, [following the manual](https://nixos.org/manual/nixos/stable/).
-
-* During install, you may select the option for `No desktop`.
-
 After installation, **shut down** the VM.
+
+## Stop the VM
+
+To cleanly shut down the VM, you should run the `shutdown` command inside the VM or use the **Machine** / **Power Down** menu action.
+
+If you need to kill it, you can run this command:
+
+```bash
+quickemu --vm ~/VMs/nixos-25.11.conf --kill
+```
 
 ## Create and Restore Snapshots
 
@@ -73,7 +76,9 @@ Create a snapshot named `initial`:
 quickemu --vm ~/VMs/nixos-25.11.conf --snapshot create initial
 ```
 
-Restore it like this:
+(Note: the VM must be shutdown to create a snapshot.)
+
+You may restore the snapshot like this:
 
 ```bash
 quickemu --vm ~/VMs/nixos-25.11.conf --snapshot apply initial
@@ -109,6 +114,11 @@ To exit the session press `Ctrl-Q`.
 
 Log in to the account you created.
 
+## Finish installation
+
+See [NIXOS.md](NIXOS.md#install-nixos) and skip to the Install NixOS
+section and follow the rest of the steps from that point.
+
 ## Start headless
 
 After installation, you can restart the VM without a display, if you want:
@@ -117,12 +127,3 @@ After installation, you can restart the VM without a display, if you want:
 quickemu --vm ~/VMs/nixos-25.11.conf --display none
 ```
 
-## Stop the VM
-
-To cleanly shut down the VM, you should run the `shutdown` command inside the VM or use the **Machine** / **Power Down** menu action.
-
-If you need to kill it, you can run this command:
-
-```bash
-quickemu --vm ~/VMs/nixos-25.11.conf --kill
-```
