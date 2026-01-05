@@ -27,4 +27,6 @@ with pkgs; [
   s3cmd
   quickemu
   just
+  rofi
+  socat
 ]
