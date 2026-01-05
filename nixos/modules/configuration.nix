@@ -4,7 +4,6 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.initrd.luks.devices."luks-870208a0-81da-419c-9a4b-50b18b2d0710".device = "/dev/disk/by-uuid/870208a0-81da-419c-9a4b-50b18b2d0710";
 
   # Enable networking
   networking.networkmanager.enable = true;
