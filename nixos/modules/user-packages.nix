@@ -29,4 +29,5 @@ with pkgs; [
   just
   rofi
   socat
+  yt-dlp
 ]

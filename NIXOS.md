@@ -80,3 +80,28 @@ See the other commands via the help command:
 ```
 just help
 ```
+
+## Important concepts and reminders
+
+ * When working on any of these config files, remember to `git add` /
+   `git commit` your changes your changes *before* running `just
+   switch`. If you forget, you will see warnings like `warning: Git
+   tree '/home/ryan/git/vendor/enigmacurry/sway-home' is dirty`.
+   That's just a reminder to you that you should cancel the operation
+   with `Ctrl-C` and you need commit your changes before you
+   reattempt. (therefore its recommended to always be working in a
+   story branch when trying out new configs, not `master`.)
+
+ * All of the files in `~/.config` (and indeed all of `/usr/bin`) are
+   actually symlinks into `/nix/store/...`. All of `/nix/store` is
+   read-only, so that means you cannot edit your dot files directly.
+   You must edit their source in this repository and re-apply with
+   `just switch` to get them into `/nix/store/....`.
+
+ * If you don't want to make permanent changes to your system (e.g.,
+   you are working in a git story branch for some experiments), you
+   can use `just test` instead of `just switch`. When using `just
+   test`, all new generations are *temporary* and will not be added to
+   your boot menu. If you do reboot, you will be forced to choose a
+   generation that you made with `just switch` (by default, it will
+   reboot to the latest generation *before you ran `just test`*. ).

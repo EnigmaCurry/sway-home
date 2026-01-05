@@ -13,6 +13,10 @@ help:
 switch:
     cd nixos; sudo nixos-rebuild switch --flake .#${HOSTNAME}
 
+# Rebuild NixOS and test the new generation (ALL config reverts on reboot)
+test:
+    cd nixos; sudo nixos-rebuild test --flake .#${HOSTNAME}
+
 list-unstable-packages:
     cd nixos; nix eval --raw .#nixosConfigurations.${HOSTNAME}._module.args.pkgsUnstable.path && echo
 
