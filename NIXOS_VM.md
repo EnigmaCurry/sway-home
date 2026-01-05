@@ -25,7 +25,6 @@ Run:
 ```bash
 CHANNEL="nixos-25.11"
 mkdir -p ~/VMs/${CHANNEL}
-cd ~/VMs
 
 cat <<EOF > ~/VMs/${CHANNEL}.conf
 #!/usr/bin/env quickemu --vm
