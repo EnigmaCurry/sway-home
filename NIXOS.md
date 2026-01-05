@@ -9,8 +9,8 @@ out in a VM first. See [NIXOS_VM.md](NIXOS_VM.md) for instructions.
 
 ## Install NixOS
 
-Follow the [NixOS manual](https://nixos.org/manual/nixos/stable/) to
-install it on your host or in a VM.
+Follow the [NixOS manual](https://nixos.org/manual/nixos/stable/) and
+use the graphical installer to install NixOS on your host, or in a VM.
 
  * During install, you should select the option for `No desktop`.
 
