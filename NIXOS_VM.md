@@ -6,7 +6,20 @@ can create a NixOS VM for testing purposes.
 Once you've created the VM, head back to
 [NIXOS.md](NIXOS.md#install-nixos) to finish the installation.
 
-This guide was tested with quickemu version 4.9.7.
+This guide was tested with quickemu version 4.9.7 from *unstable*
+nixpkg.
+
+> [!NOTE]
+> This method is not the only method you can use to create a
+> NixOS VM. You can use any alternative hypervisor. In fact, quickemu
+> may not be a particularly good method, mainly due to a wide version
+> disrepency in the release packages of quickemu on various platforms.
+> Annecdotaly, quickemu works great if you install the *unstable* nix
+> package (it seems that this version contains bug fixes that have
+> been merged but unreleased PRs). OTOH, at the time of testing, the
+> Ubuntu PPA for quickemu was broken/missing, and the Debian package
+> was buggy and refused to run because it couldn't detect a qemu
+> version properly. YMMV.
 
 ## Install quickemu
 
