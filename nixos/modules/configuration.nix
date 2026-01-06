@@ -43,12 +43,23 @@
     enable = true;
     defaultNetwork.settings.dns_enabled = true;
   };
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      runAsRoot = true;
+      swtpm.enable = true;
+    };
+  };
+
   environment.systemPackages = with pkgs; [
     tuigreet
     git
     ripgrep
     jq
     just
+    # Need lxsession only for lxpolkit to be able to access libvirt / virt-manager
+    lxsession
   ];
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
