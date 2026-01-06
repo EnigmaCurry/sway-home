@@ -23,10 +23,6 @@
       options = "ctrl:nocaps";
       consoleUseXkbConfig = true;
     };
-    emacs = {
-      enable = true;
-      input = "emacs_enigmacurry"; # Repo URLs are defined by name in flake.nix
-    };
   };
 
 }

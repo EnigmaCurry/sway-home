@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ host, ... }:
 
 {
   # Host-specific overrides go here.
@@ -7,14 +7,12 @@
   # so options you set here will typically win.
   #
   # Use lib.mkForce when you need to override a previous value that merges.
-  #
-  # Examples:
-  #
-  # services.openssh.enable = lib.mkForce false;
-  #
-  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
-  #
-  # environment.systemPackages = with pkgs; [
-  #   tcpdump
-  # ];
+
+  # --- Enable Emacs/Home-Manager module on this host -------------------------
+  home-manager.users.${host.userName}.imports = [
+    ../../modules/home/emacs.nix
+  ];
+
+  # --- Allow incoming network ports ------
+  # networking.firewall.allowedTCPPorts = [ 22 80 443 ];
 }

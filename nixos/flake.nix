@@ -93,7 +93,6 @@
                     users.${userName} = { pkgs, ... }: {
                       imports = [
                         ./modules/home/home.nix
-                        ./modules/home/emacs.nix
                       ];
                       home.packages = import ./modules/home/packages.nix { inherit pkgs; };
                     };

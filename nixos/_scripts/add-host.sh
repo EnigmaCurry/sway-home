@@ -126,7 +126,7 @@ if [[ -e "${CONFIG_NIX}" ]]; then
 fi
 
 cat > "${CONFIG_NIX}" <<'EOF'
-{ lib, pkgs, ... }:
+{ host, ... }:
 
 {
   # Host-specific overrides go here.
@@ -135,15 +135,17 @@ cat > "${CONFIG_NIX}" <<'EOF'
   # so options you set here will typically win.
   #
   # Use lib.mkForce when you need to override a previous value that merges.
-  #
-  # Examples:
-  #
-  # services.openssh.enable = lib.mkForce false;
-  #
+
+  ## Examples:
+  # --- Allow incoming network ports ------
+  # --- note the following syntax MERGES with the value already defined:
   # networking.firewall.allowedTCPPorts = [ 22 80 443 ];
-  #
-  # environment.systemPackages = with pkgs; [
-  #   tcpdump
+  # --- note the following syntax OVERWRITES all previous values because it uses lib.mkForce:
+  # networking.firewall.allowedTCPPorts = lib.mkForce [ 80 443 ];
+
+  # --- Enable Emacs/Home-Manager module on this host -------------------------
+  # home-manager.users.${host.userName}.imports = [
+  #   ../../modules/home/emacs.nix
   # ];
 }
 EOF
@@ -178,10 +180,6 @@ ENTRY=$(cat <<EOF
       variant = "";
       options = "ctrl:nocaps";
       consoleUseXkbConfig = true;
-    };
-    emacs = {
-      enable = true;
-      input = "emacs_enigmacurry";
     };
   };
 
