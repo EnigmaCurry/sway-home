@@ -9,8 +9,8 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Networking
+  # To configure NetworkManager, manually place .nmconnection files in /etc/NetworkManager
   networking.networkmanager.enable = true;
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Login manager
   services.greetd.enable = true;

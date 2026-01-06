@@ -27,8 +27,11 @@
           unstablePkgs = unstableNixpkgs.legacyPackages.${system};
 
           hardwareModule = host.hardwareModule or null;
+
           hostUnstablePackages = host.unstablePackages or [];
           hostExtraPackages = host.extraPackages or [];
+          extraSystemModules = host.extraSystemModules or [];
+
           userName = host.userName;
         in
           stableNixpkgs.lib.nixosSystem {
@@ -43,31 +46,42 @@
               ++ [
                 ./modules/unstable-overlay.nix
                 ./modules/host-locale.nix
+
                 ({ ... }: {
                   my.host = {
                     locale = host.locale or {};
                     xkb = host.xkb or {};
                   };
                 })
+
                 ({ ... }: { _module.args.host = host; })
                 ({ ... }: { my.unstablePkgs = hostUnstablePackages; })
 
                 ({ pkgs, ... }:
                   let
-                    toPkgs = names: map (name:
-                      if builtins.hasAttr name pkgs
-                      then builtins.getAttr name pkgs
-                      else throw "hosts.nix packages: pkgs has no attribute '${name}'"
-                    ) names;
+                    toPkgs = names:
+                      map (name:
+                        if builtins.hasAttr name pkgs
+                        then builtins.getAttr name pkgs
+                        else throw "hosts.nix packages: pkgs has no attribute '${name}'"
+                      ) names;
                   in
-                    {
-                      environment.systemPackages =
-                        toPkgs (hostExtraPackages ++ hostUnstablePackages);
-                    }
+                  {
+                    environment.systemPackages =
+                      toPkgs (hostExtraPackages ++ hostUnstablePackages);
+                  }
                 )
+
+                # Base system config (shared by all hosts)
                 ./modules/configuration.nix
+              ]
+              # Host-specific override/extra modules (Option A)
+              ++ extraSystemModules
+              ++ [
                 { networking.hostName = host.hostName; }
+
                 (import ./modules/user.nix { inherit userName; })
+
                 inputs.home-manager_25_11.nixosModules.home-manager
                 ({ ... }: {
                   home-manager = {
@@ -75,6 +89,7 @@
                     useUserPackages = true;
                     backupFileExtension = "backup";
                     extraSpecialArgs = { inherit inputs userName host; };
+
                     users.${userName} = { pkgs, ... }: {
                       imports = [
                         ./modules/home/home.nix

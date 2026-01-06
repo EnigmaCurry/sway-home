@@ -8,6 +8,9 @@
     ## or point to storage.nix if you need to postprocess it with your own config:
     ## (storage.nix is used to configure the swap device uuid).
     hardwareModule = ../hosts/x1/storage.nix;
+    extraSystemModules = [
+      ./x1/config.nix
+    ];
     unstablePackages = [ "just" "quickemu" ];
     extraPackages = [ "minicom" ];
     locale = {
@@ -25,4 +28,5 @@
       input = "emacs_enigmacurry"; # Repo URLs are defined by name in flake.nix
     };
   };
+
 }

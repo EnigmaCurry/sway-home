@@ -116,6 +116,38 @@ open(out_path, "w", encoding="utf-8").write(storage)
 print(f"OK: wrote {out_path}")
 PY
 
+# --- Generate config.nix (host overrides for base configuration.nix) ----------
+
+CONFIG_NIX="${DEST_DIR}/config.nix"
+
+if [[ -e "${CONFIG_NIX}" ]]; then
+  echo >&2 "ERROR: ${CONFIG_NIX} already exists (won't overwrite)"
+  exit 1
+fi
+
+cat > "${CONFIG_NIX}" <<'EOF'
+{ lib, pkgs, ... }:
+
+{
+  # Host-specific overrides go here.
+  #
+  # This module is imported AFTER the shared ./modules/configuration.nix,
+  # so options you set here will typically win.
+  #
+  # Use lib.mkForce when you need to override a previous value that merges.
+  #
+  # Examples:
+  #
+  # services.openssh.enable = lib.mkForce false;
+  #
+  # networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+  #
+  # environment.systemPackages = with pkgs; [
+  #   tcpdump
+  # ];
+}
+EOF
+
 # --- Insert host entry into hosts.nix ---------------------------------------
 
 ENTRY=$(cat <<EOF
@@ -127,8 +159,12 @@ ENTRY=$(cat <<EOF
     # Use storage.nix so you can override storage bits (swap, luks, etc.)
     # while still importing the generated hardware.nix.
     hardwareModule = ../hosts/${HOST}/storage.nix;
-    unstablePackages = [ ];
+    # Host-specific system overrides (imported after base configuration.nix)
+    extraSystemModules = [
+      ../hosts/${HOST}/config.nix
+    ];
     extraPackages = [ ];
+    unstablePackages = [ ];
     # Per-host schema consumed by modules/host-locale.nix
     locale = {
       timeZone = "America/Denver";
@@ -187,4 +223,5 @@ rm -f "${TMP}"
 
 echo "OK: wrote ${DEST_HW}"
 echo "OK: wrote ${STORAGE_NIX}"
+echo "OK: wrote ${CONFIG_NIX}"
 echo "OK: added '${HOST}' to ${HOSTS_FILE}"
