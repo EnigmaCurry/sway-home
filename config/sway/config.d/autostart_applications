@@ -1,8 +1,8 @@
 # Kanshi display resolution manager
 exec kanshi
 
-# Auth with polkit-gnome:
-exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+# Auth with lxsession polkit:
+exec lxpolkit
 
 # Desktop notifications
 exec mako
