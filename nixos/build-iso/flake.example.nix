@@ -22,6 +22,7 @@
               wifiSsid = "YOUR_WIFI_SSID";
               wifiPsk  = "YOUR_WIFI_PASSWORD";
               nmConnName = "bootstrap-wifi";
+              webhookUrl = "";
               # -------------------------
             in
             {
@@ -92,6 +93,38 @@
                 pciutils usbutils
                 iproute2 iputils dnsutils
               ];
+
+              # --- Webhook fires once network is up ---
+              # Put the script into the ISO at /etc/webhook-notify.sh
+              environment.etc."webhook-notify.sh" = {
+                mode = "0755";
+                ## relative path to nixos/build-iso/foo/../webhook-notify.sh
+                source = ../webhook-notify.sh;
+              };
+
+              systemd.services.webhook-notify = {
+                description = "POST hostname + local IP to webhook once network is up";
+                wantedBy = [ "multi-user.target" ];
+                after = [ "network-online.target" ];
+                wants = [ "network-online.target" ];
+
+                # Provide runtime deps for the script
+                path = with pkgs; [ bash curl iproute2 gawk coreutils ];
+
+                serviceConfig = {
+                  Type = "oneshot";
+                  TimeoutStartSec = "2min";
+                  StandardOutput = "journal+console";
+                  StandardError = "journal+console";
+
+                  # Pass the webhook URL to the script
+                  Environment = [ "WEBHOOK_URL=${webhookUrl}" ];
+                };
+
+                script = ''
+                      exec /etc/webhook-notify.sh
+                '';
+              };
             })
         ];
       };

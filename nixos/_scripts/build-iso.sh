@@ -2,7 +2,7 @@
 set -eo pipefail
 
 MACHINE="$1"
-MACHINE_DIR="nixos/build-iso/$MACHINE"
+MACHINE_DIR=$(realpath "nixos/build-iso/$MACHINE")
 
 if [[ -z "${MACHINE}" ]]; then
     echo "usage: build-iso.sh <MACHINE>"
@@ -19,4 +19,6 @@ if [[ ! -f ${MACHINE_DIR}/flake.nix ]]; then
     exit 1
 fi
 
+cd ${MACHINE_DIR}
+echo $MACHINE_DIR
 nix build "path:${MACHINE_DIR}#iso" --extra-experimental-features "nix-command flakes"
