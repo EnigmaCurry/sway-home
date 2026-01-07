@@ -1,9 +1,8 @@
 { inputs, host, config, pkgs, ... }:
 
 {
-  # Host specific config goes here.
   #
-  # This module is imported AFTER the shared ./modules/configuration.nix,
+  # This module is imported AFTER the shared /nixos/modules/configuration.nix,
   # so options you set here will typically win.
   #
   # Use lib.mkForce when you need to override a previous value that merges.
@@ -14,7 +13,7 @@
   ];
 
   # --- Allow incoming network ports ------
-  # networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
 
   # --- Additional packages ----
   services.mullvad-vpn.enable = true;
@@ -23,7 +22,7 @@
   ];
 
   # --- Enable CUPS to print documents ---
-  # services.printing.enable = true;
+  services.printing.enable = true;
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
@@ -75,10 +74,9 @@
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
 
-  # Open ports in the firewall.
+  # # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
+  # # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 }
-

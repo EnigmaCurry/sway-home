@@ -30,19 +30,19 @@ in
                 type = types.attrsOf types.str;
                 default = {};
               };
-            };
-          };
-        };
 
-        xkb = mkOption {
-          description = "Keyboard / XKB settings.";
-          default = {};
-          type = types.submodule {
-            options = {
-              layout = mkOption { type = types.str; default = "us"; };
-              variant = mkOption { type = types.str; default = ""; };
-              options = mkOption { type = types.str; default = ""; };
-              consoleUseXkbConfig = mkOption { type = types.bool; default = false; };
+              xkb = mkOption {
+                description = "Keyboard / XKB settings.";
+                default = {};
+                type = types.submodule {
+                  options = {
+                    layout = mkOption { type = types.str; default = "us"; };
+                    variant = mkOption { type = types.str; default = ""; };
+                    options = mkOption { type = types.str; default = ""; };
+                    consoleUseXkbConfig = mkOption { type = types.bool; default = false; };
+                  };
+                };
+              };
             };
           };
         };
@@ -58,11 +58,11 @@ in
 
     # Keymap / XKB
     services.xserver.xkb = {
-      layout = mkDefault cfg.xkb.layout;
-      variant = mkDefault cfg.xkb.variant;
-      options = mkDefault cfg.xkb.options;
+      layout = mkDefault cfg.locale.xkb.layout;
+      variant = mkDefault cfg.locale.xkb.variant;
+      options = mkDefault cfg.locale.xkb.options;
     };
 
-    console.useXkbConfig = mkDefault cfg.xkb.consoleUseXkbConfig;
+    console.useXkbConfig = mkDefault cfg.locale.xkb.consoleUseXkbConfig;
   };
 }

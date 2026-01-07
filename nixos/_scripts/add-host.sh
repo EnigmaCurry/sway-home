@@ -155,15 +155,12 @@ ENTRY=$(cat <<EOF
     locale = {
       timeZone = "America/Denver";
       defaultLocale = "en_US.UTF-8";
-      # extraLocaleSettings = {
-      #   LC_TIME = "en_US.UTF-8";
-      # };
-    };
-    xkb = {
-      layout = "us";
-      variant = "";
-      options = "ctrl:nocaps";
-      consoleUseXkbConfig = true;
+      xkb = {
+        layout = "us";
+        variant = "";
+        options = "ctrl:nocaps";
+        consoleUseXkbConfig = true;
+      };
     };
   };
 

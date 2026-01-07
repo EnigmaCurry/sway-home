@@ -50,7 +50,6 @@
                 ({ ... }: {
                   my.host = {
                     locale = host.locale or {};
-                    xkb = host.xkb or {};
                   };
                 })
 

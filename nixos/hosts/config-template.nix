@@ -1,28 +1,28 @@
 { inputs, host, config, pkgs, ... }:
 
 {
-  # This is the TEMPLATE for new host configs.
-  #
-  # This module is imported AFTER the shared /nixos/modules/configuration.nix,
-  # so options you set here will typically win.
-  #
-  # Use lib.mkForce when you need to override a previous value that merges.
+  # # This is the TEMPLATE for new host configs.
+  # #
+  # # This module is imported AFTER the shared /nixos/modules/configuration.nix,
+  # # so options you set here will typically win.
+  # #
+  # # Use lib.mkForce when you need to override a previous value that merges.
 
-  # --- Enable Emacs/Home-Manager module on this host -------------------------
+  # # --- Enable Emacs/Home-Manager module on this host -------------------------
   # home-manager.users.${host.userName}.imports = [
   #   (inputs.sway-home + "/nixos/modules/home/emacs.nix")
   # ];
 
-  # --- Allow incoming network ports ------
+  # # --- Allow incoming network ports ------
   # networking.firewall.allowedTCPPorts = [ 22 80 443 ];
 
-  # --- Additional packages ----
+  # # --- Additional packages ----
   # services.mullvad-vpn.enable = true;
   # environment.systemPackages = with pkgs; [
   #   mullvad-browser mullvad-vpn btop
   # ];
 
-  # --- Enable CUPS to print documents ---
+  # # --- Enable CUPS to print documents ---
   # services.printing.enable = true;
 
   # # Enable sound with pipewire.
@@ -62,23 +62,23 @@
   #   '';
   # };
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
+  # # Some programs need SUID wrappers, can be configured further or are
+  # # started in user sessions.
   # programs.mtr.enable = true;
   # programs.gnupg.agent = {
   #   enable = true;
   #   enableSSHSupport = true;
   # };
 
-  # List services that you want to enable:
+  # # List services that you want to enable:
 
-  # Enable the OpenSSH daemon.
+  # # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
 
-  # Open ports in the firewall.
+  # # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
+  # # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 }
 
