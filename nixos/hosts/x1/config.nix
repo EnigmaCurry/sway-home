@@ -1,4 +1,4 @@
-{ host, ... }:
+{ host, config, pkgs, ... }:
 
 {
   # Host-specific overrides go here.
@@ -15,4 +15,11 @@
 
   # --- Allow incoming network ports ------
   # networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+
+  # --- Additional packages ----
+  services.mullvad-vpn.enable = true;
+  environment.systemPackages = with pkgs; [
+    mullvad-browser mullvad-vpn btop
+  ];
+
 }

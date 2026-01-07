@@ -126,7 +126,7 @@ if [[ -e "${CONFIG_NIX}" ]]; then
 fi
 
 cat > "${CONFIG_NIX}" <<'EOF'
-{ host, ... }:
+{ host, config, pkgs, ... }:
 
 {
   # Host-specific overrides go here.
@@ -147,6 +147,14 @@ cat > "${CONFIG_NIX}" <<'EOF'
   # home-manager.users.${host.userName}.imports = [
   #   ../../modules/home/emacs.nix
   # ];
+
+  # --- Additional packages to install ----
+  # services.mullvad-vpn.enable = true;
+  # environment.systemPackages = with pkgs; [
+  #   mullvad-browser mullvad-vpn btop
+  # ];
+
+
 }
 EOF
 

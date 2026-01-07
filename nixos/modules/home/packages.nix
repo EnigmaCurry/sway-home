@@ -31,4 +31,5 @@ with pkgs; [
   yt-dlp
   ispell
   virt-manager
+  btop
 ]
