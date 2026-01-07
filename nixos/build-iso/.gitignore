@@ -1,4 +1,5 @@
 result
-flake.nix
-flake.lock
+*.nix
+*.lock
 private
+**/**

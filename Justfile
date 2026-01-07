@@ -90,3 +90,6 @@ vm-connect:
     @echo "## Press Ctrl-Q to exit socat."
     @echo "## Press Enter to show initial login console (or just start typing your username)."
     @socat STDIO,raw,echo=0,escape=0x11 UNIX-CONNECT:{{VM_ROOT}}/{{VM}}/{{VM}}-serial.socket
+
+build-iso machine:
+    ./nixos/_scripts/build-iso.sh "{{machine}}"
