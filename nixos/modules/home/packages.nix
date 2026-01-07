@@ -30,6 +30,5 @@ with pkgs; [
   socat
   yt-dlp
   ispell
-  virt-manager
   btop
 ]

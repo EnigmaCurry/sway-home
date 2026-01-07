@@ -73,7 +73,7 @@
                 )
 
                 # Base system config (shared by all hosts)
-                ./modules/configuration.nix
+                ./modules/base.nix
               ]
               # Host-specific override/extra modules (Option A)
               ++ extraSystemModules

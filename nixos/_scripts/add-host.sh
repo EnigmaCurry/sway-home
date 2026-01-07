@@ -21,6 +21,7 @@ if [[ -z "${HOST}" || -z "${USER_NAME}" ]]; then
 fi
 
 HOSTS_FILE="./nixos/hosts/hosts.nix"
+TEMPLATE_FILE="./nixos/hosts/config-template.nix"
 SRC_HW="/etc/nixos/hardware-configuration.nix"
 DEST_DIR="./nixos/hosts/${HOST}"
 DEST_HW="${DEST_DIR}/hardware.nix"
@@ -125,38 +126,13 @@ if [[ -e "${CONFIG_NIX}" ]]; then
   exit 1
 fi
 
-cat > "${CONFIG_NIX}" <<'EOF'
-{ host, config, pkgs, ... }:
+if [[ ! -f "${TEMPLATE_FILE}" ]]; then
+  echo >&2 "ERROR: ${TEMPLATE_FILE} does not exist"
+  exit 1
+fi
 
-{
-  # Host-specific overrides go here.
-  #
-  # This module is imported AFTER the shared ./modules/configuration.nix,
-  # so options you set here will typically win.
-  #
-  # Use lib.mkForce when you need to override a previous value that merges.
-
-  ## Examples:
-  # --- Allow incoming network ports ------
-  # --- note the following syntax MERGES with the value already defined:
-  # networking.firewall.allowedTCPPorts = [ 22 80 443 ];
-  # --- note the following syntax OVERWRITES all previous values because it uses lib.mkForce:
-  # networking.firewall.allowedTCPPorts = lib.mkForce [ 80 443 ];
-
-  # --- Enable Emacs/Home-Manager module on this host -------------------------
-  # home-manager.users.${host.userName}.imports = [
-  #   ../../modules/home/emacs.nix
-  # ];
-
-  # --- Additional packages to install ----
-  # services.mullvad-vpn.enable = true;
-  # environment.systemPackages = with pkgs; [
-  #   mullvad-browser mullvad-vpn btop
-  # ];
-
-
-}
-EOF
+cp ${TEMPLATE_FILE} ${CONFIG_NIX}
+sed -i 's/^  # This is the TEMPLATE for new host configs\.$/  # Host specific config goes here./' "${CONFIG_NIX}"
 
 # --- Insert host entry into hosts.nix ---------------------------------------
 
