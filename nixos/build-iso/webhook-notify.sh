@@ -3,7 +3,7 @@ set -euo pipefail
 
 WEBHOOK_URL="${WEBHOOK_URL:?missing WEBHOOK_URL}"
 
-HOSTNAME="$(hostname)"
+HOSTNAME="$(cat /proc/sys/kernel/hostname)"
 IP=""
 
 # Wait until we can infer the primary source IP via the default route.

@@ -93,3 +93,8 @@ vm-connect:
 
 build-iso machine:
     ./nixos/_scripts/build-iso.sh "{{machine}}"
+
+new-iso machine:
+    mkdir ./nixos/build-iso/{{machine}}
+    cp ./nixos/build-iso/flake.example.nix ./nixos/build-iso/{{machine}}/flake.nix
+    cp ./nixos/build-iso/webhook-notify.sh ./nixos/build-iso/{{machine}}/webhook-notify.sh

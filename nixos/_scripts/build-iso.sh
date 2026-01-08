@@ -21,4 +21,4 @@ fi
 
 cd ${MACHINE_DIR}
 echo $MACHINE_DIR
-nix build "path:${MACHINE_DIR}#iso" --extra-experimental-features "nix-command flakes"
+nix build "path:${MACHINE_DIR}#iso" --impure --extra-experimental-features "nix-command flakes"
