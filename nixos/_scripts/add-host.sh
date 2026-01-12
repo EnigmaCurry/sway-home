@@ -23,8 +23,10 @@ fi
 HOSTS_FILE="./nixos/hosts/hosts.nix"
 TEMPLATE_FILE="./nixos/hosts/config-template.nix"
 SRC_HW="/etc/nixos/hardware-configuration.nix"
+SRC_ZFS_ROOT="/etc/nixos/zfs-root.nix"
 DEST_DIR="./nixos/hosts/${HOST}"
 DEST_HW="${DEST_DIR}/hardware.nix"
+DEST_ZFS_ROOT="${DEST_DIR}/zfs_root.nix"
 
 # --- Preconditions -----------------------------------------------------------
 
@@ -47,6 +49,21 @@ if [[ -e "${DEST_HW}" ]]; then
 fi
 
 cp "${SRC_HW}" "${DEST_HW}"
+
+# --- Copy zfs config ----------------------------------------------------
+
+mkdir -p "${DEST_DIR}"
+ZFS_IMPORT=""
+
+if [[ -e "${SRC_ZFS_ROOT}" ]]; then
+    if [[ -e "${DEST_ZFS_ROOT}" ]]; then
+        echo >&2 "ERROR: ${DEST_ZFS_ROOT} already exists (won't overwrite)"
+        exit 1
+    fi
+    cp "${SRC_ZFS_ROOT}" "${DEST_ZFS_ROOT}"
+    ZFS_IMPORT="../hosts/${HOST}/zfs_root.nix"
+fi
+
 
 # --- Generate storage.nix (wrap hardware + optional swap override) ------------
 
@@ -142,12 +159,11 @@ ENTRY=$(cat <<EOF
     userName = "${USER_NAME}";
     system = "${ARCH}";
     nixpkgsInput = "${CHANNEL}";
-    # Use storage.nix so you can override storage bits (swap, luks, etc.)
-    # while still importing the generated hardware.nix.
-    hardwareModule = ../hosts/${HOST}/storage.nix;
+    hardwareModule = ../hosts/${HOST}/hardware.nix;
     # Host-specific system overrides (imported after base configuration.nix)
     extraSystemModules = [
       ../hosts/${HOST}/config.nix
+      ${ZFS_IMPORT}
     ];
     extraPackages = [ ];
     unstablePackages = [ ];

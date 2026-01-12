@@ -31,4 +31,6 @@ with pkgs; [
   yt-dlp
   ispell
   btop
+  wget
+  git-lfs
 ]
