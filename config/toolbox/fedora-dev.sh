@@ -5,7 +5,7 @@ PACKAGES=(
     bash
     bind-utils
     curl
-    emacs
+    emacs-pgtk
     flatpak-xdg-utils
     gettext
     gettext
@@ -61,6 +61,13 @@ PACKAGES=(
     sysroot-aarch64-fc41-glibc
     ghostscript-tools-dvipdf
     sqlite-devel
+    btop
+    duf
+    glances
+    sc-im
+    wayland-devel
+    alsa-lib-devel
+    systemd-devel
 )
 
 setup_fedora() {
