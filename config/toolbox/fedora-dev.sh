@@ -68,6 +68,7 @@ PACKAGES=(
     wayland-devel
     alsa-lib-devel
     systemd-devel
+    moreutils
 )
 
 setup_fedora() {
