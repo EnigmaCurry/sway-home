@@ -70,6 +70,7 @@ PACKAGES=(
     systemd-devel
     moreutils
     vhs
+    ImageMagick
 )
 
 setup_fedora() {
