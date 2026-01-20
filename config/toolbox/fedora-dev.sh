@@ -69,6 +69,7 @@ PACKAGES=(
     alsa-lib-devel
     systemd-devel
     moreutils
+    vhs
 )
 
 setup_fedora() {
