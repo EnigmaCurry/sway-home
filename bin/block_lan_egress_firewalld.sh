@@ -3,6 +3,8 @@ set -euo pipefail
 
 ## Use this script to block all outgoing routes to LAN addresses (RFC1918)
 ## Essentially, this computer will only be able to reach public IP addresses.
+## This script requires firewalld (it's the standard firewall on Fedora)
+
 
 POLICY="block-lan-egress"
 
