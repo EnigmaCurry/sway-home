@@ -5,6 +5,10 @@ set -euo pipefail
 ## Essentially, this computer will only be able to reach public IP addresses.
 ## This script requires firewalld (it's the standard firewall on Fedora)
 
+## Special note regarding virtual machines and/or router roles:
+##  - This script targets *this* machine's OUTPUT chain, not the FORWARD chain.
+##  - Other machines are not affected, so if this machine is a router,
+##    or you are hosting VMs on this machine, this script will not block those.
 
 POLICY="block-lan-egress"
 
