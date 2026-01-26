@@ -25,6 +25,7 @@ modules=(
     matrix
     tts
     bash_command_timer
+    just-completion
     local
     unset_funcs
 )
