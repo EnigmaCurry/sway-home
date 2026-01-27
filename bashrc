@@ -16,6 +16,7 @@ modules=(
     prompt-basic
     prompt
     theme
+    just-completion
     alias
     editor
     git
@@ -25,7 +26,6 @@ modules=(
     matrix
     tts
     bash_command_timer
-    just-completion
     local
     unset_funcs
 )
