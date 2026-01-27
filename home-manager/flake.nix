@@ -50,7 +50,7 @@
       homeConfigurations.default = mkHomeConfiguration {
         userName = currentUser;
         system = defaultSystem;
-        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ];
+        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ./modules/rust.nix ];
       };
 
       # Export modules for NixOS flake to import
@@ -59,6 +59,7 @@
         packages = ./modules/packages.nix;
         emacs = ./modules/emacs.nix;
         nixos-vm-template = ./modules/nixos-vm-template.nix;
+        rust = ./modules/rust.nix;
       };
 
       # Helper function for creating configurations
