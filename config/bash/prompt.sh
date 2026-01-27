@@ -30,9 +30,6 @@ ps1_generator() {
     # docker context inspect --format '{{ .Name }}'
     Time12h="\T"; Time12a="\@"; ShortHost="${PS1_HOSTNAME:-\h}"; Username="\u";
     PathShort="\W"; PathFull="\w"; NewLine="\n"; Jobs="\j";
-    test -f ~/.config/git-prompt.sh || \
-        curl -L https://raw.github.com/git/git/master/contrib/completion/git-prompt.sh \
-             > ~/.config/git-prompt.sh
     source ~/.config/git-prompt.sh
     Color_Off="\[\033[0m\]"; IBlack="\[\033[0;90m\]"; BWhite="\[\033[1;37m\]"; BGreen="\[\033[1;32m\]";
     BIRed="\[\033[1;91m\]"; BIWhite="\[\033[1;97m\]"; BIPurple="\[\033[1;95m\]"; BIBlue="\[\033[1;94m\]";

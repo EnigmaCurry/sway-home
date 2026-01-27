@@ -56,5 +56,9 @@ in {
             { source = swayConfigDir + "/${name}"; }
         )
       )
-      swayConfigTree;
+      swayConfigTree
+    // {
+      # git-prompt.sh for bash PS1 (fetched at build time, not runtime)
+      "git-prompt.sh".source = inputs.git-prompt;
+    };
 }
