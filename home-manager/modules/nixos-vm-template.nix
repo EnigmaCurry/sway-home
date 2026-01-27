@@ -6,6 +6,7 @@ let
   defaultEnv = ''
     OUTPUT_DIR=$HOME/.local/share/nixos-vm-template
     MACHINES_DIR=$HOME/.config/nixos-vm-template/machines
+    LIBVIRT_DIR=$HOME/.config/nixos-vm-template/libvirt
   '';
 in
 {
