@@ -4,8 +4,5 @@ let
   nixosVmTemplateRepo = inputs.nixos-vm-template;
 in
 {
-  home.file."nixos-vm-template" = {
-    source = nixosVmTemplateRepo;
-    recursive = true;
-  };
+  home.file."nixos-vm-template".source = nixosVmTemplateRepo;
 }
