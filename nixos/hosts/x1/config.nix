@@ -9,7 +9,7 @@
 
   # --- Enable Emacs/Home-Manager module on this host -------------------------
   home-manager.users.${host.userName}.imports = [
-    (inputs.sway-home + "/nixos/modules/home/emacs.nix")
+    (inputs.sway-home + "/home-manager/modules/emacs.nix")
   ];
 
   # --- Allow incoming network ports ------

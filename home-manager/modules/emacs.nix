@@ -13,5 +13,4 @@ in
     source = emacsRepo;
     recursive = true;
   };
-
 }

@@ -91,9 +91,9 @@
 
                     users.${userName} = { pkgs, ... }: {
                       imports = [
-                        ./modules/home/home.nix
+                        ../home-manager/modules/home.nix
                       ];
-                      home.packages = import ./modules/home/packages.nix { inherit pkgs; };
+                      home.packages = import ../home-manager/modules/packages.nix { inherit pkgs; };
                     };
                   };
                 })

@@ -17,10 +17,10 @@ with pkgs; [
   cmake
   uv
   distrobox
-	jq
-	ruff
+  jq
+  ruff
   ripgrep
-	git
+  git
   waybar
   keychain
   s3cmd
