@@ -12,6 +12,7 @@
 
     sway-home = { url = "path:.."; flake = false; };
     emacs_enigmacurry = { url = "github:EnigmaCurry/emacs"; flake = false; };
+    nixos-vm-template = { url = "github:EnigmaCurry/nixos-vm-template"; flake = false; };
   };
 
   outputs = inputs@{ self, nixpkgs, nixpkgs_unstable, home-manager, ... }:
@@ -49,7 +50,7 @@
       homeConfigurations.default = mkHomeConfiguration {
         userName = currentUser;
         system = defaultSystem;
-        extraModules = [ ./modules/emacs.nix ];
+        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ];
       };
 
       # Export modules for NixOS flake to import
@@ -57,6 +58,7 @@
         home = ./modules/home.nix;
         packages = ./modules/packages.nix;
         emacs = ./modules/emacs.nix;
+        nixos-vm-template = ./modules/nixos-vm-template.nix;
       };
 
       # Helper function for creating configurations
