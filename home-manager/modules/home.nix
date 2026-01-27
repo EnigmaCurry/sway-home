@@ -15,7 +15,12 @@ in {
   # Let home-manager manage itself when running standalone
   programs.home-manager.enable = true;
 
-  programs.git.enable = true;
+  programs.git = {
+    enable = true;
+    includes = [
+      { path = "~/.config/git/config.local"; }
+    ];
+  };
 
   programs.bash = {
     enable = true;

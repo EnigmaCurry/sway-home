@@ -94,12 +94,30 @@ vm-connect:
 # --- Home Manager (standalone, for non-NixOS systems) ---
 
 # Initial home-manager installation (run once, then use hm-switch)
-hm-install:
+hm-install: _ensure-git-config
     cd home-manager; nix run home-manager/release-25.11 -- switch --flake .#default --impure -b backup
 
 # Switch home-manager configuration (use on Fedora/other Linux)
-hm-switch:
+hm-switch: _ensure-git-config
     cd home-manager; home-manager switch --flake .#default --impure -b backup
+
+# Ensure git local config exists (prompts user if missing)
+_ensure-git-config:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    CONFIG_FILE="$HOME/.config/git/config.local"
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo "Git local config not found. Let's set it up."
+        read -rp "Enter your git user.name: " GIT_NAME
+        read -rp "Enter your git user.email: " GIT_EMAIL
+        mkdir -p "$(dirname "$CONFIG_FILE")"
+        cat > "$CONFIG_FILE" << EOF
+    [user]
+        name = $GIT_NAME
+        email = $GIT_EMAIL
+    EOF
+        echo "Created $CONFIG_FILE"
+    fi
 
 # Update home-manager flake.lock
 hm-update:
