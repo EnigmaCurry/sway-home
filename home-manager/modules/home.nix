@@ -35,6 +35,10 @@ in {
     '';
   };
 
+  # Force overwrite existing bash files
+  home.file.".bashrc".force = true;
+  home.file.".bash_profile".force = true;
+
   # Symlink sway-home/config/* into ~/.config/*
   xdg.enable = true;
   xdg.configFile =
