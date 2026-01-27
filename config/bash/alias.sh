@@ -21,5 +21,5 @@ alias hm-install='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-install
 alias hm-pull='git -C ~/git/vendor/enigmacurry/sway-home pull'
 _justfile_alias vm \
   "$HOME/nixos-vm-template/Justfile" \
-  "$HOME/nixos-vm-template/.env"
+  "$HOME/.config/nixos-vm-template/env"
 vars() { set -o posix; set | cut -d= -f1 | column; }
