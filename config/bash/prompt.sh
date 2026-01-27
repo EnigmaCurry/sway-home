@@ -60,23 +60,9 @@ fi)'
     PATH_PS1='|'${BWhite}${PathShort}${Color_Off}
     export PS1='['${USER_PS1}${GIT_PS1}${DOCKER_PS1}${PATH_PS1}']\n$ '
 }
-# Set prompt specific to various distributions:
+# Set prompt:
 set_prompt() {
-    if [ -f /etc/os-release ]; then
-        local os_id="$(grep -Po "^ID=\K.*" /etc/os-release)"
-        local variant_id="$(grep -Po "^VARIANT_ID=\K.*" /etc/os-release)"
-        if [[ "${os_id}" == "fedora" ]] && [[ "${variant_id}" == *"-atomic"* ]]; then
-            # Fedora Atomic
-            # Only set fancy PS1 if we are in a toolbox container:
-            if is_toolbox >/dev/null; then
-                ps1_generator
-            fi
-        else
-            ps1_generator
-        fi
-    else
-        ps1_generator
-    fi    
+    ps1_generator
 }
 if is_toolbox >/dev/null; then
     export TOOLBOX_CONTAINER=$(is_toolbox)
