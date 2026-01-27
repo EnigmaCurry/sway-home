@@ -19,4 +19,5 @@ alias hm-metadata='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-metada
 alias hm-update='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-update'
 alias hm-install='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-install'
 alias hm-pull='git -C ~/git/vendor/enigmacurry/sway-home pull'
+alias vm='just -f ~/nixos-vm-template/Justfile'
 vars() { set -o posix; set | cut -d= -f1 | column; }
