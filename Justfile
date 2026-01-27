@@ -91,6 +91,34 @@ vm-connect:
     @echo "## Press Enter to show initial login console (or just start typing your username)."
     @socat STDIO,raw,echo=0,escape=0x11 UNIX-CONNECT:{{VM_ROOT}}/{{VM}}/{{VM}}-serial.socket
 
+# --- Home Manager (standalone, for non-NixOS systems) ---
+
+# Initial home-manager installation (run once, then use hm-switch)
+hm-install:
+    cd home-manager; nix run home-manager/release-25.11 -- switch --flake .#default --impure -b backup
+
+# Switch home-manager configuration (use on Fedora/other Linux)
+hm-switch:
+    cd home-manager; home-manager switch --flake .#default --impure -b backup
+
+# Update home-manager flake.lock
+hm-update:
+    cd home-manager; nix flake update
+
+# List home-manager generations
+hm-generations:
+    home-manager generations
+
+# Rollback to previous home-manager generation
+hm-rollback:
+    home-manager rollback
+
+# Show home-manager flake inputs
+hm-metadata:
+    cd home-manager; nix flake metadata
+
+# --- NixOS ISO Building ---
+
 build-iso machine:
     ./nixos/_scripts/build-iso.sh "{{machine}}"
 

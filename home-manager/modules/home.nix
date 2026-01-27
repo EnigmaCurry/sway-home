@@ -1,7 +1,7 @@
 { config, pkgs, lib, inputs, userName, ... }:
 
 let
- myBashrc = inputs.sway-home + "/bashrc";
+  myBashrc = inputs.sway-home + "/bashrc";
   myBashProfile = inputs.sway-home + "/bash_profile";
 
   swayConfigDir = inputs.sway-home + "/config";
@@ -12,11 +12,22 @@ in {
   home.homeDirectory = "/home/${userName}";
   home.stateVersion = "25.11";
 
+  # Let home-manager manage itself when running standalone
+  programs.home-manager.enable = true;
+
   programs.git.enable = true;
 
   programs.bash = {
     enable = true;
     bashrcExtra = ''
+      # Source Nix profile (for non-NixOS systems)
+      # This runs for all interactive shells, not just login shells
+      if [ -e '/etc/profile.d/nix-daemon.sh' ]; then
+        . '/etc/profile.d/nix-daemon.sh'
+      elif [ -e '/etc/profile.d/nix.sh' ]; then
+        . '/etc/profile.d/nix.sh'
+      fi
+
       source "${myBashrc}"
     '';
     profileExtra = ''
