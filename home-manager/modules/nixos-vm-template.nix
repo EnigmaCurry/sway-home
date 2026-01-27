@@ -2,7 +2,9 @@
 
 let
   nixosVmTemplateRepo = inputs.nixos-vm-template;
-  envFile = "${config.xdg.configHome}/nixos-vm-template/env";
+  configDir = "${config.xdg.configHome}/nixos-vm-template";
+  envFile = "${configDir}/env";
+  libvirtDir = "${configDir}/libvirt";
   defaultEnv = ''
     OUTPUT_DIR=$HOME/.local/share/nixos-vm-template
     MACHINES_DIR=$HOME/.config/nixos-vm-template/machines
@@ -19,5 +21,7 @@ in
 ${defaultEnv}
 EOF
     fi
+    mkdir -p "${libvirtDir}"
+    ln -sf "${nixosVmTemplateRepo}/libvirt/template.xml" "${libvirtDir}/template.xml"
   '';
 }
