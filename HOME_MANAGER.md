@@ -79,6 +79,9 @@ just hm-install
 (If you have any existing files in the way of the new config, they
 will be renamed to `*.backup`)
 
+After installation, restart your terminal session to load the new
+shell configuration and aliases.
+
 ## Making changes going forward
 
 The Home Manager configuration is stored in:
@@ -87,26 +90,26 @@ The Home Manager configuration is stored in:
 To apply changes after editing configs:
 
 ```bash
-just hm-switch
+hm-switch
 ```
 
 List your generations (history of configurations):
 
 ```bash
-just hm-generations
+hm-generations
 ```
 
 Rollback to the previous generation if something breaks:
 
 ```bash
-just hm-rollback
+hm-rollback
 ```
 
 Update Home Manager and nixpkgs to latest versions:
 
 ```bash
-just hm-update
-just hm-switch
+hm-update
+hm-switch
 ```
 
 See all available commands:
@@ -144,7 +147,7 @@ with pkgs; [
 Then apply:
 
 ```bash
-just hm-switch
+hm-switch
 ```
 
 ## Included modules
@@ -161,15 +164,15 @@ To disable Emacs, edit `home-manager/flake.nix` and remove
 ## Important concepts and reminders
 
  * **Commit before switching**: When working on config files, remember
-   to `git add` / `git commit` your changes *before* running `just
-   hm-switch`. Uncommitted files may be ignored by Nix.
+   to `git add` / `git commit` your changes *before* running
+   `hm-switch`. Uncommitted files may be ignored by Nix.
 
  * **Files are read-only**: All files in `~/.config` are symlinks into
    `/nix/store/...`, which is read-only. To edit your dotfiles, modify
-   the source files in `config/` and run `just hm-switch`.
+   the source files in `config/` and run `hm-switch`.
 
  * **Generations provide rollback**: Home Manager keeps a history of
-   configurations. If something breaks, use `just hm-rollback` to
+   configurations. If something breaks, use `hm-rollback` to
    restore the previous working state.
 
  * **Backup your config**: Keep your configuration safe by committing
