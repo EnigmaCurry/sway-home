@@ -14,6 +14,8 @@ in
     if [ ! -f "${envFile}" ]; then
       mkdir -p "$(dirname "${envFile}")"
       cat > "${envFile}" << 'EOF'
-${defaultEnv}EOF
+${defaultEnv}
+EOF
     fi
   '';
+}
