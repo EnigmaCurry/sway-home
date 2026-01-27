@@ -18,4 +18,5 @@ alias hm-rollback='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-rollba
 alias hm-metadata='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-metadata'
 alias hm-update='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-update'
 alias hm-install='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-install'
+alias hm-pull='git -C ~/git/vendor/enigmacurry/sway-home pull'
 vars() { set -o posix; set | cut -d= -f1 | column; }

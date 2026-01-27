@@ -105,6 +105,12 @@ Rollback to the previous generation if something breaks:
 hm-rollback
 ```
 
+Pull the latest sway-home configuration from git:
+
+```bash
+hm-pull
+```
+
 Update Home Manager and nixpkgs to latest versions:
 
 ```bash
@@ -124,6 +130,7 @@ just help
 Available recipes:
     hm-generations           # List home-manager generations
     hm-metadata              # Show home-manager flake inputs
+    hm-pull                  # Pull latest sway-home config from git
     hm-rollback              # Rollback to previous home-manager generation
     hm-switch                # Switch home-manager configuration (use on Fedora/other Linux)
     hm-update                # Update home-manager flake.lock
