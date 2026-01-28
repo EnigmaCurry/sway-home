@@ -33,4 +33,5 @@ with pkgs; [
   btop
   wget
   git-lfs
+  duf
 ]
