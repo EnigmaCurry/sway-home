@@ -34,4 +34,5 @@ with pkgs; [
   wget
   git-lfs
   duf
+  ncdu
 ]
