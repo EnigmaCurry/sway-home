@@ -49,6 +49,21 @@
         "type": "github"
       }
     },
+    "nix-flatpak": {
+      "locked": {
+        "lastModified": 1768656715,
+        "narHash": "sha256-Sbh037scxKFm7xL0ahgSCw+X2/5ZKeOwI2clqrYr9j4=",
+        "owner": "gmodena",
+        "repo": "nix-flatpak",
+        "rev": "123fe29340a5b8671367055b75a6e7c320d6f89a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gmodena",
+        "repo": "nix-flatpak",
+        "type": "github"
+      }
+    },
     "nixos-vm-template": {
       "flake": false,
       "locked": {
@@ -102,6 +117,7 @@
         "emacs_enigmacurry": "emacs_enigmacurry",
         "git-prompt": "git-prompt",
         "home-manager": "home-manager",
+        "nix-flatpak": "nix-flatpak",
         "nixos-vm-template": "nixos-vm-template",
         "nixpkgs": "nixpkgs",
         "nixpkgs_unstable": "nixpkgs_unstable",
