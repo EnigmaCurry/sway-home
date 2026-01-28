@@ -140,7 +140,7 @@ hm-metadata:
     cd home-manager; nix flake metadata
 
 # Update flake, pull repo, and switch home-manager
-hm-upgrade: hm-update hm-pull hm-switch
+hm-upgrade: hm-pull hm-update hm-switch
 
 # --- NixOS ISO Building ---
 
