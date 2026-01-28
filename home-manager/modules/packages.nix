@@ -35,4 +35,15 @@ with pkgs; [
   git-lfs
   duf
   ncdu
+  conceal
+  fzf
+  bat
+  eza
+  delta
+  gh
+  entr
+  shellcheck
+  ripgrep-all
+  nmap
+  dust
 ]
