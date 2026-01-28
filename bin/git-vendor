@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Enable strict error handling
-set -euxo pipefail
+set -euo pipefail
 
 # Function to get the organization/repository names from the URL
 get_repo_details() {
     local url="$1"
-    
+
     # If URL starts with 'https://' or 'git@', handle accordingly
     if [[ "$url" =~ ^https?://([a-zA-Z0-9.-]+)/([^/]+)/([^/]+)$ ]]; then
         domain="${BASH_REMATCH[1]}"
@@ -30,13 +30,13 @@ get_repo_details() {
 
     # Convert the organization name to lowercase (for consistent path creation)
     org_name=$(echo "$org_name" | tr '[:upper:]' '[:lower:]')
-    
+
     # Return the canonicalized URL in https:// format
     echo "$url"
 }
 
 # Check if the user provided a URL
-if [ -z "$1" ]; then
+if [ "$#" -lt 1 ]; then
     echo "Usage: git vendor {URL}"
     exit 1
 fi
