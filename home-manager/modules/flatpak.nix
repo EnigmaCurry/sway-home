@@ -14,7 +14,7 @@ in
     ];
 
     packages = [
-      "flathub:io.github.kolunmi.Bazaar"
+      "io.github.kolunmi.Bazaar"
     ];
 
     update.onActivation = true;
