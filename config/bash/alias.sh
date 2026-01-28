@@ -20,7 +20,8 @@ alias hm-rollback='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-rollba
 alias hm-metadata='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-metadata'
 alias hm-update='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-update'
 alias hm-install='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-install'
-alias hm-pull='git -C ~/git/vendor/enigmacurry/sway-home pull'
+alias hm-pull='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-pull'
+alias hm-upgrade='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-upgrade'
 _justfile_alias vm \
   "$HOME/nixos-vm-template/Justfile" \
   "$HOME/.config/nixos-vm-template/env"

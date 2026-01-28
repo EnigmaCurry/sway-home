@@ -123,6 +123,10 @@ _ensure-git-config:
 hm-update:
     cd home-manager; nix flake update
 
+# Pull latest changes from remote
+hm-pull:
+    git pull
+
 # List home-manager generations
 hm-generations:
     home-manager generations
@@ -134,6 +138,9 @@ hm-rollback:
 # Show home-manager flake inputs
 hm-metadata:
     cd home-manager; nix flake metadata
+
+# Update flake, pull repo, and switch home-manager
+hm-upgrade: hm-update hm-pull hm-switch
 
 # --- NixOS ISO Building ---
 
