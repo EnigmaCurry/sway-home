@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Enable strict error handling
+set -euxo pipefail
+
+# Function to get the organization/repository names from the URL
+get_repo_details() {
+    local url="$1"
+    
+    # If URL starts with 'https://' or 'git@', handle accordingly
+    if [[ "$url" =~ ^https?://([a-zA-Z0-9.-]+)/([^/]+)/([^/]+)$ ]]; then
+        domain="${BASH_REMATCH[1]}"
+        org_name="${BASH_REMATCH[2]}"
+        repo_name="${BASH_REMATCH[3]}"
+    # If URL is in the format 'git@domain:org_name/repo_name.git'
+    elif [[ "$url" =~ ^git@([a-zA-Z0-9.-]+):([^/]+)/([^/]+).git$ ]]; then
+        domain="${BASH_REMATCH[1]}"
+        org_name="${BASH_REMATCH[2]}"
+        repo_name="${BASH_REMATCH[3]}"
+    # Handle 'domain/org_name/repo_name' form, use domain exactly (no fallback)
+    elif [[ "$url" =~ ^([a-zA-Z0-9.-]+)/([^/]+)/([^/]+)$ ]]; then
+        domain="${BASH_REMATCH[1]}"  # Extract domain from the input directly
+        org_name="${BASH_REMATCH[2]}"
+        repo_name="${BASH_REMATCH[3]}"
+        url="https://$domain/$org_name/$repo_name"  # Prepend https:// for the URL
+    else
+        echo "Invalid URL format: $url"
+        exit 1
+    fi
+
+    # Convert the organization name to lowercase (for consistent path creation)
+    org_name=$(echo "$org_name" | tr '[:upper:]' '[:lower:]')
+    
+    # Return the canonicalized URL in https:// format
+    echo "$url"
+}
+
+# Check if the user provided a URL
+if [ -z "$1" ]; then
+    echo "Usage: git vendor {URL}"
+    exit 1
+fi
+
+# Get the canonical URL and org_name/repo_name from the URL
+url=$(get_repo_details "$1")
+
+# Extract the org_name and repo_name from the canonicalized URL
+org_name=$(echo "$url" | sed -E 's|https?://[a-zA-Z0-9.-]+/([^/]+)/([^/]+)|\1|')
+repo_name=$(echo "$url" | sed -E 's|https?://[a-zA-Z0-9.-]+/([^/]+)/([^/]+)|\2|')
+
+# Convert the organization name to lowercase here too (in case it wasn't done earlier)
+org_name=$(echo "$org_name" | tr '[:upper:]' '[:lower:]')
+
+# Define the base vendor directory
+vendor_dir="$HOME/git/vendor"
+
+# Ensure the vendor directory exists (use lowercase org_name for path)
+mkdir -p "$vendor_dir/$org_name"
+
+# Clone the repository
+git clone "$url" "$vendor_dir/$org_name/$repo_name"
+
+echo "Repository cloned to $vendor_dir/$org_name/$repo_name"
