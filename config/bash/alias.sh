@@ -3,7 +3,7 @@ alias cp='cp -i'
 alias mv='mv -i'
 alias ls='eza'
 alias ll='eza -l --git'
-alias lt='eza -l --git -T'
+alias lt='eza -l --git -T --level=4 --color=always | less -R'
 alias grep='grep --color=auto'
 alias bb='rlwrap bb'
 alias ec="${HOME}/git/vendor/enigmacurry/emacs/ec"
