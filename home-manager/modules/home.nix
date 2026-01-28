@@ -7,6 +7,9 @@ let
   swayConfigDir = inputs.sway-home + "/config";
   swayConfigTree = builtins.readDir swayConfigDir;
 
+  swayBinDir = inputs.sway-home + "/bin";
+  swayBinTree = builtins.readDir swayBinDir;
+
 in {
   home.username = userName;
   home.homeDirectory = "/home/${userName}";
@@ -40,9 +43,20 @@ in {
     '';
   };
 
-  # Force overwrite existing bash files
-  home.file.".bashrc".force = true;
-  home.file.".bash_profile".force = true;
+  # Symlink sway-home/bin/* into ~/bin/*
+  home.file = lib.mapAttrs'
+    (name: _:
+      lib.nameValuePair "bin/${name}" {
+        source = swayBinDir + "/${name}";
+        executable = true;
+      }
+    )
+    swayBinTree
+    // {
+      # Force overwrite existing bash files
+      ".bashrc".force = true;
+      ".bash_profile".force = true;
+    };
 
   # Symlink sway-home/config/* into ~/.config/*
   xdg.enable = true;
