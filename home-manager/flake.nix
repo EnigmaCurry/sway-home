@@ -10,6 +10,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
+
     sway-home = { url = "path:.."; flake = false; };
     emacs_enigmacurry = { url = "github:EnigmaCurry/emacs"; flake = false; };
     nixos-vm-template = { url = "github:EnigmaCurry/nixos-vm-template"; flake = false; };
@@ -37,6 +39,7 @@
             inherit inputs userName unstablePkgs;
           };
           modules = [
+            inputs.nix-flatpak.homeManagerModules.nix-flatpak
             ./modules/home.nix
             ({ pkgs, ... }: {
               home.packages = import ./modules/packages.nix { inherit pkgs; };
@@ -51,7 +54,7 @@
       homeConfigurations.default = mkHomeConfiguration {
         userName = currentUser;
         system = defaultSystem;
-        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ./modules/rust.nix ];
+        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ./modules/rust.nix ./modules/flatpak.nix ];
       };
 
       # Export modules for NixOS flake to import
@@ -61,6 +64,7 @@
         emacs = ./modules/emacs.nix;
         nixos-vm-template = ./modules/nixos-vm-template.nix;
         rust = ./modules/rust.nix;
+        flatpak = ./modules/flatpak.nix;
       };
 
       # Helper function for creating configurations
