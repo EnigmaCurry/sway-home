@@ -23,5 +23,6 @@ EOF
     fi
     mkdir -p "${libvirtDir}"
     ln -sf "${nixosVmTemplateRepo}/libvirt/template.xml" "${libvirtDir}/template.xml"
+    ln -sf "${nixosVmTemplateRepo}/libvirt/template-mutable.xml" "${libvirtDir}/template-mutable.xml"
   '';
 }
