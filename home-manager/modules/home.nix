@@ -56,9 +56,57 @@ in {
       # Force overwrite existing bash files
       ".bashrc".force = true;
       ".bash_profile".force = true;
-      # Scripts from external repos
+      # Scripts from external repos (blog.rymcg.tech)
       "bin/traefik_local_auth_proxy.sh" = {
         source = inputs.blog-rymcg-tech + "/src/traefik/traefik_local_auth_proxy.sh";
+        executable = true;
+      };
+      "bin/rclone_sync.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/rclone/rclone_sync.sh";
+        executable = true;
+      };
+      "bin/rclone_webdav.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/rclone/rclone_webdav.sh";
+        executable = true;
+      };
+      "bin/ssh_expose.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/ssh/ssh_expose.sh";
+        executable = true;
+      };
+      "bin/ssh_remote_xdg_open.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/ssh/ssh_remote_xdg_open.sh";
+        executable = true;
+      };
+      "bin/wireguard_p2p.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/wireguard/wireguard_p2p.sh";
+        executable = true;
+      };
+      "bin/netwatch.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/netwatch/netwatch.sh";
+        executable = true;
+      };
+      "bin/proxmox_container.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/proxmox/proxmox_container.sh";
+        executable = true;
+      };
+      "bin/proxmox_firewall.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/proxmox/proxmox_firewall.sh";
+        executable = true;
+      };
+      "bin/proxmox_kvm.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/proxmox/proxmox_kvm.sh";
+        executable = true;
+      };
+      "bin/proxmox_nat.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/proxmox/proxmox_nat.sh";
+        executable = true;
+      };
+      "bin/restic_backup.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/systemd/restic_backup.sh";
+        executable = true;
+      };
+      "bin/nix-build-iso.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/nix/nix-build-iso.sh";
         executable = true;
       };
     };
