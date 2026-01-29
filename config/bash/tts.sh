@@ -1,6 +1,10 @@
 #!/bin/bash
 ## Text to speech with Piper - https://github.com/rhasspy/piper
 ### Install depdendencies: bash podman curl pulseaudio-utils
+
+# Unalias to prevent alias expansion breaking function definition on re-source
+unalias say say_wrapped 2>/dev/null || true
+
 say() {
     set -e
     local MODEL_DIR=${MODEL_DIR:-~/ai/piper/model}
