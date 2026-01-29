@@ -105,8 +105,8 @@ in {
         source = inputs.blog-rymcg-tech + "/src/systemd/restic_backup.sh";
         executable = true;
       };
-      "bin/nix-build-iso.sh" = {
-        source = inputs.blog-rymcg-tech + "/src/nix/nix-build-iso.sh";
+      "bin/nix_build_iso.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/nix/nix_build_iso.sh";
         executable = true;
       };
     };
