@@ -16,6 +16,7 @@
     emacs_enigmacurry = { url = "github:EnigmaCurry/emacs"; flake = false; };
     nixos-vm-template = { url = "github:EnigmaCurry/nixos-vm-template"; flake = false; };
     git-prompt = { url = "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"; flake = false; };
+    blog-rymcg-tech = { url = "github:EnigmaCurry/blog.rymcg.tech"; flake = false; };
   };
 
   outputs = inputs@{ self, nixpkgs, nixpkgs_unstable, home-manager, ... }:

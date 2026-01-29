@@ -56,6 +56,11 @@ in {
       # Force overwrite existing bash files
       ".bashrc".force = true;
       ".bash_profile".force = true;
+      # Scripts from external repos
+      "bin/traefik_local_auth_proxy.sh" = {
+        source = inputs.blog-rymcg-tech + "/src/traefik/traefik_local_auth_proxy.sh";
+        executable = true;
+      };
     };
 
   # Symlink sway-home/config/* into ~/.config/*
