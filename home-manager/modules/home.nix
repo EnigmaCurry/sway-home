@@ -109,6 +109,14 @@ in {
         source = inputs.blog-rymcg-tech + "/src/nix/nix_build_iso.sh";
         executable = true;
       };
+      "bin/git-vendor" = {
+        source = inputs.blog-rymcg-tech + "/src/git/git_vendor.sh";
+        executable = true;
+      };
+      "bin/git-clone-deploy" = {
+        source = inputs.blog-rymcg-tech + "/src/git/git_clone_deploy.sh";
+        executable = true;
+      };
     };
 
   # Symlink sway-home/config/* into ~/.config/*
