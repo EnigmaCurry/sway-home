@@ -39,13 +39,13 @@
           inherit pkgs;
           extraSpecialArgs = {
             inherit inputs userName unstablePkgs;
-            script-wizard = inputs.script-wizard.packages.${system}.default;
+            scriptWizard = inputs.script-wizard.packages.${system}.default;
           };
           modules = [
             inputs.nix-flatpak.homeManagerModules.nix-flatpak
             ./modules/home.nix
-            ({ pkgs, script-wizard, ... }: {
-              home.packages = (import ./modules/packages.nix { inherit pkgs; }) ++ [ script-wizard ];
+            ({ pkgs, scriptWizard, ... }: {
+              home.packages = (import ./modules/packages.nix { inherit pkgs; }) ++ [ scriptWizard ];
             })
           ] ++ extraModules;
         };
