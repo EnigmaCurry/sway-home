@@ -46,4 +46,5 @@ with pkgs; [
   ripgrep-all
   nmap
   dust
+  rclone
 ]
