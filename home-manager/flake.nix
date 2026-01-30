@@ -17,6 +17,7 @@
     nixos-vm-template = { url = "github:EnigmaCurry/nixos-vm-template"; flake = false; };
     git-prompt = { url = "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"; flake = false; };
     blog-rymcg-tech = { url = "github:EnigmaCurry/blog.rymcg.tech"; flake = false; };
+    script-wizard.url = "github:EnigmaCurry/script-wizard";
   };
 
   outputs = inputs@{ self, nixpkgs, nixpkgs_unstable, home-manager, ... }:
@@ -38,12 +39,13 @@
           inherit pkgs;
           extraSpecialArgs = {
             inherit inputs userName unstablePkgs;
+            script-wizard = inputs.script-wizard.packages.${system}.default;
           };
           modules = [
             inputs.nix-flatpak.homeManagerModules.nix-flatpak
             ./modules/home.nix
-            ({ pkgs, ... }: {
-              home.packages = import ./modules/packages.nix { inherit pkgs; };
+            ({ pkgs, script-wizard, ... }: {
+              home.packages = (import ./modules/packages.nix { inherit pkgs; }) ++ [ script-wizard ];
             })
           ] ++ extraModules;
         };
