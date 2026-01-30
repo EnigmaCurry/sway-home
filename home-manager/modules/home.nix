@@ -25,6 +25,17 @@ in {
     ];
   };
 
+  # Create editable git config.local if it doesn't exist
+  home.activation.createGitConfigLocal = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if [ ! -f ~/.config/git/config.local ]; then
+      mkdir -p ~/.config/git
+      cat > ~/.config/git/config.local << 'EOF'
+[init]
+    defaultBranch = master
+EOF
+    fi
+  '';
+
   programs.bash = {
     enable = true;
     bashrcExtra = ''
