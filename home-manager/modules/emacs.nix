@@ -13,4 +13,15 @@ in
     source = emacsRepo;
     recursive = true;
   };
+
+  # Wrapper function that auto-detects terminal mode when no display available
+  programs.bash.initExtra = ''
+    emacs() {
+      if [[ -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
+        command emacs -nw "$@"
+      else
+        command emacs "$@"
+      fi
+    }
+  '';
 }
