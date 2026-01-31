@@ -121,19 +121,19 @@ EOF
         executable = true;
       };
       "bin/git-vendor" = {
-        source = inputs.blog-rymcg-tech + "/src/bash/git/git_extensions.sh";
+        source = inputs.blog-rymcg-tech + "/src/git/git_extensions.sh";
         executable = true;
       };
       "bin/git-deploy" = {
-        source = inputs.blog-rymcg-tech + "/src/bash/git/git_extensions.sh";
+        source = inputs.blog-rymcg-tech + "/src/git/git_extensions.sh";
         executable = true;
       };
       "bin/git-deploy-key" = {
-        source = inputs.blog-rymcg-tech + "/src/bash/git/git_extensions.sh";
+        source = inputs.blog-rymcg-tech + "/src/git/git_extensions.sh";
         executable = true;
       };
       "bin/git-remote-proto" = {
-        source = inputs.blog-rymcg-tech + "/src/bash/git/git_extensions.sh";
+        source = inputs.blog-rymcg-tech + "/src/git/git_extensions.sh";
         executable = true;
       };
     };
