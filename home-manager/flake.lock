@@ -3,11 +3,11 @@
     "blog-rymcg-tech": {
       "flake": false,
       "locked": {
-        "lastModified": 1769678894,
-        "narHash": "sha256-+IQof93MHYVnBfYXxUOw6Moyr9L/CkEod2wlbtKS0OI=",
+        "lastModified": 1769895949,
+        "narHash": "sha256-TpdvqoniWaYb4ak0RjDDkTTBmsZ6ezweZUEyxkH7TOQ=",
         "owner": "EnigmaCurry",
         "repo": "blog.rymcg.tech",
-        "rev": "3da717ac2639249ef4ba40021bb38e3de8597905",
+        "rev": "1c276255394dbc373ce08e88e39cc1eebc5bfb9b",
         "type": "github"
       },
       "original": {
@@ -101,11 +101,11 @@
     "nixos-vm-template": {
       "flake": false,
       "locked": {
-        "lastModified": 1769830940,
-        "narHash": "sha256-itEJb44AZnh1qQrVYCtYVyKE5xrhLyx7wzKCDAy73C8=",
+        "lastModified": 1769841182,
+        "narHash": "sha256-uWX2qhpNkEBi30H8LSaliv6R/jctkmG4+FEs+rTVErc=",
         "owner": "EnigmaCurry",
         "repo": "nixos-vm-template",
-        "rev": "bb6acb49bf2b914e023eba435c403e9c21dc1090",
+        "rev": "d770930479f9c78c180806e9305165120b94a169",
         "type": "github"
       },
       "original": {
