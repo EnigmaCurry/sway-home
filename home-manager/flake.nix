@@ -57,7 +57,7 @@
       homeConfigurations.default = mkHomeConfiguration {
         userName = currentUser;
         system = defaultSystem;
-        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ./modules/rust.nix ./modules/flatpak.nix ];
+        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ./modules/rust.nix ./modules/flatpak.nix ./modules/fluidsynth.nix ];
       };
 
       # Export modules for NixOS flake to import
@@ -68,6 +68,7 @@
         nixos-vm-template = ./modules/nixos-vm-template.nix;
         rust = ./modules/rust.nix;
         flatpak = ./modules/flatpak.nix;
+        fluidsynth = ./modules/fluidsynth.nix;
       };
 
       # Helper function for creating configurations
