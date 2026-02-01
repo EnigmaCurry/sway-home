@@ -22,7 +22,7 @@
   systemd.user.services.fluidsynth = {
     Unit = {
       Description = "FluidSynth software synthesizer";
-      After = [ "pipewire.service" ];
+      After = [ "pipewire.service" "rtkit-daemon.service" ];
     };
     Service = {
       ExecStart = "${pkgs.fluidsynth}/bin/fluidsynth -a pulseaudio -m alsa_seq -s -i %h/soundfonts/GeneralUser-GS.sf2";
