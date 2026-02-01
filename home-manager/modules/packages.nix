@@ -48,4 +48,5 @@ with pkgs; [
   dust
   rclone
   unar
+  ffmpeg
 ]
