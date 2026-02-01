@@ -2,10 +2,21 @@
 { config, pkgs, lib, ... }:
 
 let
+  defaultMidiPort = "128:0";
+
+  # Wrapper for aplaymidi that defaults to fluidsynth port
+  midiPlay = pkgs.writeShellScriptBin "midi_play" ''
+    if [[ "$1" == "-p" ]]; then
+      ${pkgs.alsa-utils}/bin/aplaymidi "$@"
+    else
+      ${pkgs.alsa-utils}/bin/aplaymidi -p ${defaultMidiPort} "$@"
+    fi
+  '';
+
   # Script to send All Notes Off to fluidsynth (or specified port)
   # Sends CC 120 (All Sound Off) and CC 123 (All Notes Off) on all 16 channels
   midiReset = pkgs.writeShellScriptBin "midi_reset" ''
-    PORT="''${1:-128:0}"
+    PORT="''${1:-${defaultMidiPort}}"
     MIDI_FILE=$(mktemp --suffix=.mid)
     trap "rm -f $MIDI_FILE" EXIT
     # Pre-computed MIDI file: header + CC 120/123 on all 16 channels + end of track
@@ -40,6 +51,7 @@ in
     soundfont-generaluser
     soundfont-ydp-grand
     x42-gmsynth
+    midiPlay
     midiReset
   ];
 
