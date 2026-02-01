@@ -47,5 +47,5 @@ with pkgs; [
   nmap
   dust
   rclone
-  unrar
+  unar
 ]
