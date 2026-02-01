@@ -17,4 +17,19 @@
     "soundfonts/FluidR3_GM2-2.sf2".source =
       "${pkgs.soundfont-fluid}/share/soundfonts/FluidR3_GM2-2.sf2";
   };
+
+  # FluidSynth user service
+  systemd.user.services.fluidsynth = {
+    Unit = {
+      Description = "FluidSynth software synthesizer";
+      After = [ "pipewire.service" ];
+    };
+    Service = {
+      ExecStart = "${pkgs.fluidsynth}/bin/fluidsynth -a pulseaudio -m alsa_seq -s -i %h/soundfonts/GeneralUser-GS.sf2";
+      Restart = "on-failure";
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
 }
