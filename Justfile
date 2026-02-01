@@ -123,8 +123,9 @@ _ensure-git-config:
 hm-update:
     cd home-manager; nix flake update
 
-# Pull latest changes from remote
+# Pull latest changes from remote (resets flake.lock to trust remote)
 hm-pull:
+    git checkout home-manager/flake.lock 2>/dev/null || true
     git pull
 
 # List home-manager generations
