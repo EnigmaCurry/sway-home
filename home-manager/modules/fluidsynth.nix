@@ -13,6 +13,16 @@ let
     fi
   '';
 
+  # Wrapper script for fluidsynth that selects the soundfont
+  fluidsynthWrapper = pkgs.writeShellScriptBin "fluidsynth-start" ''
+    if [ -f "$HOME/soundfonts/default.sf2" ]; then
+      SF="$HOME/soundfonts/default.sf2"
+    else
+      SF="$HOME/soundfonts/GeneralUser-GS.sf2"
+    fi
+    exec ${pkgs.fluidsynth}/bin/fluidsynth -a pulseaudio -m alsa_seq -s -i "$SF"
+  '';
+
   # Script to send All Notes Off to fluidsynth (or specified port)
   # Sends CC 120 (All Sound Off) and CC 123 (All Notes Off) on all 16 channels
   midiReset = pkgs.writeShellScriptBin "midi_reset" ''
@@ -70,7 +80,7 @@ in
       After = [ "pipewire.service" "rtkit-daemon.service" ];
     };
     Service = {
-      ExecStart = "${pkgs.fluidsynth}/bin/fluidsynth -a pulseaudio -m alsa_seq -s -i %h/soundfonts/GeneralUser-GS.sf2";
+      ExecStart = "${fluidsynthWrapper}/bin/fluidsynth-start";
       Restart = "on-failure";
     };
     Install = {
