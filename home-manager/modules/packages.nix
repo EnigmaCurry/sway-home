@@ -47,4 +47,9 @@ with pkgs; [
   nmap
   dust
   rclone
+  fluidsynth
+  soundfont-fluid
+  soundfont-generaluser
+  soundfont-ydp-grand
+  x42-gmsynth
 ]
