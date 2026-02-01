@@ -7,6 +7,7 @@
 # Bash config is split into modules, loaded in the order listed below:
 modules=(
     funcs
+    git-setup
     vars
     bugs
     path
