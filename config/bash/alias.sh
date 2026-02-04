@@ -22,6 +22,7 @@ alias hm-update='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-update'
 alias hm-install='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-install'
 alias hm-pull='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-pull'
 alias hm-upgrade='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-upgrade'
+alias ssh-new='ssh -o ControlMaster=no -o ControlPath=none'
 _justfile_alias vm \
   "$HOME/nixos-vm-template/Justfile" \
   "$HOME/.config/nixos-vm-template/env"
