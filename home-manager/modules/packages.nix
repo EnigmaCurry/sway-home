@@ -49,4 +49,8 @@ with pkgs; [
   rclone
   unar
   ffmpeg
+  apacheHttpd
+  moreutils
+  inotify-tools
+  sshfs
 ]
