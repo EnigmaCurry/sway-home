@@ -211,6 +211,7 @@ bindsym $mod+r mode "resize"
 #
 # App shortcuts
 #
+    bindsym $mod+Tab exec $rofi_cmd -show window
     bindsym $mod+t exec thunar
 #    bindsym $mod+o exec firefox
 #
