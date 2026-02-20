@@ -19,11 +19,11 @@
     "emacs_enigmacurry": {
       "flake": false,
       "locked": {
-        "lastModified": 1769584273,
-        "narHash": "sha256-nQXzdylvqN9uTvb2S2Cg81zn9tIAUhC94fMAK5TpEfw=",
+        "lastModified": 1771577167,
+        "narHash": "sha256-5jQ4gOuSkYnPAGaweMqSNBVnr7iRprx7YYKUfjxt6Kw=",
         "owner": "EnigmaCurry",
         "repo": "emacs",
-        "rev": "b7d98ee0824c3847071ef518bd8595e146af3a59",
+        "rev": "12969bdd6580a23dcd82a3e3b4eb428f886e0c01",
         "type": "github"
       },
       "original": {
