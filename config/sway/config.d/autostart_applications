@@ -4,8 +4,7 @@ exec kanshi
 # Auth with lxsession polkit:
 exec lxpolkit
 
-# Desktop notifications
-exec mako
+# Desktop notifications (dunst auto-starts via D-Bus activation)
 
 # Network Applet
 exec nm-applet --indicator
