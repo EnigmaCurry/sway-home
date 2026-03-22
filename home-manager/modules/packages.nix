@@ -53,4 +53,5 @@ with pkgs; [
   moreutils
   inotify-tools
   sshfs
+  nerd-fonts.jetbrains-mono
 ]
