@@ -148,8 +148,7 @@ in
         # Vertical tabs
         "sidebar.verticalTabs" = true;
         "sidebar.revamp" = true;
-        "sidebar.visibility" = "hide-sidebar";
-        "sidebar.expandOnHover" = true;
+        "sidebar.visibility" = "expand-on-hover";
 
         # UI cleanup
         "browser.shell.checkDefaultBrowser" = false;
