@@ -103,6 +103,10 @@ in
         "browser.tabs.crashReporting.sendReport" = false;
         "browser.crashReports.unsubmittedCheck.autoSubmit2" = false;
 
+        # Disable AI chatbot
+        "browser.ml.chat.enabled" = false;
+        "browser.ml.chat.sidebar" = false;
+
         # Disable Pocket and sponsored content
         "extensions.pocket.enabled" = false;
         "browser.urlbar.suggest.quicksuggest.sponsored" = false;
