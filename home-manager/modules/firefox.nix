@@ -138,6 +138,10 @@ in
         # Extensions: auto-enable without user approval
         "extensions.autoDisableScopes" = 0;
 
+        # Vertical tabs
+        "sidebar.verticalTabs" = true;
+        "sidebar.revamp" = true;
+
         # UI cleanup
         "browser.shell.checkDefaultBrowser" = false;
         "browser.aboutConfig.showWarning" = false;
