@@ -3,6 +3,7 @@
 with pkgs; [
   libtool
   openssl.dev
+  firefox
   foot
   cargo-generate
   cargo-watch
