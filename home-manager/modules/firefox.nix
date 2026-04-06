@@ -116,6 +116,9 @@ in
         "browser.search.suggest.enabled" = false;
         "browser.urlbar.suggest.searches" = false;
         "browser.urlbar.suggest.engines" = false;
+        "browser.urlbar.suggest.topsites" = false;
+        "browser.urlbar.suggest.trending" = false;
+        "browser.topsites.contile.enabled" = false;
 
         # History: clear on restart
         "privacy.sanitize.sanitizeOnShutdown" = true;
