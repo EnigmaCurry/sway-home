@@ -14,6 +14,16 @@ in
         force = true;
         settings = [
           {
+            name = "Toolbar";
+            toolbar = true;
+            bookmarks = [
+              {
+                name = "sway-home";
+                url = "https://github.com/EnigmaCurry/sway-home/";
+              }
+            ];
+          }
+          {
             name = "d.rymcg.tech";
             url = "https://github.com/EnigmaCurry/d.rymcg.tech/";
           }
@@ -28,10 +38,6 @@ in
           {
             name = "nixos-vm-template";
             url = "https://github.com/EnigmaCurry/nixos-vm-template";
-          }
-          {
-            name = "sway-home";
-            url = "https://github.com/EnigmaCurry/sway-home/";
           }
         ];
       };
@@ -149,6 +155,9 @@ in
         "sidebar.verticalTabs" = true;
         "sidebar.revamp" = true;
         "sidebar.visibility" = "expand-on-hover";
+
+        # Bookmarks toolbar
+        "browser.toolbars.bookmarks.visibility" = "always";
 
         # UI cleanup
         "browser.shell.checkDefaultBrowser" = false;
