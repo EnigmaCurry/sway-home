@@ -23,6 +23,9 @@ set $menu $rofi_cmd -show combi -combi-modes drun#run -modes combi
 
 set $powermenu ~/.config/waybar/scripts/power-menu.sh
 
+### Start user-level dinit (for PipeWire, dbus, etc. on non-systemd)
+exec test ! -e /run/user/$(id -u)/dinitctl && dinit --user --ready-fd 3 3>/dev/null
+
 ### Idle configuration
 exec swayidle -w\
     timeout 1070 'swaylock -f -C ~/.config/swaylock/config'\
