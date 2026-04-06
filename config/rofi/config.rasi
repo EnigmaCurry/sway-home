@@ -1,1 +1,5 @@
 @theme "DarkBlue"
+
+configuration {
+  font: "JetBrainsMono Nerd Font 14";
+}
