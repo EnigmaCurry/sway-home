@@ -18,6 +18,10 @@
     git-prompt = { url = "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"; flake = false; };
     blog-rymcg-tech = { url = "github:EnigmaCurry/blog.rymcg.tech"; flake = false; };
     script-wizard.url = "github:EnigmaCurry/script-wizard";
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs@{ self, nixpkgs, nixpkgs_unstable, home-manager, ... }:
@@ -57,7 +61,7 @@
       homeConfigurations.default = mkHomeConfiguration {
         userName = currentUser;
         system = defaultSystem;
-        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ./modules/rust.nix ./modules/flatpak.nix ./modules/fluidsynth.nix ];
+        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ./modules/rust.nix ./modules/flatpak.nix ./modules/fluidsynth.nix ./modules/firefox.nix ];
       };
 
       # Export modules for NixOS flake to import
@@ -69,6 +73,7 @@
         rust = ./modules/rust.nix;
         flatpak = ./modules/flatpak.nix;
         fluidsynth = ./modules/fluidsynth.nix;
+        firefox = ./modules/firefox.nix;
       };
 
       # Helper function for creating configurations
