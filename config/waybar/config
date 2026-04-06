@@ -29,7 +29,7 @@
         "clock",
         "tray",
         //"custom/weather",
-        "custom/power",
+        "custom/power"
     ],
 
     // Modules
