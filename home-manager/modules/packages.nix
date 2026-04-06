@@ -54,4 +54,7 @@ with pkgs; [
   inotify-tools
   sshfs
   nerd-fonts.jetbrains-mono
+  grim
+  slurp
+  sway-contrib.grimshot
 ]
