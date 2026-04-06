@@ -2,28 +2,28 @@
 exec kanshi
 
 # Auth with lxsession polkit:
-exec lxpolkit
+exec which lxpolkit >/dev/null 2>&1 && lxpolkit
 
 # Desktop notifications (dunst auto-starts via D-Bus activation)
 
 # Network Applet
-exec nm-applet --indicator
+exec which nm-applet >/dev/null 2>&1 && nm-applet --indicator
 
 # Bluetooth Applet
-exec blueman-applet
+exec which blueman-applet >/dev/null 2>&1 && blueman-applet
 
 # GTK3 applications take a long time to start
-exec systemctl --user import-environment DISPLAY WAYLAND_DISPLAY SWAYSOCK
+exec if command -v systemctl >/dev/null 2>&1; then systemctl --user import-environment DISPLAY WAYLAND_DISPLAY SWAYSOCK; fi
 exec hash dbus-update-activation-environment 2>/dev/null && \
-     dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK
+     dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK 2>/dev/null
 
 # Welcome App
-exec dex -a -s /etc/xdg/autostart/:~/.config/autostart/
+exec which dex >/dev/null 2>&1 && dex -a -s /etc/xdg/autostart/:~/.config/autostart/
 
 # Sway Fader
 # exec python3 ~/.config/sway/scripts/swayfader.py
 
 exec firefox
-exec element-desktop
+exec which element-desktop >/dev/null 2>&1 && element-desktop
 exec emacs
 
