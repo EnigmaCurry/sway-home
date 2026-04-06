@@ -217,8 +217,8 @@ bindsym $mod+r mode "resize"
 #
 # Screenshots
 #
-    bindsym print exec mkdir -p ~/Images/Screenshots && XDG_SCREENSHOTS_DIR=~/Images/Screenshots grimshot --notify save active
-    bindsym Shift+print exec mkdir -p ~/Images/Screenshots && XDG_SCREENSHOTS_DIR=~/Images/Screenshots grimshot --notify save area
+    bindsym print exec mkdir -p ~/Images/Screenshots && XDG_SCREENSHOTS_DIR=~/Images/Screenshots grimshot --notify savecopy active
+    bindsym Shift+print exec mkdir -p ~/Images/Screenshots && XDG_SCREENSHOTS_DIR=~/Images/Screenshots grimshot --notify savecopy area
 #
 # Keybindings List
 #
