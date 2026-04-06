@@ -156,8 +156,8 @@ in
         "sidebar.revamp" = true;
         "sidebar.visibility" = "expand-on-hover";
 
-        # Bookmarks toolbar
-        "browser.toolbars.bookmarks.visibility" = "always";
+        # Bookmarks toolbar (only on new tab page)
+        "browser.toolbars.bookmarks.visibility" = "newtab";
 
         # UI cleanup
         "browser.shell.checkDefaultBrowser" = false;
