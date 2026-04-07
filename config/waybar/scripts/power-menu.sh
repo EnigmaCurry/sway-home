@@ -8,7 +8,11 @@ case $op in
     reboot)
     ;&
     suspend)
-        loginctl $op
+        if command -v systemctl &>/dev/null; then
+            systemctl $op
+        else
+            loginctl $op
+        fi
         ;;
     lock)
 		swaylock -c 000000
