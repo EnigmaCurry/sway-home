@@ -58,4 +58,5 @@ with pkgs; [
   slurp
   sway-contrib.grimshot
   wl-clipboard
+  wdisplays
 ]
