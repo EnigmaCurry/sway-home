@@ -3,3 +3,4 @@ bindsym $mod+F9 exec obs-do toggle-record
 bindsym $mod+Shift+F9 exec obs-do toggle-pause
 bindsym $mod+Shift+d exec foot --title OBS-DEMO-TERM --config ~/.config/foot/foot-demo.ini
 bindsym $mod+Shift+m exec ~/.config/sway/scripts/toggle-cursor-size
+bindsym $mod+Shift+v exec virt-viewer --connect qemu:///system artix

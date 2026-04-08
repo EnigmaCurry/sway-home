@@ -57,3 +57,6 @@ for_window [title="^Weston.*"] border none
 
 # OBS demo terminal
 for_window [title="^OBS-DEMO-TERM$"] floating enable, sticky enable, resize set width 1920 px height 1080 px, move position 200 px 120 px
+
+# VM viewer for screencasting
+for_window [title="^artix .*"] floating enable, sticky enable, border none, resize set width 1920 px height 1080 px, move position 200 px 120 px
