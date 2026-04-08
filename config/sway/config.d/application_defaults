@@ -59,4 +59,4 @@ for_window [title="^Weston.*"] border none
 for_window [title="^OBS-DEMO-TERM$"] floating enable, sticky enable, resize set width 1920 px height 1080 px, move position 200 px 120 px
 
 # VM viewer for screencasting
-for_window [title="^OBS-DEMO-VM$"] floating enable, sticky enable, border none, resize set width 1920 px height 1080 px, move position 200 px 120 px
+for_window [title="^artix \(1\)$"] floating enable, sticky enable, border none, resize set width 1920 px height 1080 px, move position 200 px 120 px
