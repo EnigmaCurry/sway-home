@@ -54,3 +54,6 @@ for_window [app_id="org.libretro.RetroArch"] fullscreen
 # Weston no window decoration
 for_window [app_id="weston"] border none
 for_window [title="^Weston.*"] border none
+
+# OBS demo terminal
+for_window [title="^OBS-DEMO-TERM$"] floating enable, resize set width 1600 px height 900 px, move position 200 px 120 px
