@@ -1,0 +1,12 @@
+#!/bin/bash
+## Toggle cursor size between normal (24) and large (48) for screencasting
+CURSOR_STATE_FILE="${XDG_RUNTIME_DIR:-/tmp}/cursor-size-state"
+CURSOR_CONFIG="$HOME/.config/sway/config.d/cursor_size"
+
+if [ -f "$CURSOR_STATE_FILE" ] && [ "$(cat "$CURSOR_STATE_FILE")" = "large" ]; then
+    rm -f "$CURSOR_CONFIG" "$CURSOR_STATE_FILE"
+else
+    echo 'seat seat0 xcursor_theme default 48' > "$CURSOR_CONFIG"
+    echo "large" > "$CURSOR_STATE_FILE"
+fi
+swaymsg reload
