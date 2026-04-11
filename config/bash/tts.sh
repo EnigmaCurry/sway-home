@@ -16,6 +16,6 @@ say() {
     curl -s -X POST "http://localhost:${port}/tts" \
         -F "text=${text}" \
         -o "$tmpfile" \
-        && mpv --no-terminal --keep-open=no "$tmpfile"
+        && mpv --keep-open=no "$tmpfile"
     rm -f "$tmpfile"
 }
