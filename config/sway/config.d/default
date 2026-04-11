@@ -26,6 +26,9 @@ set $powermenu ~/.config/waybar/scripts/power-menu.sh
 ### Start user-level dinit (for PipeWire, dbus, etc. on non-systemd)
 exec test ! -e /run/user/$(id -u)/dinitctl && dinit --user --ready-fd 3 3>/dev/null
 
+### Start pocket-tts speech server
+exec command -v uvx >/dev/null && flock -n /tmp/pocket-tts.lock uvx pocket-tts serve --port 8956
+
 ### Idle configuration
 exec swayidle -w\
     timeout 1070 'swaylock -f -C ~/.config/swaylock/config'\
