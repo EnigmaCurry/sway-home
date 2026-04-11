@@ -2,15 +2,26 @@
 ## Text to speech via pocket-tts server
 
 say() {
-    local text="$*"
     local port="${POCKET_TTS_PORT:-8956}"
+    local voice=""
+    local args=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --voice) voice="$2"; shift 2 ;;
+            *) args+=("$1"); shift ;;
+        esac
+    done
+    local text="${args[*]}"
     if [[ -z "$text" ]]; then
         text=$(cat)
     fi
     if [[ -z "$text" ]]; then
-        echo "Usage: say <text>" >&2
+        echo "Usage: say [--voice <name|url>] <text>" >&2
         return 1
     fi
-    curl -s -X POST "http://localhost:${port}/tts" \
-        -F "text=${text}" | aplay -q
+    local curl_args=(-s -X POST "http://localhost:${port}/tts" -F "text=${text}")
+    if [[ -n "$voice" ]]; then
+        curl_args+=(-F "voice_url=${voice}")
+    fi
+    curl "${curl_args[@]}" | aplay -q
 }
