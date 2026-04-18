@@ -19,9 +19,9 @@ say() {
         echo "Usage: say [--voice <name|url>] <text>" >&2
         return 1
     fi
-    local curl_args=(-s -X POST "http://localhost:${port}/tts" -F "text=${text}")
+    local curl_args=(-s -X POST "http://localhost:${port}/tts" -F "text=<-")
     if [[ -n "$voice" ]]; then
         curl_args+=(-F "voice_url=${voice}")
     fi
-    curl "${curl_args[@]}" | aplay -q
+    echo "$text" | curl "${curl_args[@]}" | pa-play
 }
