@@ -23,5 +23,5 @@ say() {
     if [[ -n "$voice" ]]; then
         curl_args+=(-F "voice_url=${voice}")
     fi
-    echo "$text" | curl "${curl_args[@]}" | pa-play
+    echo "$text" | curl "${curl_args[@]}" | paplay
 }
