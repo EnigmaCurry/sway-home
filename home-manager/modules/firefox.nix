@@ -128,11 +128,11 @@ in
 
         # History: clear on restart
         "privacy.sanitize.sanitizeOnShutdown" = true;
-        "privacy.clearOnShutdown_v2.historyFormDataAndDownloads" = true;
-        "privacy.clearOnShutdown_v2.cookiesAndStorage" = true;
+        "privacy.clearOnShutdown_v2.historyFormDataAndDownloads" = false;
+        "privacy.clearOnShutdown_v2.cookiesAndStorage" = false;
         "privacy.clearOnShutdown_v2.cache" = true;
         "privacy.clearOnShutdown_v2.siteSettings" = false;
-        "places.history.enabled" = false;
+        "places.history.enabled" = true;
 
         # Privacy
         "browser.contentblocking.category" = "strict";
