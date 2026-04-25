@@ -127,7 +127,7 @@ in
         "browser.topsites.contile.enabled" = false;
 
         # History: clear on restart
-        "privacy.sanitize.sanitizeOnShutdown" = true;
+        "privacy.sanitize.sanitizeOnShutdown" = false;
         "privacy.clearOnShutdown_v2.historyFormDataAndDownloads" = false;
         "privacy.clearOnShutdown_v2.cookiesAndStorage" = false;
         "privacy.clearOnShutdown_v2.cache" = true;
