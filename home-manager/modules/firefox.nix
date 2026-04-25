@@ -151,6 +151,25 @@ in
         # Extensions: auto-enable without user approval
         "extensions.autoDisableScopes" = 0;
 
+        # Toolbar: ensure stop/reload button is visible
+        "browser.uiCustomization.state" = builtins.toJSON {
+          placements = {
+            nav-bar = [
+              "back-button"
+              "forward-button"
+              "stop-reload-button"
+              "urlbar-container"
+              "downloads-button"
+              "unified-extensions-button"
+            ];
+            toolbar-menubar = [ "menubar-items" ];
+            TabsToolbar = [ "tabbrowser-tabs" "new-tab-button" "alltabs-button" ];
+            vertical-tabs = [];
+            PersonalToolbar = [ "personal-bookmarks" ];
+          };
+          currentVersion = 20;
+        };
+
         # Vertical tabs
         "sidebar.verticalTabs" = true;
         "sidebar.revamp" = true;
