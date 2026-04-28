@@ -173,7 +173,9 @@ in
         # Vertical tabs
         "sidebar.verticalTabs" = true;
         "sidebar.revamp" = true;
-        "sidebar.visibility" = "expand-on-hover";
+        "sidebar.visibility" = "always-show";
+        "sidebar.expandOnHover.enabled" = false;
+        "sidebar.width" = 42;
 
         # Bookmarks toolbar (only on new tab page)
         "browser.toolbars.bookmarks.visibility" = "newtab";
