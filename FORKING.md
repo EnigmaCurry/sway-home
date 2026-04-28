@@ -148,7 +148,59 @@ sed -i "s|github.com/EnigmaCurry/sway-home|YOUR_FORGE/${FORGE_USER}/sway-home|g"
   nixos/_scripts/bootstrap.sh
 ```
 
-## Step 9: Update the flake lock files
+## Step 9: NixOS host configuration
+
+If you use the NixOS install method, `nixos/hosts/hosts.nix` contains
+host-specific settings you'll want to change:
+
+- `userName` — hardcoded to `ryan`
+- `hostName` — hardcoded to `x1`
+- `timeZone` — set to `America/Denver`
+- Keyboard layout options (e.g. `ctrl:nocaps`)
+
+Use `nixos/_scripts/add-host.sh` to create your own host entry, or
+edit `hosts.nix` directly.
+
+## Step 10: Firefox bookmarks
+
+`home-manager/modules/firefox.nix` has default bookmarks pointing to
+EnigmaCurry projects (sway-home, d.rymcg.tech, blog.rymcg.tech,
+book.rymcg.tech, nixos-vm-template). Replace or remove these.
+
+## Step 11: blog.rymcg.tech utility scripts
+
+`home-manager/modules/home.nix` symlinks ~16 utility scripts from the
+`blog-rymcg-tech` flake input into `~/bin/` (git-vendor, proxmox
+helpers, rclone, wireguard, restic, etc.). Review these and remove any
+you don't need.
+
+## Step 12: Other personal config
+
+- `config/ksnip/ksnip.conf` — `SaveDirectory` is hardcoded to
+  `/home/ryan`, update to your home directory
+- `config/waybar/config` — weather widget has a `<your_location>`
+  placeholder, set it to your location
+
+## Step 13: Add or remove packages
+
+To customize which packages are installed, edit
+`home-manager/modules/packages.nix`. It's a simple list of nixpkgs
+attribute names:
+
+```nix
+{ pkgs }:
+
+with pkgs; [
+  ripgrep
+  jq
+  # add your packages here
+]
+```
+
+Search for packages at [search.nixos.org](https://search.nixos.org/packages)
+and add them to the list. Remove any you don't need.
+
+## Step 14: Update the flake lock files
 
 After changing flake inputs, update the lock files:
 
@@ -157,12 +209,12 @@ cd home-manager && nix flake update && cd ..
 cd nixos && nix flake update && cd ..
 ```
 
-## Step 10: Verify
+## Step 15: Verify
 
 Search for any remaining references to make sure you got everything:
 
 ```bash
-grep -ri "enigmacurry" --include='*.sh' --include='*.nix' .
+grep -ri "enigmacurry" --include='*.sh' --include='*.nix' --include='*.conf' .
 ```
 
 ## Summary of files changed
@@ -172,5 +224,10 @@ grep -ri "enigmacurry" --include='*.sh' --include='*.nix' .
 | `config/bash/alias.sh` | `hm-*` alias paths, `ec` alias |
 | `config/bash/completion.sh` | `cdg` and `cdd` alias paths, d.rymcg.tech |
 | `home-manager/flake.nix` | Flake inputs for emacs, optionally others |
+| `home-manager/modules/firefox.nix` | Default bookmarks |
+| `home-manager/modules/home.nix` | blog.rymcg.tech utility scripts |
 | `nixos/flake.nix` | Flake input for emacs |
+| `nixos/hosts/hosts.nix` | Username, hostname, timezone, keyboard |
 | `nixos/_scripts/bootstrap.sh` | Default GIT_URL and GIT_REPO |
+| `config/ksnip/ksnip.conf` | SaveDirectory home path |
+| `config/waybar/config` | Weather widget location |
