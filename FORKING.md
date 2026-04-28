@@ -2,30 +2,31 @@
 
 This guide walks through the steps to fork sway-home and make it your
 own. The goal is to replace hard-coded `enigmacurry` references with
-your own GitHub username and repository locations.
+your own username and repository locations.
 
 Eventually this document will become a script. For now, the steps are
 written as bash snippets you can run manually.
 
 ## Prerequisites
 
-You need a GitHub account and `git` installed. Throughout this guide,
-set `GITHUB_USER` to your GitHub username:
+You need `git` installed and a git forge account (GitHub, Codeberg,
+GitLab, Forgejo, etc.). Throughout this guide, set `FORGE_USER` to
+your username on whatever forge you use:
 
 ```bash
-GITHUB_USER="your-github-username"
+FORGE_USER="your-username"
 ```
 
 ## Step 1: Fork and clone
 
-Fork the repository on GitHub, then clone it into your vendor
+Fork the repository on your forge, then clone it into your vendor
 directory:
 
 ```bash
-mkdir -p ~/git/vendor/${GITHUB_USER}
-git clone https://github.com/${GITHUB_USER}/sway-home.git \
-  ~/git/vendor/${GITHUB_USER}/sway-home
-cd ~/git/vendor/${GITHUB_USER}/sway-home
+mkdir -p ~/git/vendor/${FORGE_USER}
+git clone https://YOUR_FORGE/${FORGE_USER}/sway-home.git \
+  ~/git/vendor/${FORGE_USER}/sway-home
+cd ~/git/vendor/${FORGE_USER}/sway-home
 ```
 
 ## Step 2: Decide which upstream repos to fork
@@ -40,12 +41,12 @@ You likely want to fork some and keep others upstream:
 | `blog.rymcg.tech` | Keep upstream (or remove) | EnigmaCurry's blog — you probably don't need it |
 | `script-wizard` | Keep upstream | Shared utility, not personal config |
 
-Fork the ones you want on GitHub, then clone them:
+Fork the ones you want on your forge, then clone them:
 
 ```bash
 # Example: fork emacs
-git clone https://github.com/${GITHUB_USER}/emacs.git \
-  ~/git/vendor/${GITHUB_USER}/emacs
+git clone https://YOUR_FORGE/${FORGE_USER}/emacs.git \
+  ~/git/vendor/${FORGE_USER}/emacs
 ```
 
 ## Step 3: Update bash aliases
@@ -54,10 +55,10 @@ The file `config/bash/alias.sh` has hard-coded paths to
 `~/git/vendor/enigmacurry/sway-home`. Update them:
 
 ```bash
-sed -i "s|enigmacurry/sway-home|${GITHUB_USER}/sway-home|g" \
+sed -i "s|enigmacurry/sway-home|${FORGE_USER}/sway-home|g" \
   config/bash/alias.sh
 
-sed -i "s|enigmacurry/emacs|${GITHUB_USER}/emacs|g" \
+sed -i "s|enigmacurry/emacs|${FORGE_USER}/emacs|g" \
   config/bash/alias.sh
 ```
 
@@ -71,7 +72,7 @@ with hard-coded paths (the `cdg` in `config/bash/git.sh` is
 deprecated — the `completion.sh` version is canonical):
 
 ```bash
-sed -i "s|enigmacurry|${GITHUB_USER}|g" \
+sed -i "s|enigmacurry|${FORGE_USER}|g" \
   config/bash/completion.sh
 ```
 
@@ -89,19 +90,29 @@ sed -i '/d.rymcg.tech/d' config/bash/completion.sh
 ## Step 6: Update home-manager flake inputs
 
 Edit `home-manager/flake.nix` to point to your repos where
-appropriate:
+appropriate. The upstream inputs use `github:` nix flake URL syntax.
+If your forge is GitHub, you can simply replace the username. For
+other forges, use the appropriate nix flake URL scheme:
+
+- GitHub: `github:USER/REPO`
+- GitLab: `gitlab:USER/REPO`
+- Sourcehut: `sourcehut:~USER/REPO`
+- Generic git: `git+https://YOUR_FORGE/USER/REPO`
 
 ```bash
-# Update emacs to your fork (you almost certainly want this):
-sed -i 's|github:EnigmaCurry/emacs|github:'"${GITHUB_USER}"'/emacs|g' \
+# If your fork is on GitHub, a simple sed works:
+sed -i 's|github:EnigmaCurry/emacs|github:'"${FORGE_USER}"'/emacs|g' \
   home-manager/flake.nix
 
+# For other forges, edit the URL manually. For example, Codeberg:
+#   emacs_enigmacurry = { url = "git+https://codeberg.org/YOU/emacs"; flake = false; };
+
 # Optional: update other repos only if you forked them:
-# sed -i 's|github:EnigmaCurry/nixos-vm-template|github:'"${GITHUB_USER}"'/nixos-vm-template|g' \
+# sed -i 's|github:EnigmaCurry/nixos-vm-template|github:'"${FORGE_USER}"'/nixos-vm-template|g' \
 #   home-manager/flake.nix
-# sed -i 's|github:EnigmaCurry/blog.rymcg.tech|github:'"${GITHUB_USER}"'/blog.rymcg.tech|g' \
+# sed -i 's|github:EnigmaCurry/blog.rymcg.tech|github:'"${FORGE_USER}"'/blog.rymcg.tech|g' \
 #   home-manager/flake.nix
-# sed -i 's|github:EnigmaCurry/script-wizard|github:'"${GITHUB_USER}"'/script-wizard|g' \
+# sed -i 's|github:EnigmaCurry/script-wizard|github:'"${FORGE_USER}"'/script-wizard|g' \
 #   home-manager/flake.nix
 ```
 
@@ -111,23 +122,29 @@ reference it).
 
 ## Step 7: Update NixOS flake inputs
 
-The NixOS flake at `nixos/flake.nix` also references the emacs repo:
+The NixOS flake at `nixos/flake.nix` also references the emacs repo.
+Use the same flake URL scheme as in step 6:
 
 ```bash
-sed -i 's|github:EnigmaCurry/emacs|github:'"${GITHUB_USER}"'/emacs|g' \
+# If your fork is on GitHub:
+sed -i 's|github:EnigmaCurry/emacs|github:'"${FORGE_USER}"'/emacs|g' \
   nixos/flake.nix
+
+# For other forges, edit the URL manually as described in step 6.
 ```
 
 ## Step 8: Update the bootstrap script
 
 The bootstrap script `nixos/_scripts/bootstrap.sh` has defaults for
-the git URL and local path:
+the git URL and local clone path. Update both:
 
 ```bash
-sed -i "s|EnigmaCurry/sway-home|${GITHUB_USER}/sway-home|g" \
+# Update the local clone path:
+sed -i "s|enigmacurry/sway-home|${FORGE_USER}/sway-home|g" \
   nixos/_scripts/bootstrap.sh
 
-sed -i "s|enigmacurry/sway-home|${GITHUB_USER}/sway-home|g" \
+# Update the git remote URL (adjust for your forge):
+sed -i "s|github.com/EnigmaCurry/sway-home|YOUR_FORGE/${FORGE_USER}/sway-home|g" \
   nixos/_scripts/bootstrap.sh
 ```
 
