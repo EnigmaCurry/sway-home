@@ -48,7 +48,7 @@ You likely want to fork some and keep others upstream:
 |---|---|---|
 | `emacs` | **Fork** | Personal editor config — you'll want your own |
 | `nixos-vm-template` | Keep upstream | General-purpose tool, not personal config |
-| `blog.rymcg.tech` | Keep upstream (or remove) | EnigmaCurry's blog — you probably don't need it |
+| `blog.rymcg.tech` | Keep upstream (or remove) | EnigmaCurry's blog - which contains some useful and obscure scripts |
 | `script-wizard` | Keep upstream | Shared utility, not personal config |
 
 Fork the ones you want on your forge, then clone them:
