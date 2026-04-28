@@ -234,3 +234,10 @@ grep -ri "enigmacurry" --include='*.sh' --include='*.nix' --include='*.conf' .
 | `nixos/_scripts/bootstrap.sh` | Default GIT_URL and GIT_REPO |
 | `config/ksnip/ksnip.conf` | SaveDirectory home path |
 | `config/waybar/config` | Weather widget location |
+
+---
+
+The `~/git/vendor/USERNAME` directory convention is useful for
+organizing repositories by origin, but it's not required. You can
+clone your fork wherever you like — just update the paths in the
+steps above accordingly.
