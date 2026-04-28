@@ -78,9 +78,8 @@ hm-rollback, etc.) and the `ec` emacs alias.
 
 ## Step 4: Update bash cd aliases and completion
 
-The file `config/bash/completion.sh` defines `cdg` and `cdd` aliases
-with hard-coded paths (the `cdg` in `config/bash/git.sh` is
-deprecated — the `completion.sh` version is canonical):
+The files `config/bash/completion.sh` and `config/bash/git.sh` define
+`cdg` and `cdd` aliases with hard-coded paths:
 
 ```bash
 sed -i "s|enigmacurry|${FORGE_USER}|g" \
