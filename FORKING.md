@@ -28,7 +28,7 @@ it on your forge before cloning, and use that name in place of
 
 ```bash
 mkdir -p ~/git/vendor/${FORGE_USER}
-git clone git@YOUR_FORGE:${FORGE_USER}/sway-home.git \
+git clone git@${YOUR_FORGE}:${FORGE_USER}/sway-home.git \
   ~/git/vendor/${FORGE_USER}/sway-home
 cd ~/git/vendor/${FORGE_USER}/sway-home
 ```
@@ -49,7 +49,7 @@ Fork the ones you want on your forge, then clone them:
 
 ```bash
 # Example: fork emacs
-git clone git@YOUR_FORGE:${FORGE_USER}/emacs.git \
+git clone git@${YOUR_FORGE}:${FORGE_USER}/emacs.git \
   ~/git/vendor/${FORGE_USER}/emacs
 ```
 
@@ -148,7 +148,7 @@ sed -i "s|enigmacurry/sway-home|${FORGE_USER}/sway-home|g" \
   nixos/_scripts/bootstrap.sh
 
 # Update the git remote URL (adjust for your forge):
-sed -i "s|github.com/EnigmaCurry/sway-home|YOUR_FORGE/${FORGE_USER}/sway-home|g" \
+sed -i "s|github.com/EnigmaCurry/sway-home|${YOUR_FORGE}/${FORGE_USER}/sway-home|g" \
   nixos/_scripts/bootstrap.sh
 ```
 
