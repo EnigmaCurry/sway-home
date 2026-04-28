@@ -8,26 +8,16 @@ The non-nix specific config files are in the root directory
 ([config](config), [bashrc](bashrc), etc.) and are imported by the nix
 config.
 
-You can install this on a real machine, but you may want to test it
-out in a VM first. See [NIXOS_VM.md](NIXOS_VM.md) for instructions.
+For VM-based NixOS development, see
+[nixos-vm-template](https://github.com/EnigmaCurry/nixos-vm-template).
 
 ## Install NixOS
 
 Follow the [NixOS manual](https://nixos.org/manual/nixos/stable/) and
-use the graphical installer to install NixOS on your host (or in a
-VM).
+use the graphical installer to install NixOS on your host.
 
  * During the install, you should select the option for `No desktop`,
    because this setting will be overriden anyway.
-
-Special instructions *only if you are using a VM*:
-
- * After the install, you should **shut down** (not reboot) the VM.
- * Once shutdown, create an initial snapshot so you can reset to a
-   fresh state.
- * Make sure to set up the serial console, so that you can easily copy
-   and paste the following commands (otherwise you'll need to type
-   them by hand).
 
 ## Bootstrap the config
 
@@ -111,16 +101,6 @@ Available recipes:
     switch                   # Rebuild NixOS and switch to the new generation
     test                     # Rebuild NixOS and test the new generation (ALL config reverts on reboot)
     update                   # Update flake.lock
-    vm-connect               # Connect to VM serial port (See NIXOS_VM.md)
-    vm-create                # Create test VM (See NIXOS_VM.md)
-    vm-delete-disk           # Delete just the VM disk (See NIXOS_VM.md)
-    vm-delete-snapshot *args # Delete VM snapshot by name (See NIXOS_VM.md)
-    vm-destroy               # Delete the test VM AND its configuration (See NIXOS_VM.md)
-    vm-kill                  # Kill the test VM (See NIXOS_VM.md)
-    vm-list-snapshots *args  # List VM snapshots (See NIXOS_VM.md)
-    vm-restore *args         # Restore VM snapshot by name (See NIXOS_VM.md)
-    vm-snapshot *args        # Create VM snapshot by name (See NIXOS_VM.md)
-    vm-start                 # Start the test VM (See NIXOS_VM.md)
 ```
 
 
@@ -181,12 +161,3 @@ Available recipes:
    original `/etc/nixos/hardware-configuration.nix`, because it's no
    longer being used.
 
- * There is an alternative `minimal` .iso image you can use instead of
-   the `graphical` one, but I find the `graphical` one to be easier to
-   bootstrap with. There is a boot menu option to enable a serial
-   console, but it is not the default, so a graphical display appears
-   to be required anyway. If I could figure out a way to enable the
-   serial console during the install without needing the display to do
-   it, then the `minimal` installer might be preferable to me, but if
-   a virtual display (`gtk` window) is going to required anyway, I
-   might as well just use the `graphical` installer.
