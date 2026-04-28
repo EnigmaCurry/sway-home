@@ -9,7 +9,8 @@ The non-nix specific config files are in the root directory
 config.
 
 For VM-based NixOS development, see
-[nixos-vm-template](https://github.com/EnigmaCurry/nixos-vm-template).
+[nixos-vm-template](https://github.com/EnigmaCurry/nixos-vm-template),
+which has an included profile for sway-home.
 
 ## Install NixOS
 
