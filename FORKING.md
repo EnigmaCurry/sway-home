@@ -51,13 +51,9 @@ You likely want to fork some and keep others upstream:
 | `blog.rymcg.tech` | Keep upstream (or remove) | EnigmaCurry's blog - which contains some useful and obscure scripts |
 | `script-wizard` | Keep upstream | Shared utility, not personal config |
 
-Fork the ones you want on your forge, then clone them:
-
-```bash
-# Example: fork emacs (adjust the clone URL for your forge)
-git clone git@github.com:${FORGE_USER}/emacs.git \
-  ~/git/vendor/${FORGE_USER}/emacs
-```
+Fork the ones you want on your forge. You don't need to clone them
+locally — home-manager fetches them as flake inputs. You only need a
+local clone if you want to develop on a repo directly.
 
 ## Step 3: Update bash aliases
 
