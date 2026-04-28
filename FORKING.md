@@ -20,7 +20,10 @@ FORGE_USER="your-username"
 ## Step 1: Fork and clone
 
 Fork the repository on your forge, then clone it into your vendor
-directory:
+directory. If you want to rename the repo (e.g. `dotfiles`,
+`home-config`, etc.), now is the time — rename it on your forge before
+cloning, and use that name in place of `sway-home` throughout this
+guide:
 
 ```bash
 mkdir -p ~/git/vendor/${FORGE_USER}
