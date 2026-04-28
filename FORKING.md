@@ -89,13 +89,9 @@ sed -i "s|enigmacurry|${FORGE_USER}|g" \
 ## Step 5: Update d.rymcg.tech references (optional)
 
 If you don't use [d.rymcg.tech](https://github.com/EnigmaCurry/d.rymcg.tech),
-you can remove or comment out its block in `config/bash/completion.sh`
-(lines 5-13). Otherwise update the path:
-
-```bash
-# Remove the d.rymcg.tech block if you don't use it:
-sed -i '/d.rymcg.tech/d' config/bash/completion.sh
-```
+remove the `if` block (lines 5-13) and the `cdd` alias (line 53) from
+`config/bash/completion.sh`. If you do use it, update the hard-coded
+path on lines 7-8 and 53.
 
 ## Step 6: Update home-manager flake inputs
 
