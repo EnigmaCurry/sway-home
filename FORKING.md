@@ -15,7 +15,6 @@ your username on whatever forge you use:
 
 ```bash
 FORGE_USER="your-username"
-YOUR_FORGE="github.com"  # or codeberg.org, gitlab.com, etc.
 ```
 
 ## Step 1: Fork and clone
@@ -24,12 +23,19 @@ Fork the repository on your forge, then clone it into your [vendor
 directory](#a-note-on-directory-layout). If you want to rename the
 repo (e.g. `dotfiles`, `home-config`, etc.), now is the time — rename
 it on your forge before cloning, and use that name in place of
-`sway-home` throughout this guide:
+`sway-home` throughout this guide.
+
+Copy the SSH clone URL from your forge and use it below. The URL
+format varies by forge:
+
+- GitHub: `git@github.com:USER/REPO.git`
+- Codeberg: `git@codeberg.org:USER/REPO.git`
+- Forgejo/Gitea (custom port): `ssh://git@forgejo.example.com:2222/USER/REPO.git`
 
 ```bash
+CLONE_URL="git@github.com:${FORGE_USER}/sway-home.git"  # adjust for your forge
 mkdir -p ~/git/vendor/${FORGE_USER}
-git clone git@${YOUR_FORGE}:${FORGE_USER}/sway-home.git \
-  ~/git/vendor/${FORGE_USER}/sway-home
+git clone ${CLONE_URL} ~/git/vendor/${FORGE_USER}/sway-home
 cd ~/git/vendor/${FORGE_USER}/sway-home
 ```
 
@@ -48,8 +54,8 @@ You likely want to fork some and keep others upstream:
 Fork the ones you want on your forge, then clone them:
 
 ```bash
-# Example: fork emacs
-git clone git@${YOUR_FORGE}:${FORGE_USER}/emacs.git \
+# Example: fork emacs (adjust the clone URL for your forge)
+git clone git@github.com:${FORGE_USER}/emacs.git \
   ~/git/vendor/${FORGE_USER}/emacs
 ```
 
@@ -147,9 +153,8 @@ the git URL and local clone path. Update both:
 sed -i "s|enigmacurry/sway-home|${FORGE_USER}/sway-home|g" \
   nixos/_scripts/bootstrap.sh
 
-# Update the git remote URL (adjust for your forge):
-sed -i "s|github.com/EnigmaCurry/sway-home|${YOUR_FORGE}/${FORGE_USER}/sway-home|g" \
-  nixos/_scripts/bootstrap.sh
+# Update the git remote URL to match your forge:
+# (review the GIT_URL default in the script and replace it with your own)
 ```
 
 ## Step 9: NixOS host configuration
