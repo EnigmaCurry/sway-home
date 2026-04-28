@@ -15,6 +15,7 @@ your username on whatever forge you use:
 
 ```bash
 FORGE_USER="your-username"
+YOUR_FORGE="github.com"  # or codeberg.org, gitlab.com, etc.
 ```
 
 ## Step 1: Fork and clone
