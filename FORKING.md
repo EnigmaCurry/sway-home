@@ -58,13 +58,17 @@ local clone if you want to develop on a repo directly.
 ## Step 3: Update bash aliases
 
 The file `config/bash/alias.sh` has hard-coded paths to
-`~/git/vendor/enigmacurry/sway-home`. Update them:
+`~/git/vendor/enigmacurry/sway-home` and
+`~/git/vendor/enigmacurry/emacs`. Set `REPO_ROOT` to wherever you
+cloned the repo, then update:
 
 ```bash
-sed -i "s|enigmacurry/sway-home|${FORGE_USER}/${CONFIG_REPO}|g" \
+REPO_ROOT=~/git/vendor/${FORGE_USER}/${CONFIG_REPO}  # adjust if you cloned elsewhere
+
+sed -i "s|~/git/vendor/enigmacurry/sway-home|${REPO_ROOT}|g" \
   config/bash/alias.sh
 
-sed -i "s|enigmacurry/emacs|${FORGE_USER}/emacs|g" \
+sed -i "s|\${HOME}/git/vendor/enigmacurry/emacs|${REPO_ROOT%/*}/emacs|g" \
   config/bash/alias.sh
 ```
 
