@@ -63,7 +63,7 @@ The file `config/bash/alias.sh` has hard-coded paths to
 cloned the repo, then update:
 
 ```bash
-# Use a literal path (don't let ~ expand)
+# Use a literal path with ~ (don't let it expand)
 REPO_ROOT='~/git/vendor/'"${FORGE_USER}/${CONFIG_REPO}"  # adjust if you cloned elsewhere
 
 sed -i "s|~/git/vendor/enigmacurry/sway-home|${REPO_ROOT}|g" \
@@ -90,8 +90,7 @@ sed -i "s|enigmacurry|${FORGE_USER}|g" \
 
 If you don't use [d.rymcg.tech](https://github.com/EnigmaCurry/d.rymcg.tech),
 remove the `if` block (lines 5-13) and the `cdd` alias (line 53) from
-`config/bash/completion.sh`. If you do use it, update the hard-coded
-path on lines 7-8 and 53.
+`config/bash/completion.sh`.
 
 ## Step 6: Update home-manager flake inputs
 
