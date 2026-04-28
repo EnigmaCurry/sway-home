@@ -214,8 +214,7 @@ and add them to the list. Remove any you don't need.
 After changing flake inputs, update the lock files:
 
 ```bash
-cd home-manager && nix flake update && cd ..
-cd nixos && nix flake update && cd ..
+hm-update
 ```
 
 ## Step 15: Verify
