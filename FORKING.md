@@ -10,8 +10,9 @@ written as bash snippets you can run manually.
 ## Prerequisites
 
 You need `git` installed and a git forge account (GitHub, Codeberg,
-GitLab, Forgejo, etc.). Throughout this guide, set `FORGE_USER` to
-your username on whatever forge you use:
+GitLab, Forgejo, etc.). Throughout this guide, set `FORGE_USER` to your username on whatever
+forge you use, and `CONFIG_REPO` as the name you want for your forked
+repo:
 
 ```bash
 FORGE_USER="your-username"
