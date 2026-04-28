@@ -15,15 +15,14 @@ your username on whatever forge you use:
 
 ```bash
 FORGE_USER="your-username"
+CONFIG_REPO="sway-home"  # rename if you called your fork something else
 ```
 
 ## Step 1: Fork and clone
 
 Fork the repository on your forge, then clone it into your [vendor
-directory](#a-note-on-directory-layout). If you want to rename the
-repo (e.g. `dotfiles`, `home-config`, etc.), now is the time — rename
-it on your forge before cloning, and use that name in place of
-`sway-home` throughout this guide.
+directory](#a-note-on-directory-layout). If you renamed your fork,
+set `CONFIG_REPO` accordingly in the prerequisites above.
 
 Copy the SSH clone URL from your forge and use it below. The URL
 format varies by forge:
@@ -33,10 +32,10 @@ format varies by forge:
 - Forgejo/Gitea (custom port): `ssh://git@forgejo.example.com:2222/USER/REPO.git`
 
 ```bash
-CLONE_URL="git@github.com:${FORGE_USER}/sway-home.git"  # adjust for your forge
+CLONE_URL="git@github.com:${FORGE_USER}/${CONFIG_REPO}.git"  # adjust for your forge
 mkdir -p ~/git/vendor/${FORGE_USER}
-git clone ${CLONE_URL} ~/git/vendor/${FORGE_USER}/sway-home
-cd ~/git/vendor/${FORGE_USER}/sway-home
+git clone ${CLONE_URL} ~/git/vendor/${FORGE_USER}/${CONFIG_REPO}
+cd ~/git/vendor/${FORGE_USER}/${CONFIG_REPO}
 ```
 
 ## Step 2: Decide which upstream repos to fork
@@ -65,7 +64,7 @@ The file `config/bash/alias.sh` has hard-coded paths to
 `~/git/vendor/enigmacurry/sway-home`. Update them:
 
 ```bash
-sed -i "s|enigmacurry/sway-home|${FORGE_USER}/sway-home|g" \
+sed -i "s|enigmacurry/sway-home|${FORGE_USER}/${CONFIG_REPO}|g" \
   config/bash/alias.sh
 
 sed -i "s|enigmacurry/emacs|${FORGE_USER}/emacs|g" \
@@ -150,7 +149,7 @@ the git URL and local clone path. Update both:
 
 ```bash
 # Update the local clone path:
-sed -i "s|enigmacurry/sway-home|${FORGE_USER}/sway-home|g" \
+sed -i "s|enigmacurry/sway-home|${FORGE_USER}/${CONFIG_REPO}|g" \
   nixos/_scripts/bootstrap.sh
 
 # Update the git remote URL to match your forge:
