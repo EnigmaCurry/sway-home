@@ -92,9 +92,14 @@ hm-rollback:
 hm-metadata:
     cd home-manager; nix flake metadata
 
+# Show home-manager news
+hm-news:
+    cd home-manager; home-manager news --flake .#default --impure
+
 # Update flake, pull repo, and switch home-manager
 hm-upgrade: hm-pull hm-update hm-switch
     @echo ""
+    @echo "Run 'hm-news' to read home-manager news."
     @echo "NOTE: Restart your shell to pick up all changes."
 
 # --- NixOS ISO Building ---
