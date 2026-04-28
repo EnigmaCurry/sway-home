@@ -19,11 +19,11 @@ FORGE_USER="your-username"
 
 ## Step 1: Fork and clone
 
-Fork the repository on your forge, then clone it into your vendor
-directory. If you want to rename the repo (e.g. `dotfiles`,
-`home-config`, etc.), now is the time — rename it on your forge before
-cloning, and use that name in place of `sway-home` throughout this
-guide:
+Fork the repository on your forge, then clone it into your [vendor
+directory](#a-note-on-directory-layout). If you want to rename the
+repo (e.g. `dotfiles`, `home-config`, etc.), now is the time — rename
+it on your forge before cloning, and use that name in place of
+`sway-home` throughout this guide:
 
 ```bash
 mkdir -p ~/git/vendor/${FORGE_USER}
@@ -236,6 +236,8 @@ grep -ri "enigmacurry" --include='*.sh' --include='*.nix' --include='*.conf' .
 | `config/waybar/config` | Weather widget location |
 
 ---
+
+## A note on directory layout
 
 The `~/git/vendor/USERNAME` directory convention is useful for
 organizing repositories by origin, but it's not required. You can
