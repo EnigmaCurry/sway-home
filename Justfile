@@ -94,6 +94,8 @@ hm-metadata:
 
 # Update flake, pull repo, and switch home-manager
 hm-upgrade: hm-pull hm-update hm-switch
+    @echo ""
+    @echo "NOTE: Restart your shell to pick up all changes."
 
 # --- NixOS ISO Building ---
 
