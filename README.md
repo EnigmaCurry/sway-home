@@ -10,3 +10,5 @@ following installation methods:
 For building and managing NixOS VMs, see
 [nixos-vm-template](https://github.com/enigmacurry/nixos-vm-template).
 
+Want to make these dotfiles your own? See [FORKING.md](FORKING.md).
+
