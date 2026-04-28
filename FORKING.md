@@ -63,7 +63,8 @@ The file `config/bash/alias.sh` has hard-coded paths to
 cloned the repo, then update:
 
 ```bash
-REPO_ROOT=~/git/vendor/${FORGE_USER}/${CONFIG_REPO}  # adjust if you cloned elsewhere
+# Use a literal path (don't let ~ expand)
+REPO_ROOT='~/git/vendor/'"${FORGE_USER}/${CONFIG_REPO}"  # adjust if you cloned elsewhere
 
 sed -i "s|~/git/vendor/enigmacurry/sway-home|${REPO_ROOT}|g" \
   config/bash/alias.sh
