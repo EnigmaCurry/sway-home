@@ -7,3 +7,6 @@ following installation methods:
  * [home-manager](HOME_MANAGER.md) (declarative config on any Linux distro *with* Nix).
  * [NixOS](NIXOS.md) (fully declarative operating system and home manager config).
 
+For building and managing NixOS VMs, see
+[nixos-vm-template](https://github.com/enigmacurry/nixos-vm-template).
+
