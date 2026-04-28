@@ -27,7 +27,7 @@ it on your forge before cloning, and use that name in place of
 
 ```bash
 mkdir -p ~/git/vendor/${FORGE_USER}
-git clone https://YOUR_FORGE/${FORGE_USER}/sway-home.git \
+git clone git@YOUR_FORGE:${FORGE_USER}/sway-home.git \
   ~/git/vendor/${FORGE_USER}/sway-home
 cd ~/git/vendor/${FORGE_USER}/sway-home
 ```
@@ -48,7 +48,7 @@ Fork the ones you want on your forge, then clone them:
 
 ```bash
 # Example: fork emacs
-git clone https://YOUR_FORGE/${FORGE_USER}/emacs.git \
+git clone git@YOUR_FORGE:${FORGE_USER}/emacs.git \
   ~/git/vendor/${FORGE_USER}/emacs
 ```
 
