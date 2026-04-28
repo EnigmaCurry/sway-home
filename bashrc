@@ -20,7 +20,7 @@ modules=(
     just-completion
     alias
     editor
-    git
+
     rust
     video
     music
