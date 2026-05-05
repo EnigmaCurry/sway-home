@@ -10,7 +10,6 @@ with pkgs; [
   wasm-pack
   pgformatter
   tree-sitter
-  rustup
   pkg-config
   gcc
   gnumake
