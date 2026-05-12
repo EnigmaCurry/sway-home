@@ -101,6 +101,16 @@ hm-upgrade: hm-pull hm-update hm-switch
     @echo ""
     @echo "Run 'hm-news' to read home-manager news."
     @echo "NOTE: Restart your shell to pick up all changes."
+    @current=$(grep -oP 'nixpkgs\.url\s*=\s*"github:NixOS/nixpkgs/nixos-\K[0-9]+\.[0-9]+' home-manager/flake.nix); \
+    latest=$(git ls-remote --tags https://github.com/NixOS/nixpkgs.git 2>/dev/null \
+        | grep -oP 'refs/tags/\K[0-9]+\.[0-9]+$' \
+        | sort -t. -k1,1n -k2,2n \
+        | tail -1); \
+    if [ -n "$latest" ] && [ "$latest" != "$current" ] && [ "$(printf '%s\n%s' "$current" "$latest" | sort -t. -k1,1n -k2,2n | tail -1)" = "$latest" ]; then \
+        echo ""; \
+        echo ">>> NixOS ${latest} is now available! You are on nixos-${current}."; \
+        echo ">>> Update nixpkgs.url in home-manager/flake.nix when ready."; \
+    fi
 
 # --- NixOS ISO Building ---
 
