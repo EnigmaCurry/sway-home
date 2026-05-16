@@ -7,19 +7,16 @@
   #
   # Use lib.mkForce when you need to override a previous value that merges.
 
-  # --- Enable Emacs/Home-Manager module on this host -------------------------
-  home-manager.users.${host.userName}.imports = [
-    (inputs.sway-home + "/home-manager/modules/emacs.nix")
-  ];
+  # Emacs is now included via all.nix
 
   # --- Allow incoming network ports ------
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
 
   # --- Additional packages ----
-  services.mullvad-vpn.enable = true;
-  environment.systemPackages = with pkgs; [
-    mullvad-browser mullvad-vpn btop
-  ];
+  # services.mullvad-vpn.enable = true;
+  # environment.systemPackages = with pkgs; [
+  #   mullvad-browser mullvad-vpn
+  # ];
 
   # --- Enable CUPS to print documents ---
   services.printing.enable = true;
