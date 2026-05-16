@@ -46,8 +46,7 @@
             scriptWizard = inputs.script-wizard.packages.${system}.default;
           };
           modules = [
-            inputs.nix-flatpak.homeManagerModules.nix-flatpak
-            ./modules/home.nix
+            ./modules/all.nix
             ({ pkgs, scriptWizard, ... }: {
               home.packages = (import ./modules/packages.nix { inherit pkgs; }) ++ [ scriptWizard ];
             })
@@ -61,7 +60,6 @@
       homeConfigurations.default = mkHomeConfiguration {
         userName = currentUser;
         system = defaultSystem;
-        extraModules = [ ./modules/emacs.nix ./modules/nixos-vm-template.nix ./modules/rust.nix ./modules/flatpak.nix ./modules/fluidsynth.nix ./modules/firefox.nix ];
       };
 
       # Export modules for NixOS flake to import

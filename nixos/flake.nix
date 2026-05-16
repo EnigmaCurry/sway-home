@@ -10,10 +10,18 @@
       inputs.nixpkgs.follows = "nixpkgs_25_11";
     };
 
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
+
     sway-home = { url = "path:.."; flake = false; };
     emacs_enigmacurry = { url = "github:EnigmaCurry/emacs"; flake = false; };
+    nixos-vm-template = { url = "github:EnigmaCurry/nixos-vm-template"; flake = false; };
     git-prompt = { url = "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"; flake = false; };
     blog-rymcg-tech = { url = "github:EnigmaCurry/blog.rymcg.tech"; flake = false; };
+    script-wizard.url = "github:EnigmaCurry/script-wizard";
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs_25_11";
+    };
   };
 
   outputs = inputs@{ self, ... }:
@@ -91,11 +99,15 @@
                     backupFileExtension = "backup";
                     extraSpecialArgs = { inherit inputs userName host; };
 
-                    users.${userName} = { pkgs, ... }: {
+                    users.${userName} = { pkgs, ... }:
+                      let
+                        system = host.system or "x86_64-linux";
+                        scriptWizard = inputs.script-wizard.packages.${system}.default;
+                      in {
                       imports = [
-                        ../home-manager/modules/home.nix
+                        ../home-manager/modules/all.nix
                       ];
-                      home.packages = import ../home-manager/modules/packages.nix { inherit pkgs; };
+                      home.packages = (import ../home-manager/modules/packages.nix { inherit pkgs; }) ++ [ scriptWizard ];
                     };
                   };
                 })
