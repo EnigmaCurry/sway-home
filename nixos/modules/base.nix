@@ -4,6 +4,11 @@
   # Opt-in for "experimental" flakes support (defacto standard, but possibly unstable)
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  # Symlink /bin/bash for scripts with #!/bin/bash shebangs
+  system.activationScripts.binbash = ''
+    ln -sfn ${pkgs.bash}/bin/bash /bin/bash
+  '';
+
   # Boot loader
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
