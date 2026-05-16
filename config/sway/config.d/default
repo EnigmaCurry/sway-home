@@ -15,7 +15,8 @@ set $volume_mute $(pactl set-sink-mute @DEFAULT_SINK@ toggle && pactl get-sink-m
 set $mic_mute $(pactl set-source-mute @DEFAULT_SOURCE@ toggle && pactl get-source-mute @DEFAULT_SOURCE@ | sed -En "/no/ s/.*/$($source_volume)/p; /yes/ s/.*/0/p")
 
 # Your preferred terminal emulators
-set $term-float foot
+set $term-float sh -c 'if command -v ghostty >/dev/null; then ghostty; else foot; fi'
+set $term-foot foot
 
 # Your preferred application launcher
 set $rofi_cmd rofi -terminal '$term'
@@ -46,8 +47,10 @@ exec swayidle -w\
 #
 # Basics:
 #
-    # Start a floating terminal
+    # Start a floating terminal (ghostty if available, else foot)
     bindsym Mod3+Return exec $term-float
+    # Start foot explicitly
+    bindsym Shift+Mod3+Return exec $term-foot
 
     # Open the power menu
     bindsym $mod+Shift+e exec $powermenu
