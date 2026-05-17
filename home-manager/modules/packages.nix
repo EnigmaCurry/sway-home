@@ -51,6 +51,7 @@ with pkgs; [
   apacheHttpd
   moreutils
   inotify-tools
+  tmux
   sshfs
   nerd-fonts.jetbrains-mono
   grim
