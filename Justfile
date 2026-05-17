@@ -43,6 +43,22 @@ metadata:
 add-host:
     ./nixos/_scripts/add-host.sh "{{HOSTNAME}}" "{{USERNAME}}"
 
+# Locally ignore nixos/hosts (useful for forks with custom host configs)
+ignore-hosts:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    grep -qxF 'nixos/hosts/' .git/info/exclude 2>/dev/null || echo 'nixos/hosts/' >> .git/info/exclude
+    git ls-files nixos/hosts/ | xargs -r git update-index --skip-worktree
+    echo "Locally ignoring nixos/hosts/ (untracked and tracked files)"
+
+# Stop locally ignoring nixos/hosts
+unignore-hosts:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sed -i '\|^nixos/hosts/$|d' .git/info/exclude
+    git ls-files nixos/hosts/ | xargs -r git update-index --no-skip-worktree
+    echo "No longer ignoring nixos/hosts/"
+
 # --- Home Manager (standalone, for non-NixOS systems) ---
 
 # Initial home-manager installation (run once, then use hm-switch)

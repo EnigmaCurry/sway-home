@@ -165,6 +165,16 @@ host-specific settings you'll want to change:
 Use `nixos/_scripts/add-host.sh` to create your own host entry, or
 edit `hosts.nix` directly.
 
+If you want to keep your host configs private (not committed to your
+fork), you can locally ignore the directory:
+
+```bash
+just ignore-hosts
+```
+
+This adds `nixos/hosts/` to `.git/info/exclude`, which works like
+`.gitignore` but is never committed. To undo: `just unignore-hosts`.
+
 ## Step 10: Firefox bookmarks
 
 `home-manager/modules/firefox.nix` has default bookmarks pointing to
