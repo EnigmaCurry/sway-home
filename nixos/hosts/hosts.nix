@@ -25,4 +25,30 @@
       };
     };
   };
+
+  x13 = {
+    hostName = "x13";
+    userName = "enigmacurry";
+    system = "x86_64-linux";
+    nixpkgsInput = "nixpkgs_25_11";
+    hardwareModule = ../hosts/x13/hardware.nix;
+    # Host-specific system overrides (imported after base configuration.nix)
+    extraSystemModules = [
+      ../hosts/x13/config.nix
+      
+    ];
+    extraPackages = [ ];
+    unstablePackages = [ ];
+    # Per-host schema consumed by modules/host-locale.nix
+    locale = {
+      timeZone = "America/Denver";
+      defaultLocale = "en_US.UTF-8";
+      xkb = {
+        layout = "us";
+        variant = "";
+        options = "ctrl:nocaps";
+        consoleUseXkbConfig = true;
+      };
+    };
+  };
 }
