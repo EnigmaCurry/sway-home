@@ -59,4 +59,18 @@ with pkgs; [
   sway-contrib.grimshot
   wl-clipboard
   wdisplays
+  ansible
+  babashka
+  docker
+  irssi
+  kubectl
+  natscli
+  nodejs
+  pnpm
+  pv
+  rlwrap
+  rustup
+  talosctl
+  tcpdump
+  tor
 ]

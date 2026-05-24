@@ -67,7 +67,7 @@ hm-install: _ensure-git-config
 
 # Switch home-manager configuration (use on Fedora/other Linux)
 hm-switch: _ensure-git-config
-    cd home-manager; home-manager switch --flake .#default --impure -b backup
+    cd home-manager; nix run home-manager -- switch --flake .#default --impure -b backup
 
 # Ensure git local config exists (prompts user if missing)
 _ensure-git-config:
@@ -110,7 +110,7 @@ hm-metadata:
 
 # Show home-manager news
 hm-news:
-    cd home-manager; home-manager news --flake .#default --impure
+    cd home-manager; nix run home-manager -- news --flake .#default --impure
 
 # Update flake, pull repo, and switch home-manager
 hm-upgrade: hm-pull hm-update hm-switch
