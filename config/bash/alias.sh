@@ -5,7 +5,7 @@ alias ls='eza'
 alias ll='eza -l --git'
 alias lt='eza -l --git -T --level=4 --color=always | less -R'
 alias grep='grep --color=auto'
-alias bb='rlwrap bb'
+alias bb='rlwrap -n bb'
 alias ec="${HOME}/git/vendor/enigmacurry/emacs/ec"
 alias run='just run'
 alias dev='distrobox enter dev'
