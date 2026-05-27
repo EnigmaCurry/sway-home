@@ -73,4 +73,5 @@ with pkgs; [
   talosctl
   tcpdump
   tor
+  leiningen
 ]
