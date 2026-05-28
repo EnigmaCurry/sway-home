@@ -19,11 +19,11 @@
     "emacs_enigmacurry": {
       "flake": false,
       "locked": {
-        "lastModified": 1779650149,
-        "narHash": "sha256-UljD9ewmCyKATBqgvF2abxYz2nGKZLT5Cgxy+i+uySc=",
+        "lastModified": 1779980962,
+        "narHash": "sha256-xfwwl/sPTt0PY14vStodvYEGVdhm4jyYFQo2r5/R3s0=",
         "owner": "EnigmaCurry",
         "repo": "emacs",
-        "rev": "09cb89751123276cd96880ed4828b810798c1865",
+        "rev": "cb3c2e90101438a9bce923cb127a9dc4f952dfae",
         "type": "github"
       },
       "original": {
@@ -40,11 +40,11 @@
       },
       "locked": {
         "dir": "pkgs/firefox-addons",
-        "lastModified": 1779768165,
-        "narHash": "sha256-+8SOI83x+AGQ+Zd50C4v+riMPVyxmJeVmMDWD6qBjxY=",
+        "lastModified": 1779940971,
+        "narHash": "sha256-bmmLVGqgohXF8Lb447TDAD2a1r9siFE8e//lAKosmyY=",
         "owner": "rycee",
         "repo": "nur-expressions",
-        "rev": "77733616a71a575a4b4f0fb4d4f42bfb2d6f9813",
+        "rev": "96bf7ce4c4420a800986309413dbc08cc27c36c1",
         "type": "gitlab"
       },
       "original": {
@@ -123,11 +123,11 @@
     "nixos-vm-template": {
       "flake": false,
       "locked": {
-        "lastModified": 1779853235,
-        "narHash": "sha256-wmbXRVcyMSafDsX6Z5zT+zm1Zu7Ru20FyuHJu2FqyKA=",
+        "lastModified": 1779855221,
+        "narHash": "sha256-2wcSgBY9GjPVxi4dCPrFVCK4dCcVA1EAVc4Oyyu3v4Y=",
         "owner": "EnigmaCurry",
         "repo": "nixos-vm-template",
-        "rev": "6dbf66f006e9c272da670af69c8286557bf91c8f",
+        "rev": "a5e415fd8c1985303809b91337948893e3503d76",
         "type": "github"
       },
       "original": {
