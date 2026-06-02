@@ -81,14 +81,23 @@
 (defonce running? (atom false))
 (defonce pending? (atom false))
 
+(defn kill-process-group!
+  "Kill an entire process group by PGID. Uses Runtime.exec to avoid p/shell
+   shutdown-hook registration (safe to call from JVM shutdown hooks)."
+  [pid signal]
+  (try
+    (-> (Runtime/getRuntime)
+        (.exec (into-array String ["kill" signal "--" (str "-" pid)]))
+        (.waitFor))
+    (catch Exception _ nil)))
+
 (defn kill-dev! []
   (when-let [proc @dev-process]
     (let [pid (.pid proc)]
       (println "Killing previous dev process tree (pid" pid ")...")
-      ;; Kill the entire process group (setsid gives the dev command its own group)
-      (p/shell {:continue true} "kill" "-TERM" "--" (str "-" pid))
+      (kill-process-group! pid "-TERM")
       (Thread/sleep 500)
-      (p/shell {:continue true} "kill" "-KILL" "--" (str "-" pid))
+      (kill-process-group! pid "-KILL")
       (.waitFor proc)
       (reset! dev-process nil)
       (println "Previous dev process killed."))))
@@ -144,19 +153,21 @@
 ;; --- Webhook cleanup ---
 
 (defn cleanup-drone-webhooks!
-  "Delete any existing webhooks created by gh webhook forward (smee.io URLs)."
+  "Delete any existing webhooks created by gh webhook forward."
   []
   (println "Cleaning up stale drone webhooks...")
   (let [result (p/shell {:out :string :err :string :continue true}
                         "gh" "api" (str "repos/" github-repo "/hooks")
-                        "--jq" ".[] | select(.config.url | test(\"smee.io\")) | .id")
+                        "--jq" ".[] | select(.name == \"cli\" or (.config.url | test(\"smee.io\"))) | .id")
         ids (when (zero? (:exit result))
               (->> (clojure.string/split-lines (:out result))
                    (map clojure.string/trim)
                    (remove clojure.string/blank?)))]
+    (when-not (zero? (:exit result))
+      (println "  Warning: could not list webhooks:" (clojure.string/trim (:err result))))
     (doseq [id ids]
       (println "  Deleting stale webhook" id)
-      (p/shell {:out :inherit :err :inherit}
+      (p/shell {:out :inherit :err :inherit :continue true}
                "gh" "api" "-X" "DELETE"
                (str "repos/" github-repo "/hooks/" id)))
     (when (seq ids)
