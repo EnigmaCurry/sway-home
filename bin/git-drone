@@ -108,8 +108,9 @@
        (Thread/sleep 1000)
        (when-not (.isAlive proc)
          (let [exit (.exitValue proc)]
-           (println "ERROR: dev command exited immediately with code" exit)
-           (System/exit exit)))))))
+           (when-not (zero? exit)
+             (println "ERROR: dev command exited immediately with code" exit)
+             (System/exit exit))))))))
 
 (defn sh! [cmd]
   (println "$" cmd)
