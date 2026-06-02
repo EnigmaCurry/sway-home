@@ -183,42 +183,55 @@
   ;; Start the dev process immediately (fail early if it exits right away)
   (start-dev! true)
 
-  ;; Start gh webhook forward, reading events from stdout
-  (let [cmd ["gh" "webhook" "forward"
+  ;; Start gh webhook forward with retry on transient failures
+  (let [max-retries 5
+        cmd ["gh" "webhook" "forward"
              "--repo" github-repo
              "--events" "push"]
-        _ (println "\n$" (clojure.string/join " " cmd))
-        proc (-> (ProcessBuilder. cmd)
-                 (.directory (java.io.File. repo-dir))
-                 (.redirectErrorStream true)
-                 (.start))
-        reader (io/reader (.getInputStream proc))]
+        shutdown-proc (atom nil)]
 
     (.addShutdownHook
      (Runtime/getRuntime)
      (Thread. (fn []
                 (println "\nShutting down...")
                 (kill-dev!)
-                (.destroyForcibly proc)
-                (cleanup-drone-webhooks!))))
+                (when-let [p @shutdown-proc] (.destroyForcibly p))
+                (try (cleanup-drone-webhooks!)
+                     (catch Exception _ nil)))))
 
-    ;; Read lines from gh webhook forward stdout
-    (doseq [line (line-seq reader)]
-      (try
-        (let [payload (json/parse-string line)]
-          (when (and (map? payload)
-                     (= (str "refs/heads/" branch)
-                        (get payload "ref")))
-            (reset! pending? true)
-            (future (handle-push!))))
-        (catch Exception _
-          ;; Not JSON (status messages from gh), print through
-          (println "[gh]" line))))
+    (loop [attempt 1]
+      (println "\n$" (clojure.string/join " " cmd))
+      (let [proc (-> (ProcessBuilder. cmd)
+                     (.directory (java.io.File. repo-dir))
+                     (.redirectErrorStream true)
+                     (.start))
+            reader (io/reader (.getInputStream proc))]
+        (reset! shutdown-proc proc)
 
-    ;; gh webhook forward exited
-    (let [exit (.waitFor proc)]
-      (println "gh webhook forward exited with code" exit)
-      (kill-dev!)
-      (System/exit exit))))
+        ;; Read lines from gh webhook forward stdout
+        (doseq [line (line-seq reader)]
+          (try
+            (let [payload (json/parse-string line)]
+              (when (and (map? payload)
+                         (= (str "refs/heads/" branch)
+                            (get payload "ref")))
+                (reset! pending? true)
+                (future (handle-push!))))
+            (catch Exception _
+              ;; Not JSON (status messages from gh), print through
+              (println "[gh]" line))))
+
+        ;; gh webhook forward exited
+        (let [exit (.waitFor proc)]
+          (if (and (not (zero? exit)) (< attempt max-retries))
+            (let [delay (* attempt 5)]
+              (println "gh webhook forward exited with code" exit
+                       (str "(retry " attempt "/" max-retries " in " delay "s...)"))
+              (Thread/sleep (* delay 1000))
+              (recur (inc attempt)))
+            (do
+              (println "gh webhook forward exited with code" exit)
+              (kill-dev!)
+              (System/exit exit))))))))
 
 (-main)
