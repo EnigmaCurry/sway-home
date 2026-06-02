@@ -94,14 +94,22 @@
     (reset! dev-process nil)
     (println "Previous dev process killed.")))
 
-(defn start-dev! []
-  (println "$" dev-cmd)
-  (let [proc (-> (ProcessBuilder. ["bash" "-c" dev-cmd])
-                 (.directory (java.io.File. repo-dir))
-                 (.inheritIO)
-                 (.start))]
-    (reset! dev-process proc)
-    (println "Started dev process (pid" (.pid proc) ")")))
+(defn start-dev!
+  ([] (start-dev! false))
+  ([fail-early?]
+   (println "$" dev-cmd)
+   (let [proc (-> (ProcessBuilder. ["bash" "-c" dev-cmd])
+                  (.directory (java.io.File. repo-dir))
+                  (.inheritIO)
+                  (.start))]
+     (reset! dev-process proc)
+     (println "Started dev process (pid" (.pid proc) ")")
+     (when fail-early?
+       (Thread/sleep 1000)
+       (when-not (.isAlive proc)
+         (let [exit (.exitValue proc)]
+           (println "ERROR: dev command exited immediately with code" exit)
+           (System/exit exit)))))))
 
 (defn sh! [cmd]
   (println "$" cmd)
@@ -193,8 +201,8 @@
   (println "  port:   " port)
   (println)
 
-  ;; Start the dev process immediately
-  (start-dev!)
+  ;; Start the dev process immediately (fail early if it exits right away)
+  (start-dev! true)
 
   ;; Start HTTP server for webhook
   (println (str "\nListening on http://127.0.0.1:" port "/webhook"))
