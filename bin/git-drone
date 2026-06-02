@@ -137,6 +137,27 @@
       (finally
         (reset! running? false)))))
 
+;; --- Webhook cleanup ---
+
+(defn cleanup-drone-webhooks!
+  "Delete any existing webhooks created by gh webhook forward (smee.io URLs)."
+  []
+  (println "Cleaning up stale drone webhooks...")
+  (let [result (p/shell {:out :string :err :string :continue true}
+                        "gh" "api" (str "repos/" github-repo "/hooks")
+                        "--jq" ".[] | select(.config.url | test(\"smee.io\")) | .id")
+        ids (when (zero? (:exit result))
+              (->> (clojure.string/split-lines (:out result))
+                   (map clojure.string/trim)
+                   (remove clojure.string/blank?)))]
+    (doseq [id ids]
+      (println "  Deleting stale webhook" id)
+      (p/shell {:out :inherit :err :inherit}
+               "gh" "api" "-X" "DELETE"
+               (str "repos/" github-repo "/hooks/" id)))
+    (when (seq ids)
+      (println "  Cleaned up" (count ids) "stale webhook(s)"))))
+
 ;; --- Main ---
 
 (defn -main []
@@ -151,6 +172,9 @@
   (println "  cmd:    " dev-cmd)
   (println "  pull:   " pull-cmd)
   (println)
+
+  ;; Clean up stale webhooks from previous runs
+  (cleanup-drone-webhooks!)
 
   ;; Start the dev process immediately (fail early if it exits right away)
   (start-dev! true)
@@ -171,7 +195,8 @@
      (Thread. (fn []
                 (println "\nShutting down...")
                 (kill-dev!)
-                (.destroyForcibly proc))))
+                (.destroyForcibly proc)
+                (cleanup-drone-webhooks!))))
 
     ;; Read lines from gh webhook forward stdout
     (doseq [line (line-seq reader)]
