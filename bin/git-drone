@@ -200,6 +200,7 @@
                      (catch Exception _ nil)))))
 
     (loop [attempt 1]
+      (when (> attempt 1) (cleanup-drone-webhooks!))
       (println "\n$" (clojure.string/join " " cmd))
       (let [proc (-> (ProcessBuilder. cmd)
                      (.directory (java.io.File. repo-dir))
