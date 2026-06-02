@@ -10,7 +10,7 @@
 ;; Environment variables (lower priority than CLI flags):
 ;;   BRANCH       — branch to watch (default: current branch)
 ;;   DEV_CMD      — long-running dev command (default: just dev)
-;;   PULL_CMD     — pull command (default: git fetch origin && git reset --hard origin/$BRANCH)
+;;   PULL_CMD     — pull command (default: fetch only, no checkout)
 ;;   GITHUB_REPO  — owner/repo (default: auto-detected from git remote)
 ;;   PORT         — webhook listener port (default: 9999)
 
@@ -78,7 +78,7 @@
 (def pull-cmd
   (or (:pull cli-opts)
       (System/getenv "PULL_CMD")
-      (str "git fetch origin && git reset --hard origin/" branch)))
+      "echo 'No pull command configured. Set PULL_CMD to update the working tree.'"))
 
 ;; --- Process management ---
 
@@ -125,6 +125,12 @@
           (reset! pending? false)
           (println "\nReceived push; stopping dev, pulling, restarting...")
           (kill-dev!)
+          (sh! "git fetch origin")
+          (let [sha (-> (p/shell {:dir repo-dir :out :string}
+                                 "git" "rev-parse" (str "origin/" branch))
+                        :out
+                        clojure.string/trim)]
+            (println (str "origin/" branch " is at " sha)))
           (sh! pull-cmd)
           (start-dev!)
 
