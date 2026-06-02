@@ -1,0 +1,218 @@
+#!/usr/bin/env bb
+
+;; git-drone — watch a GitHub repo for pushes; kill, pull, restart a dev command.
+;;
+;; Usage:
+;;   git drone                          # run from inside a git repo
+;;   git -C /path/to/repo drone        # specify repo via git -C
+;;   git drone --branch main --cmd "npm run dev" --port 8888
+;;
+;; Environment variables (lower priority than CLI flags):
+;;   BRANCH       — branch to watch (default: current branch)
+;;   DEV_CMD      — long-running dev command (default: just dev)
+;;   PULL_CMD     — pull command (default: git fetch origin && git reset --hard origin/$BRANCH)
+;;   GITHUB_REPO  — owner/repo (default: auto-detected from git remote)
+;;   PORT         — webhook listener port (default: 9999)
+
+(require '[babashka.process :as p]
+         '[babashka.cli :as cli]
+         '[clojure.data.json :as json]
+         '[org.httpkit.server :as http])
+
+;; --- CLI arg parsing ---
+
+(def cli-spec
+  {:branch  {:alias :b :desc "Branch to watch" :ref "<branch>"}
+   :cmd     {:alias :c :desc "Dev command to run" :ref "<cmd>"}
+   :pull    {:alias :p :desc "Pull command" :ref "<cmd>"}
+   :repo    {:alias :r :desc "GitHub owner/repo" :ref "<owner/repo>"}
+   :port    {:desc "Webhook listener port" :ref "<port>" :coerce :long}
+   :help    {:alias :h :desc "Show this help"}})
+
+(def cli-opts (cli/parse-opts *command-line-args* {:spec cli-spec}))
+
+(when (:help cli-opts)
+  (println "Usage: git drone [options]")
+  (println)
+  (println "Watch a GitHub repo for pushes; kill, pull, restart a dev command.")
+  (println)
+  (println "Options:")
+  (println (cli/format-opts {:spec cli-spec}))
+  (System/exit 0))
+
+;; --- Configuration ---
+
+(def repo-dir
+  (-> (p/shell {:out :string :err :string}
+               "git" "rev-parse" "--show-toplevel")
+      :out
+      clojure.string/trim))
+
+(def branch
+  (or (:branch cli-opts)
+      (System/getenv "BRANCH")
+      (-> (p/shell {:dir repo-dir :out :string}
+                    "git" "rev-parse" "--abbrev-ref" "HEAD")
+          :out
+          clojure.string/trim)))
+
+(def port
+  (or (:port cli-opts)
+      (some-> (System/getenv "PORT") parse-long)
+      9999))
+
+(def github-repo
+  (or (:repo cli-opts)
+      (System/getenv "GITHUB_REPO")
+      (let [url (-> (p/shell {:dir repo-dir :out :string}
+                              "git" "remote" "get-url" "origin")
+                    :out
+                    clojure.string/trim)]
+        (second (re-find #"github\.com[:/](.+?)(?:\.git)?$" url)))))
+
+(def dev-cmd
+  (or (:cmd cli-opts)
+      (System/getenv "DEV_CMD")
+      "just dev"))
+
+(def pull-cmd
+  (or (:pull cli-opts)
+      (System/getenv "PULL_CMD")
+      (str "git fetch origin && git reset --hard origin/" branch)))
+
+;; --- Process management ---
+
+(defonce dev-process (atom nil))
+(defonce running? (atom false))
+(defonce pending? (atom false))
+
+(defn kill-dev! []
+  (when-let [proc @dev-process]
+    (println "Killing previous dev process (pid" (.pid proc) ")...")
+    (.destroyForcibly proc)
+    (.waitFor proc)
+    (reset! dev-process nil)
+    (println "Previous dev process killed.")))
+
+(defn start-dev! []
+  (println "$" dev-cmd)
+  (let [proc (-> (ProcessBuilder. ["bash" "-c" dev-cmd])
+                 (.directory (java.io.File. repo-dir))
+                 (.inheritIO)
+                 (.start))]
+    (reset! dev-process proc)
+    (println "Started dev process (pid" (.pid proc) ")")))
+
+(defn sh! [cmd]
+  (println "$" cmd)
+  (p/shell {:dir repo-dir :out :inherit :err :inherit}
+           "bash" "-c" cmd))
+
+(defn run-loop! []
+  (future
+    (when (compare-and-set! running? false true)
+      (try
+        (loop []
+          (reset! pending? false)
+          (println "\nReceived push; stopping dev, pulling, restarting...")
+          (kill-dev!)
+          (sh! pull-cmd)
+          (start-dev!)
+
+          (when @pending?
+            (println "Another push arrived while restarting; repeating...")
+            (recur)))
+        (catch Exception e
+          (binding [*out* *err*]
+            (println "Command failed:" (ex-message e))))
+        (finally
+          (reset! running? false))))))
+
+;; --- Webhook handler ---
+
+(defn valid-push? [req]
+  (= "push" (get-in req [:headers "x-github-event"])))
+
+(defn valid-branch? [payload]
+  (= (str "refs/heads/" branch)
+     (get payload "ref")))
+
+(defn handler [req]
+  (try
+    (cond
+      (not= :post (:request-method req))
+      {:status 405
+       :headers {"content-type" "text/plain"}
+       :body "method not allowed\n"}
+
+      (not (valid-push? req))
+      {:status 202
+       :headers {"content-type" "text/plain"}
+       :body "ignored non-push event\n"}
+
+      :else
+      (let [payload (json/read-str (slurp (:body req)))]
+        (if (valid-branch? payload)
+          (do
+            (reset! pending? true)
+            (run-loop!)
+            {:status 202
+             :headers {"content-type" "text/plain"}
+             :body "accepted\n"})
+          {:status 202
+           :headers {"content-type" "text/plain"}
+           :body "ignored branch\n"})))
+    (catch Exception e
+      {:status 500
+       :headers {"content-type" "text/plain"}
+       :body (str "error: " (ex-message e) "\n")})))
+
+(defn start-webhook-forward! []
+  (when-not github-repo
+    (println "ERROR: Could not determine GitHub repo. Set GITHUB_REPO=owner/repo or use --repo")
+    (System/exit 1))
+  (let [url (str "http://127.0.0.1:" port "/webhook")
+        cmd ["gh" "webhook" "forward"
+             "--repo" github-repo
+             "--events" "push"
+             "--url" url]]
+    (println "$" (clojure.string/join " " cmd))
+    (-> (ProcessBuilder. cmd)
+        (.inheritIO)
+        (.start))))
+
+;; --- Main ---
+
+(defn -main []
+  (println "git-drone")
+  (println "  repo:   " repo-dir)
+  (println "  github: " github-repo)
+  (println "  branch: " branch)
+  (println "  cmd:    " dev-cmd)
+  (println "  pull:   " pull-cmd)
+  (println "  port:   " port)
+  (println)
+
+  ;; Start the dev process immediately
+  (start-dev!)
+
+  ;; Start HTTP server for webhook
+  (println (str "\nListening on http://127.0.0.1:" port "/webhook"))
+  (http/run-server handler {:ip "127.0.0.1" :port port})
+
+  ;; Start gh webhook forward
+  (let [gh-proc (start-webhook-forward!)]
+    (.addShutdownHook
+     (Runtime/getRuntime)
+     (Thread. (fn []
+                (println "\nShutting down...")
+                (kill-dev!)
+                (.destroyForcibly gh-proc))))
+
+    ;; Block until gh webhook forward exits
+    (let [exit (.waitFor gh-proc)]
+      (println "gh webhook forward exited with code" exit)
+      (kill-dev!)
+      (System/exit exit))))
+
+(-main)
