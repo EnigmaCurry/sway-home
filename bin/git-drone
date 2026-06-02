@@ -16,7 +16,7 @@
 
 (require '[babashka.process :as p]
          '[babashka.cli :as cli]
-         '[clojure.data.json :as json]
+         '[cheshire.core :as json]
          '[org.httpkit.server :as http])
 
 ;; --- CLI arg parsing ---
@@ -151,7 +151,7 @@
        :body "ignored non-push event\n"}
 
       :else
-      (let [payload (json/read-str (slurp (:body req)))]
+      (let [payload (json/parse-string (slurp (:body req)))]
         (if (valid-branch? payload)
           (do
             (reset! pending? true)
