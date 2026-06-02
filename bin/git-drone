@@ -41,10 +41,12 @@
 ;; --- Configuration ---
 
 (def repo-dir
-  (-> (p/shell {:out :string :err :string}
-               "git" "rev-parse" "--show-toplevel")
-      :out
-      clojure.string/trim))
+  (let [result (p/shell {:out :string :err :string :continue true}
+                        "git" "rev-parse" "--show-toplevel")]
+    (when-not (zero? (:exit result))
+      (println "ERROR: not a git repository. Run from a repo or use git -C <path> drone")
+      (System/exit 1))
+    (clojure.string/trim (:out result))))
 
 (def branch
   (or (:branch cli-opts)
