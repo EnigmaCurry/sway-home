@@ -83,11 +83,16 @@
 
 (defn kill-dev! []
   (when-let [proc @dev-process]
-    (println "Killing previous dev process (pid" (.pid proc) ")...")
-    (.destroyForcibly proc)
-    (.waitFor proc)
-    (reset! dev-process nil)
-    (println "Previous dev process killed.")))
+    (let [pid (.pid proc)]
+      (println "Killing previous dev process tree (pid" pid ")...")
+      ;; Kill entire process group/tree, not just the direct child
+      (p/shell {:continue true} "pkill" "-TERM" "-P" (str pid))
+      (Thread/sleep 500)
+      (p/shell {:continue true} "pkill" "-KILL" "-P" (str pid))
+      (.destroyForcibly proc)
+      (.waitFor proc)
+      (reset! dev-process nil)
+      (println "Previous dev process killed."))))
 
 (defn start-dev!
   ([] (start-dev! false))
