@@ -61,7 +61,7 @@ with pkgs; [
   wdisplays
   ansible
   babashka
-  docker
+  docker_29
   irssi
   kubectl
   natscli
