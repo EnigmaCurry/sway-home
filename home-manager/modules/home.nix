@@ -13,7 +13,7 @@ let
 in {
   home.username = userName;
   home.homeDirectory = "/home/${userName}";
-  home.stateVersion = "25.11";
+  home.stateVersion = "26.05";
 
   # Let home-manager manage itself when running standalone
   programs.home-manager.enable = true;
