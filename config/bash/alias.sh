@@ -23,7 +23,12 @@ alias hm-pull='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-pull'
 alias hm-upgrade='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-upgrade'
 alias ssh-new='ssh -o ControlMaster=no -o ControlPath=none'
 alias ssh-exit='ssh -O exit'
-_justfile_alias vm \
-  "$HOME/nixos-vm-template/Justfile" \
-  "$HOME/.config/nixos-vm-template/env"
+# nixos-vm-template: per-backend aliases + data-driven tab completion. The
+# completion script ships in the repo (symlinked to ~/nixos-vm-template by
+# home-manager) and defines the `nixos-vm-template-alias` helper.
+if [ -f "$HOME/nixos-vm-template/completions/vm.bash" ]; then
+  source "$HOME/nixos-vm-template/completions/vm.bash"
+  nixos-vm-template-alias vm  "$HOME/.config/nixos-vm-template/env"      # libvirt
+  nixos-vm-template-alias pve "$HOME/.config/nixos-vm-template/pve.env"  # proxmox
+fi
 vars() { set -o posix; set | cut -d= -f1 | column; }

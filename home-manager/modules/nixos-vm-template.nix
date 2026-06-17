@@ -4,11 +4,25 @@ let
   nixosVmTemplateRepo = inputs.nixos-vm-template;
   configDir = "${config.xdg.configHome}/nixos-vm-template";
   envFile = "${configDir}/env";
+  pveEnvFile = "${configDir}/pve.env";
   libvirtDir = "${configDir}/libvirt";
+  # MACHINES_DIR is intentionally not set: it defaults to
+  # <config>/nixos-vm-template/machines/<backend>/<host>, which keeps each
+  # backend's machines separate automatically. LIBVIRT_DIR points at the
+  # writable copy of the template XMLs symlinked below.
   defaultEnv = ''
     OUTPUT_DIR=$HOME/.local/share/nixos-vm-template
-    MACHINES_DIR=$HOME/.config/nixos-vm-template/machines
     LIBVIRT_DIR=$HOME/.config/nixos-vm-template/libvirt
+  '';
+  # Env file for the `pve` (proxmox) alias. Machines land in
+  # machines/proxmox/<host>, parallel to machines/libvirt/<host>. Set PVE_HOST
+  # (an ~/.ssh/config host) before using it.
+  defaultPveEnv = ''
+    BACKEND=proxmox
+    OUTPUT_DIR=$HOME/.local/share/nixos-vm-template
+    #PVE_HOST=pve
+    #PVE_STORAGE=local
+    #PVE_BRIDGE=vmbr0
   '';
 in
 {
@@ -19,6 +33,12 @@ in
       mkdir -p "$(dirname "${envFile}")"
       cat > "${envFile}" << 'EOF'
 ${defaultEnv}
+EOF
+    fi
+    if [ ! -f "${pveEnvFile}" ]; then
+      mkdir -p "$(dirname "${pveEnvFile}")"
+      cat > "${pveEnvFile}" << 'EOF'
+${defaultPveEnv}
 EOF
     fi
     mkdir -p "${libvirtDir}"
