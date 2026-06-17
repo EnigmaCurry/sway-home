@@ -3,11 +3,11 @@
     "blog-rymcg-tech": {
       "flake": false,
       "locked": {
-        "lastModified": 1781674611,
-        "narHash": "sha256-Ecogvfu5giaJBpktvCrhdN2yBqpOZzhX8OXFxyJK0jg=",
+        "lastModified": 1781681773,
+        "narHash": "sha256-0ahDfiqi8mtVOHb8M63hagOlTQkkKsFTCOf0UvmsN5Y=",
         "owner": "EnigmaCurry",
         "repo": "blog.rymcg.tech",
-        "rev": "83c6a35c864d324c29016e70726219c71622daa2",
+        "rev": "570f683fad9a75fccef52c2e9dbb0707db40957c",
         "type": "github"
       },
       "original": {
