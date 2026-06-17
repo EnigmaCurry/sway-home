@@ -17,6 +17,7 @@ modules=(
     prompt-basic
     prompt
     theme
+    just-completion
     alias
     editor
 
