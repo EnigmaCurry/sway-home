@@ -496,6 +496,56 @@
   (println "  (skip `setup host` -- the config repo in /home/<user>/nixos is preserved.)"))
 
 ;;; ============================================================
+;;; /mnt guard
+;;; ============================================================
+;;;
+;;; /mnt is the installer's reserved target mountpoint. A leftover mount
+;;; there -- typically from a previous `setup disk` run -- marks the
+;;; target disk as in-use (see `node-mounted?`), so it'd be hidden and
+;;; we'd bail with "No installable disks found". Detect it up front and
+;;; offer to clear it before partitioning.
+
+(defn mnt-mounted?
+  "True if anything is currently mounted at /mnt or under it. Reads
+  /proc/mounts so it sees the recursive subvolume/ESP mounts disko
+  leaves behind, not just /mnt itself."
+  []
+  (and (fs/exists? "/proc/mounts")
+       (->> (str/split-lines (slurp "/proc/mounts"))
+            (some (fn [line]
+                    (let [mp (second (str/split line #"\s+"))]
+                      (and mp (or (= mp "/mnt") (str/starts-with? mp "/mnt/"))))))
+            boolean)))
+
+(defn unmount-mnt!
+  "Recursively unmount everything under /mnt so the target disk is free
+  to repartition. Dies if the unmount fails (something is still using it)."
+  []
+  (println)
+  (println "== Unmounting /mnt ==")
+  (let [r (sh {:err :string :continue true} "umount" "-R" "/mnt")]
+    (if (zero? (:exit r))
+      (println "/mnt unmounted.")
+      (die (str "could not unmount /mnt: " (str/trim (str (:err r)))
+                "\n  Something may still be using it -- close it and retry.")))))
+
+(defn ensure-mnt-free!
+  "If /mnt is mounted, refuse to partition until it's cleared. Offers
+  'Unmount /mnt' as the first option; any other choice (or ESC) aborts."
+  []
+  (when (mnt-mounted?)
+    (println)
+    (println "⚠️  /mnt is currently mounted -- it's reserved for the installer target.")
+    (println "    A previous `setup disk` run likely left it mounted, which marks the")
+    (println "    target disk as in-use and hides it. Clear it before repartitioning.")
+    (println)
+    (let [unmount "Unmount /mnt"
+          cancel  "Cancel"]
+      (if (= unmount (sw/choose "/mnt is mounted -- what do you want to do?" [unmount cancel]))
+        (unmount-mnt!)
+        (do (println "Aborted.") (System/exit 0))))))
+
+;;; ============================================================
 ;;; CLI
 ;;; ============================================================
 
@@ -570,6 +620,10 @@
     (when-not (fs/which "lsblk") (die "'lsblk' not found."))
     (when (and (:apply opts) (not (fs/which "nix")))
       (die "'nix' not found -- cannot apply the layout (disko runs via 'nix run')."))
+
+    ;; /mnt is reserved for the installer target. Clear any leftover mount
+    ;; there before listing disks, or the target would be hidden as in-use.
+    (ensure-mnt-free!)
 
     (let [uefi?     (fs/exists? "/sys/firmware/efi")
           all-disks (list-disks)
