@@ -708,13 +708,22 @@
           (when swap-size (ensure-swap-active! device))
 
           ;; Persist the layout into the new system so it can be
-          ;; imported by the host's NixOS configuration later.
-          (let [dest "/mnt/etc/nixos/disko.nix"]
-            (try
-              (fs/create-dirs "/mnt/etc/nixos")
-              (fs/copy config-path dest {:replace-existing true})
-              (catch Exception e
-                (stderr "Could not copy config to" dest ":" (.getMessage e))))
+          ;; imported by the host's NixOS configuration later. /mnt was
+          ;; mounted by disko as root, so when this tool runs as the
+          ;; unprivileged live-ISO `nixos` user we must write through
+          ;; `sh` (sudo) -- raw fs/copy would hit "permission denied",
+          ;; leaving disko.nix absent and `setup host` failing with
+          ;; "disko.nix not found".
+          (let [dest    "/mnt/etc/nixos/disko.nix"
+                mkdir-r (sh {:err :string :continue true} "mkdir" "-p" "/mnt/etc/nixos")
+                copy-r  (when (zero? (:exit mkdir-r))
+                          (sh {:err :string :continue true} "cp" "-f" config-path dest))
+                ok?     (and (zero? (:exit mkdir-r)) copy-r (zero? (:exit copy-r)))]
+            (when-not ok?
+              (stderr "Could not save layout to" dest "--"
+                      (str/trim (str (:err (or copy-r mkdir-r)))))
+              (stderr "  `setup host` will fail until" dest "exists.")
+              (System/exit 1))
 
             (println)
             (println "✅ Disk ready and mounted under /mnt.")
