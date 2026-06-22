@@ -506,16 +506,18 @@
 ;;; offer to clear it before partitioning.
 
 (defn mnt-mounted?
-  "True if anything is currently mounted at /mnt or under it. Reads
-  /proc/mounts so it sees the recursive subvolume/ESP mounts disko
-  leaves behind, not just /mnt itself."
+  "True if anything is currently mounted at /mnt or under it. Uses
+  `findmnt` (util-linux, same package as lsblk) to list every mount
+  target -- this sees the recursive subvolume/ESP mounts disko leaves
+  behind, not just /mnt itself. (We avoid slurping /proc/mounts: reading
+  procfs through babashka's slurp throws 'Invalid argument'.)"
   []
-  (and (fs/exists? "/proc/mounts")
-       (->> (str/split-lines (slurp "/proc/mounts"))
-            (some (fn [line]
-                    (let [mp (second (str/split line #"\s+"))]
-                      (and mp (or (= mp "/mnt") (str/starts-with? mp "/mnt/"))))))
-            boolean)))
+  (let [r (proc/shell {:out :string :err :string :continue true}
+                      "findmnt" "-rno" "TARGET")]
+    (and (zero? (:exit r))
+         (->> (str/split-lines (str (:out r)))
+              (some (fn [mp] (or (= mp "/mnt") (str/starts-with? mp "/mnt/"))))
+              boolean))))
 
 (defn unmount-mnt!
   "Recursively unmount everything under /mnt so the target disk is free
