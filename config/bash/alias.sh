@@ -23,6 +23,12 @@ alias hm-pull='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-pull'
 alias hm-upgrade='just -f ~/git/vendor/enigmacurry/sway-home/Justfile hm-upgrade'
 alias ssh-new='ssh -o ControlMaster=no -o ControlPath=none'
 alias ssh-exit='ssh -O exit'
+# 'admin' runs just in ~/nixos (this host's NixOS config repo, created by
+# 'setup host'), with full recipe + arg tab completion. Only on installed
+# NixOS systems where that repo exists.
+if [ -f "$HOME/nixos/Justfile" ]; then
+  _justfile_alias admin "$HOME/nixos/Justfile"
+fi
 # nixos-vm-template: per-backend aliases + data-driven tab completion. The
 # completion script ships in the repo (symlinked to ~/nixos-vm-template by
 # home-manager) and defines the `nixos-vm-template-alias` helper.

@@ -116,10 +116,6 @@ EOF
         source = inputs.blog-rymcg-tech + "/src/systemd/restic_backup.sh";
         executable = true;
       };
-      "bin/nix_build_iso.sh" = {
-        source = inputs.blog-rymcg-tech + "/src/nix/nix_build_iso.sh";
-        executable = true;
-      };
       "bin/git-vendor" = {
         source = inputs.blog-rymcg-tech + "/src/git/git_extensions.bb";
         executable = true;

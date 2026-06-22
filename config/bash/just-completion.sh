@@ -92,6 +92,29 @@ _justfile_alias_sanitize_name() {
   echo "$1" | sed -E 's/[^A-Za-z0-9_]/_/g'
 }
 
+# Internal: list this alias's recipe names (one per line, aliases included).
+_justfile_alias_recipes() {
+  local alias_name="$1"
+  _justfile_alias_run_just "$alias_name" --summary 2>/dev/null | tr ' ' '\n'
+}
+
+# Internal: hand off to just's OWN completion (recipe names + flags), pointed
+# at this alias's justfile/workdir via env vars. just >=1.50 ships clap's
+# dynamic completion (_clap_complete_just, from `source <(just --completions
+# bash)`); older just shipped a static `_just`. Support both.
+_justfile_alias_delegate_just() {
+  local alias_name="$1"
+  local workdir="${_JUSTFILE_ALIAS_WORKDIR[$alias_name]}"
+  local justfile="${_JUSTFILE_ALIAS_JUSTFILE[$alias_name]}"
+  if declare -F _clap_complete_just >/dev/null 2>&1; then
+    JUST_JUSTFILE="$justfile" JUST_WORKING_DIRECTORY="$workdir" \
+      _clap_complete_just
+  elif declare -F _just >/dev/null 2>&1; then
+    JUST_JUSTFILE="$justfile" JUST_WORKING_DIRECTORY="$workdir" \
+      _just "$alias_name"
+  fi
+}
+
 # --- generic completion dispatcher: called for every alias we create ---
 _justfile_alias_complete() {
   local alias_name="${COMP_WORDS[0]}"
@@ -99,13 +122,19 @@ _justfile_alias_complete() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
   local recipe="${COMP_WORDS[1]}"
 
-  # If completing recipe name or flags, delegate to just's stock completion.
+  # Completing the recipe name itself: offer recipe names only. (just's own
+  # dynamic completion dumps every global flag here too, burying the recipes.)
+  if (( COMP_CWORD == 1 )) && [[ "$cur" != -* ]]; then
+    local -a recipes
+    mapfile -t recipes < <(_justfile_alias_recipes "$alias_name")
+    local IFS=$'\n'
+    COMPREPLY=($(compgen -W "${recipes[*]}" -- "$cur"))
+    return 0
+  fi
+
+  # Completing a flag (or word 0): delegate to just's stock completion.
   if (( COMP_CWORD <= 1 )) || [[ "$cur" == -* ]]; then
-    # Use env vars here so _just still works from any directory.
-    local workdir="${_JUSTFILE_ALIAS_WORKDIR[$alias_name]}"
-    local justfile="${_JUSTFILE_ALIAS_JUSTFILE[$alias_name]}"
-    JUST_JUSTFILE="$justfile" JUST_WORKING_DIRECTORY="$workdir" \
-      _just "$alias_name"
+    _justfile_alias_delegate_just "$alias_name"
     return 0
   fi
 
@@ -142,10 +171,7 @@ _justfile_alias_complete() {
   fi
 
   # Otherwise fall back to just completion behavior
-  local workdir="${_JUSTFILE_ALIAS_WORKDIR[$alias_name]}"
-  local justfile="${_JUSTFILE_ALIAS_JUSTFILE[$alias_name]}"
-  JUST_JUSTFILE="$justfile" JUST_WORKING_DIRECTORY="$workdir" \
-    _just "$alias_name"
+  _justfile_alias_delegate_just "$alias_name"
 }
 
 # --- public helper: define alias + completion ---

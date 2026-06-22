@@ -1,5 +1,0 @@
-result
-*.nix
-*.lock
-private
-**/**

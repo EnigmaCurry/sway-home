@@ -6,7 +6,7 @@ let
 in
 {
   options.my.host = mkOption {
-    description = "Per-host settings sourced from hosts.nix.";
+    description = "Per-host settings passed to lib.mkHost.";
     default = {};
     type = types.submodule {
       options = {
