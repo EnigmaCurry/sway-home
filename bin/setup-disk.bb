@@ -548,6 +548,60 @@
         (do (println "Aborted.") (System/exit 0))))))
 
 ;;; ============================================================
+;;; Swap guard
+;;; ============================================================
+;;;
+;;; Active swap on a real disk partition shows up in lsblk as a [SWAP]
+;;; mountpoint, so `node-mounted?` flags the whole disk as in-use and
+;;; hides it -- yet it never appears in `mount`. A previous `setup disk`
+;;; run leaves swap active (disko's mount phase + ensure-swap-active!),
+;;; and the /mnt unmount above does NOT swapoff, so it lingers. Clear it
+;;; before listing disks, just like the /mnt guard.
+
+(defn active-disk-swaps
+  "Active swap devices backed by a real disk partition (not zram).
+  Read via `swapon` (not /proc/swaps -- slurping procfs throws in bb)."
+  []
+  (let [r (proc/shell {:out :string :err :string :continue true}
+                      "swapon" "--show=NAME" "--noheadings")]
+    (if-not (zero? (:exit r))
+      []
+      (->> (str/split-lines (str (:out r)))
+           (map str/trim)
+           (remove str/blank?)
+           (remove #(str/starts-with? % "/dev/zram"))
+           vec))))
+
+(defn swapoff!
+  "Disable the given swap devices so their parent disks are free to
+  repartition. Dies if a swapoff fails."
+  [devs]
+  (println)
+  (println "== Disabling active swap ==")
+  (doseq [d devs]
+    (let [r (sh {:err :string :continue true} "swapoff" d)]
+      (if (zero? (:exit r))
+        (println (str "swapoff " d))
+        (die (str "could not swapoff " d ": " (str/trim (str (:err r)))))))))
+
+(defn ensure-swap-off!
+  "If swap is active on a real disk, refuse to partition until it's
+  cleared. Offers 'Disable swap' first; any other choice (or ESC) aborts."
+  []
+  (when-let [devs (seq (active-disk-swaps))]
+    (println)
+    (println "⚠️  Active swap detected on a disk -- this marks it in-use and hides it:")
+    (doseq [d devs] (println (str "    - " d)))
+    (println "    A previous `setup disk` run likely left it active. Clear it before")
+    (println "    repartitioning. (Swap never appears in `mount`.)")
+    (println)
+    (let [off    "Disable swap (swapoff)"
+          cancel "Cancel"]
+      (if (= off (sw/choose "Active swap found -- what do you want to do?" [off cancel]))
+        (swapoff! devs)
+        (do (println "Aborted.") (System/exit 0))))))
+
+;;; ============================================================
 ;;; CLI
 ;;; ============================================================
 
@@ -626,6 +680,8 @@
     ;; /mnt is reserved for the installer target. Clear any leftover mount
     ;; there before listing disks, or the target would be hidden as in-use.
     (ensure-mnt-free!)
+    ;; Active swap on a real disk likewise marks it in-use (lsblk [SWAP]).
+    (ensure-swap-off!)
 
     (let [uefi?     (fs/exists? "/sys/firmware/efi")
           all-disks (list-disks)
