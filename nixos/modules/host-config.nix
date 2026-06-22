@@ -37,7 +37,6 @@
 
   # # System programs and packages
   # programs.firefox.enable = true;
-  # programs.sway.enable = true;
   # virtualisation.podman = {
   #   enable = true;
   #   defaultNetwork.settings.dns_enabled = true;
