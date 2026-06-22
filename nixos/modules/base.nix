@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, ... }:
+{ config, pkgs, ... }:
 
 {
   # Core system config shared by ALL hosts (every profile). The Sway
@@ -43,26 +43,15 @@
     just
   ];
 
-  # Bash completion, system-wide (the 'admin' helper below relies on it,
-  # and it's generally welcome on a headless box).
+  # Bash completion, system-wide (generally welcome on a headless box; the
+  # per-user interactive shells get their own completion via home-manager).
   programs.bash.completion.enable = true;
 
-  # 'admin' = run `just` in this host's config repo (~/nixos, created by
-  # `setup host`) with full recipe + argument tab completion. Defined here
-  # at the system level so it works on EVERY profile: the "sway" profile
-  # also gets it through home-manager's ~/.bashrc (config/bash/alias.sh),
-  # but "minimal" has no home-manager, so this is what reaches it (via
-  # /etc/bashrc, sourced by SSH login shells). Both paths source the same
-  # _justfile_alias machinery from the repo, so behaviour is identical.
-  programs.bash.interactiveShellInit = ''
-    if command -v just >/dev/null; then
-      source <(just --completions bash)
-      source ${inputs.sway-home + "/config/bash/just-completion.sh"}
-      if [ -f "$HOME/nixos/Justfile" ]; then
-        _justfile_alias admin "$HOME/nixos/Justfile"
-      fi
-    fi
-  '';
+  # The `admin` alias (run `just` in ~/nixos with full recipe + argument
+  # tab completion) is set up by home-manager on every profile now --
+  # config/bash/alias.sh on "sway", home-manager/modules/minimal.nix on
+  # "minimal" -- both sourcing the same _justfile_alias machinery from the
+  # repo. It is no longer wired here at the system level via /etc/bashrc.
 
   # This value determines the NixOS release from which the default
   # settings for stateful data were taken. Leave it at the release version

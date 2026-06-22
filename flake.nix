@@ -132,9 +132,14 @@
 
               (import ./nixos/modules/user.nix { inherit userName; })
             ]
-            # home-manager (the user's sway/dotfile environment) -- only
-            # for the "sway" profile. "minimal" is a bare server.
-            ++ lib.optionals isSway [
+            # home-manager is included on EVERY profile so that switching
+            # profiles stays fully declarative: a "sway" -> "minimal"
+            # downgrade makes home-manager remove the sway dotfiles it no
+            # longer manages, instead of orphaning them in $HOME. Only the
+            # *content* is gated -- "sway" loads the full desktop
+            # environment; "minimal" loads just the essentials (the `admin`
+            # alias) so it can also clean up on a downgrade.
+            ++ [
               moduleInputs.home-manager.nixosModules.home-manager
               ({ ... }: {
                 home-manager = {
@@ -144,14 +149,16 @@
                   extraSpecialArgs = { inputs = moduleInputs; inherit userName host; };
 
                   users.${userName} = { pkgs, ... }:
-                    let
-                      scriptWizard = moduleInputs.script-wizard.packages.${system}.default;
-                    in {
-                    imports = [
-                      ./home-manager/modules/all.nix
-                    ];
-                    home.packages = (import ./home-manager/modules/packages.nix { inherit pkgs; }) ++ [ scriptWizard ];
-                  };
+                    if isSway then
+                      let
+                        scriptWizard = moduleInputs.script-wizard.packages.${system}.default;
+                      in {
+                        imports = [ ./home-manager/modules/all.nix ];
+                        home.packages = (import ./home-manager/modules/packages.nix { inherit pkgs; }) ++ [ scriptWizard ];
+                      }
+                    else {
+                      imports = [ ./home-manager/modules/minimal.nix ];
+                    };
                 };
               })
             ];
