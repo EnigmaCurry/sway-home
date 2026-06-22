@@ -10,14 +10,24 @@
 ;;; One of the `setup-*` installer tools (git-extension style): run it
 ;;; directly as `setup-disk`, or via the dispatcher as `setup disk`.
 ;;;
-;;; v1 scope (intentionally small -- more to come):
+;;; Scope:
 ;;;   - pick a single target disk
 ;;;   - GPT layout: ESP (UEFI) or bios_grub (legacy BIOS) + btrfs root
 ;;;   - btrfs subvolumes: @ (/), @home (/home), @nix (/nix)
+;;;   - optional swap partition
+;;;   - optional full-disk LUKS encryption of the btrfs root (and, when
+;;;     swap is present, random-key encryption of swap)
 ;;;   - apply declaratively with `disko` and mount everything under /mnt
 ;;;
-;;; Future features (LUKS, swap, ext4/xfs, multi-disk) slot into the
-;;; same generate-a-Nix-file-then-apply structure.
+;;; Encryption note: we never touch the passphrase ourselves. With no
+;;; key/password file in the generated config, disko's `askPassword`
+;;; defaults on -- it prompts for (and confirms) the passphrase via
+;;; cryptsetup at format time. `initrdUnlock` likewise defaults on, so
+;;; the disko NixOS module (imported by the host flake) generates the
+;;; boot.initrd.luks unlock entry and the system prompts at boot.
+;;;
+;;; Future features (ext4/xfs, multi-disk) slot into the same
+;;; generate-a-Nix-file-then-apply structure.
 ;;;
 ;;; This runs on the installer ISO, which already ships babashka and
 ;;; the script-wizard pod binary, so the pod loads from PATH (no
@@ -208,13 +218,29 @@
 ;;; disko.nix generation
 ;;; ============================================================
 
-(def btrfs-subvolumes
+(defn btrfs-subvolumes
+  "The btrfs subvolume map (@ -> /, @home -> /home, @nix -> /nix). `pad`
+  is the indentation of the `subvolumes = {` line, so the block sits at
+  the right depth whether btrfs is the direct root content or nested
+  inside a luks container."
+  [pad]
+  (let [item (str pad "  ")]
+    (str
+     pad "subvolumes = {\n"
+     item "\"@\"     = { mountpoint = \"/\";     mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n"
+     item "\"@home\" = { mountpoint = \"/home\"; mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n"
+     item "\"@nix\"  = { mountpoint = \"/nix\";  mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n"
+     pad "};\n")))
+
+(defn btrfs-content
+  "The `type = \"btrfs\"` content block (with subvolumes), indented by
+  `pad`. Used directly as the root content, or nested inside the luks
+  block when the disk is encrypted."
+  [pad]
   (str
-   "                subvolumes = {\n"
-   "                  \"@\"     = { mountpoint = \"/\";     mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n"
-   "                  \"@home\" = { mountpoint = \"/home\"; mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n"
-   "                  \"@nix\"  = { mountpoint = \"/nix\";  mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n"
-   "                };\n"))
+   pad "type = \"btrfs\";\n"
+   pad "extraArgs = [ \"-f\" ];\n"
+   (btrfs-subvolumes pad)))
 
 (defn esp-partition []
   (str
@@ -241,29 +267,46 @@
 (defn swap-partition
   "A fixed-size swap partition. priority 2 keeps it after the
   boot/ESP partition and before the 100% root, so root still grabs
-  the remaining space."
-  [size]
+  the remaining space. When `encrypt?`, swap is re-keyed with a random
+  passphrase on every boot (randomEncryption) so it never leaks RAM
+  contents in plaintext on an otherwise-encrypted disk -- this rules
+  out hibernation (suspend-to-disk)."
+  [size encrypt?]
   (str
    "            swap = {\n"
    "              priority = 2;\n"
    "              size = \"" size "\";\n"
    "              content = {\n"
    "                type = \"swap\";\n"
+   (when encrypt? "                randomEncryption = true;\n")
    "              };\n"
    "            };\n"))
 
-(defn root-partition []
+(defn root-partition
+  "The 100% root partition. When `encrypt?`, the btrfs lives inside a
+  LUKS container exposed as /dev/mapper/cryptroot: disko prompts for the
+  passphrase interactively at format time (askPassword defaults on with
+  no key/password file) and the disko NixOS module adds the
+  boot.initrd.luks unlock entry (initrdUnlock) automatically.
+  allowDiscards passes TRIM through to the SSD."
+  [encrypt?]
   (str
    "            root = {\n"
    "              size = \"100%\";\n"
    "              content = {\n"
-   "                type = \"btrfs\";\n"
-   "                extraArgs = [ \"-f\" ];\n"
-   btrfs-subvolumes
+   (if encrypt?
+     (str
+      "                type = \"luks\";\n"
+      "                name = \"cryptroot\";\n"
+      "                settings = { allowDiscards = true; };\n"
+      "                content = {\n"
+      (btrfs-content "                  ")
+      "                };\n")
+     (btrfs-content "                "))
    "              };\n"
    "            };\n"))
 
-(defn disko-nix [{:keys [device uefi? swap-size]}]
+(defn disko-nix [{:keys [device uefi? swap-size encrypt?]}]
   (str
    "# Generated by disk_config.bb -- declarative disk layout (disko).\n"
    "# Apply:  disko --mode destroy,format,mount ./disko.nix\n"
@@ -277,8 +320,8 @@
    "          type = \"gpt\";\n"
    "          partitions = {\n"
    (if uefi? (esp-partition) (bios-boot-partition))
-   (when swap-size (swap-partition swap-size))
-   (root-partition)
+   (when swap-size (swap-partition swap-size encrypt?))
+   (root-partition encrypt?)
    "          };\n"
    "        };\n"
    "      };\n"
@@ -290,19 +333,27 @@
 ;;; Review + apply
 ;;; ============================================================
 
-(defn confirm-review [{:keys [device uefi? swap-size config-path]}]
+(defn confirm-review [{:keys [device uefi? swap-size encrypt? config-path]}]
   (println)
   (println "================ Review =================")
   (println "Target disk: " device)
   (println "Firmware:    " (if uefi? "UEFI (ESP /boot)" "Legacy BIOS (bios_grub)"))
   (println "Filesystem:   btrfs")
+  (println "Encryption:  " (if encrypt? "LUKS2 (passphrase set during format, prompted at boot)" "none"))
   (println "Subvolumes:   @ -> /, @home -> /home, @nix -> /nix")
-  (println "Swap:        " (if swap-size swap-size "none"))
+  (println "Swap:        " (cond (and swap-size encrypt?) (str swap-size " (random-key encrypted)")
+                                 swap-size                 swap-size
+                                 :else                     "none"))
   (println "Config:      " config-path)
   (println "=========================================")
   (println)
   (println (str "⚠️  This ERASES ALL DATA on " device " and mounts the new"))
   (println "    filesystems under /mnt.")
+  (when encrypt?
+    (println)
+    (println "    disko will prompt you to set the LUKS passphrase during"))
+  (when encrypt?
+    (println "    formatting -- keep it safe, it cannot be recovered."))
   (println)
   (sw/confirm "Proceed?" :default :no))
 
@@ -456,16 +507,21 @@
   (println "Options:")
   (println "  --output FILE       Write disko.nix to FILE and exit (no changes made).")
   (println "  --no-apply          Generate the config but do not run disko.")
+  (println "  --encrypt           Encrypt the root (LUKS) without prompting.")
+  (println "  --no-encrypt        Skip encryption without prompting.")
+  (println "                      (Default: ask interactively.)")
   (println "  --include-mounted   Also list disks with active mounts (e.g. the")
   (println "                      live boot medium). Off by default for safety.")
   (println "  -h, --help          Show help."))
 
 (defn parse-args [args]
-  (loop [args args opts {:apply true :output nil :include-mounted false}]
+  (loop [args args opts {:apply true :output nil :include-mounted false :encrypt nil}]
     (if-let [a (first args)]
       (case a
         "--output"   (recur (drop 2 args) (assoc opts :output (second args) :apply false))
         "--no-apply" (recur (rest args) (assoc opts :apply false))
+        "--encrypt"    (recur (rest args) (assoc opts :encrypt true))
+        "--no-encrypt" (recur (rest args) (assoc opts :encrypt false))
         "--include-mounted" (recur (rest args) (assoc opts :include-mounted true))
         ("-h" "--help") (do (usage) (System/exit 0))
         (do (stderr "Unknown option:" a) (usage) (System/exit 2)))
@@ -500,6 +556,14 @@
           s
           (do (println "Please enter a size like 8G or 2048M.") (recur)))))
     nil))
+
+(defn ask-encrypt
+  "Ask whether to encrypt the disk with LUKS. Returns a boolean. We only
+  decide whether to generate the encrypted layout here -- disko itself
+  prompts for and confirms the passphrase during formatting."
+  []
+  (sw/confirm "Encrypt the disk with LUKS? (disko will prompt for a passphrase during formatting)"
+              :default :no))
 
 (defn -main []
   (let [opts (parse-args *command-line-args*)]
@@ -549,8 +613,12 @@
                           (reinstall-flow! (assoc existing :device device :uefi? uefi?))
                           (System/exit 0))
                         (println)))
+            ;; Encryption is fresh-install only: an existing encrypted
+            ;; disk shows crypto_LUKS (not a btrfs with @/@home/@nix), so
+            ;; detect-reinstall above returns nil and we land here.
+            encrypt?  (if (nil? (:encrypt opts)) (ask-encrypt) (:encrypt opts))
             swap-size (ask-swap)
-            config  (disko-nix {:device device :uefi? uefi? :swap-size swap-size})]
+            config  (disko-nix {:device device :uefi? uefi? :swap-size swap-size :encrypt? encrypt?})]
 
         ;; Config-only mode: write and exit.
         (when (:output opts)
@@ -569,7 +637,7 @@
               config-path (str (fs/path workdir "disko.nix"))]
           (spit config-path config)
 
-          (when-not (confirm-review {:device device :uefi? uefi? :swap-size swap-size :config-path config-path})
+          (when-not (confirm-review {:device device :uefi? uefi? :swap-size swap-size :encrypt? encrypt? :config-path config-path})
             (println "Aborted.")
             (System/exit 0))
 
