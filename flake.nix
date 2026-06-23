@@ -121,6 +121,12 @@
 
               # Core system config (shared by all profiles)
               ./nixos/modules/base.nix
+
+              # Composable feature profiles (libvirt, podman, flatpak,
+              # sound, ...). Always imported; each is inert until its
+              # `my.profiles.<name>.enable` flag is set in the host's
+              # config.nix.
+              ./nixos/modules/profiles
             ]
             # Sway desktop layer -- only for the "sway" profile.
             ++ lib.optional isSway ./nixos/modules/desktop.nix
