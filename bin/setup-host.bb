@@ -117,7 +117,8 @@
 ;; generated config.nix as `my.profiles.<key>.enable` toggles. Each maps to a
 ;; module in sway-home's nixos/modules/profiles/.
 (def profile-catalog
-  [["sway"    "Sway desktop (greetd login, sway, fonts, firefox, emacs, dotfiles)"]
+  [["dotfiles" "Shell/CLI home environment (bashrc, ~/.config dotfiles, emacs, CLI tools) -- no GUI"]
+   ["sway"    "Sway desktop (greetd login, sway, fonts, firefox; implies dotfiles)"]
    ["sound"   "PipeWire audio"]
    ["podman"  "Podman containers (Docker-compatible)"]
    ["flatpak" "Flatpak + Flathub remote"]

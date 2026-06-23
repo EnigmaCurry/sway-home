@@ -4,7 +4,7 @@ let
   emacsRepo = inputs.emacs_enigmacurry;
 in
 {
-  config = lib.mkIf config.my.home.sway.enable {
+  config = lib.mkIf config.my.home.dotfiles.enable {
     programs.emacs = {
       enable = true;
       package = pkgs.emacs-pgtk;

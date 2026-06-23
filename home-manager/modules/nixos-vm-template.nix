@@ -26,7 +26,7 @@ let
   '';
 in
 {
-  config = lib.mkIf config.my.home.sway.enable {
+  config = lib.mkIf config.my.home.dotfiles.enable {
   home.file."nixos-vm-template".source = nixosVmTemplateRepo;
 
   home.activation.nixos-vm-template-env = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

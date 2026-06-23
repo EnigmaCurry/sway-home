@@ -3,10 +3,24 @@
 # Always-on home-manager baseline -- loaded on EVERY host (minimal server or
 # sway desktop, NixOS or standalone). It owns the home-manager identity that
 # must always be set, plus the `admin` alias a headless host needs to drive
-# its ~/nixos repo. It also declares the `my.home.sway.enable` gate that the
-# desktop content modules (home.nix, emacs.nix, firefox.nix, ...) switch on.
+# its ~/nixos repo. It also declares the two gates the content modules switch
+# on: `my.home.dotfiles.enable` (shell/CLI: bashrc, ~/bin, ~/.config, emacs,
+# CLI tools) and `my.home.sway.enable` (the GUI desktop adds on top).
 
 {
+  options.my.home.dotfiles.enable = lib.mkOption {
+    type = lib.types.bool;
+    # Defaults on for standalone home-manager (HOME_MANAGER.md, non-NixOS).
+    # On NixOS, lib.mkHost overrides this from my.profiles.dotfiles.enable
+    # (and sway implies it).
+    default = true;
+    description = ''
+      Whether to load the shell/CLI home-manager environment: bashrc, the
+      ~/bin scripts, the ~/.config dotfiles, git config, emacs, the
+      nixos-vm-template env, and the CLI package toolbox. No GUI.
+    '';
+  };
+
   options.my.home.sway.enable = lib.mkOption {
     type = lib.types.bool;
     # Defaults on so standalone home-manager (HOME_MANAGER.md, non-NixOS)
@@ -14,9 +28,8 @@
     # system's my.profiles.sway.enable.
     default = true;
     description = ''
-      Whether to load the full sway desktop home-manager environment
-      (dotfiles, packages, emacs, firefox, fluidsynth, ...). When false,
-      only this baseline is active -- the headless-server essentials.
+      Whether to load the GUI desktop home-manager content on top of the
+      dotfiles: firefox, fluidsynth, and the Wayland/Sway package set.
     '';
   };
 

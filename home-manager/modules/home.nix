@@ -14,11 +14,11 @@ let
 in {
   # Identity (home.username/homeDirectory/stateVersion) and
   # programs.home-manager.enable live in baseline.nix, which is always on.
-  # Everything below is the sway desktop content, gated as a single block so
-  # a minimal host (or a sway->minimal downgrade) cleanly drops it.
-  config = lib.mkIf config.my.home.sway.enable {
-    # The desktop user toolbox + the interactive script-wizard pod. (On a
-    # standalone, non-NixOS home-manager this is the user's whole package set.)
+  # The shell/CLI content below is gated on my.home.dotfiles.enable; the GUI
+  # package set is added separately under my.home.sway.enable at the end.
+  config = lib.mkMerge [
+   (lib.mkIf config.my.home.dotfiles.enable {
+    # The CLI toolbox + the interactive script-wizard pod.
     home.packages = (import ./packages.nix { inherit pkgs; }) ++ [ scriptWizard ];
 
     programs.git = {
@@ -154,5 +154,10 @@ EOF
       # git-prompt.sh for bash PS1 (fetched at build time, not runtime)
       "git-prompt.sh".source = inputs.git-prompt;
     };
-  };
+   })
+   (lib.mkIf config.my.home.sway.enable {
+     # GUI desktop packages (Wayland/Sway) -- added on top of the dotfiles.
+     home.packages = import ./packages-gui.nix { inherit pkgs; };
+   })
+  ];
 }

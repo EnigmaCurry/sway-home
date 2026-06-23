@@ -11,6 +11,7 @@
 
 {
   imports = [
+    ./dotfiles.nix
     ./sway.nix
     ./libvirt.nix
     ./podman.nix

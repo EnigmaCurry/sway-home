@@ -137,8 +137,8 @@
             # stays fully declarative: disabling it makes home-manager remove
             # the dotfiles it no longer manages instead of orphaning them in
             # $HOME. The same module set always loads -- only the *content* is
-            # gated by my.home.sway.enable, mirrored from the system's
-            # my.profiles.sway.enable below.
+            # gated, mirrored from the system profiles below: dotfiles (shell/
+            # CLI) and sway (GUI desktop, which implies dotfiles).
             ++ [
               moduleInputs.home-manager.nixosModules.home-manager
               ({ ... }: {
@@ -150,6 +150,9 @@
 
                   users.${userName} = { osConfig, ... }: {
                     imports = [ ./home-manager/modules/all.nix ];
+                    # sway implies dotfiles (a desktop wants the shell env too).
+                    my.home.dotfiles.enable =
+                      osConfig.my.profiles.dotfiles.enable || osConfig.my.profiles.sway.enable;
                     my.home.sway.enable = osConfig.my.profiles.sway.enable;
                   };
                 };

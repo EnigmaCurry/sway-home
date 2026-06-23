@@ -1,9 +1,11 @@
 { pkgs }:
 
+# CLI / TUI user packages -- the shell + dev toolbox. Part of the `dotfiles`
+# profile (no GUI). Wayland/desktop packages live in packages-gui.nix.
+
 with pkgs; [
   libtool
   openssl.dev
-  foot
   cargo-generate
   cargo-watch
   live-server
@@ -20,12 +22,10 @@ with pkgs; [
   ruff
   ripgrep
   git
-  waybar
   keychain
   s3cmd
   quickemu
   just
-  rofi
   socat
   yt-dlp
   ispell
@@ -53,12 +53,6 @@ with pkgs; [
   inotify-tools
   tmux
   sshfs
-  nerd-fonts.jetbrains-mono
-  grim
-  slurp
-  sway-contrib.grimshot
-  wl-clipboard
-  wdisplays
   ansible
   babashka
   docker
