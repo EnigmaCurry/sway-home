@@ -1,9 +1,9 @@
 { config, pkgs, ... }:
 
 {
-  # Core system config shared by ALL hosts (every profile). The Sway
-  # desktop bits live in desktop.nix, included only for the "sway"
-  # profile (see lib.mkHost).
+  # Core system config shared by ALL hosts. The Sway desktop bits live in
+  # the sway profile module (nixos/modules/profiles/sway.nix), gated by
+  # my.profiles.sway.enable.
 
   # Opt-in for flakes (defacto standard).
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -48,10 +48,10 @@
   programs.bash.completion.enable = true;
 
   # The `admin` alias (run `just` in ~/nixos with full recipe + argument
-  # tab completion) is set up by home-manager on every profile now --
-  # config/bash/alias.sh on "sway", home-manager/modules/minimal.nix on
-  # "minimal" -- both sourcing the same _justfile_alias machinery from the
-  # repo. It is no longer wired here at the system level via /etc/bashrc.
+  # tab completion) is set up by home-manager on every host now --
+  # home-manager/modules/baseline.nix wires it directly, and on a sway host
+  # config/bash/alias.sh defines it too; both source the same _justfile_alias
+  # machinery. It is no longer wired here at the system level via /etc/bashrc.
 
   # This value determines the NixOS release from which the default
   # settings for stateful data were taken. Leave it at the release version

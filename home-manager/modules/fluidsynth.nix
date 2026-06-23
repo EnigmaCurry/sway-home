@@ -55,6 +55,7 @@ let
   '';
 in
 {
+  config = lib.mkIf config.my.home.sway.enable {
   home.packages = with pkgs; [
     fluidsynth
     soundfont-fluid
@@ -86,5 +87,6 @@ in
     Install = {
       WantedBy = [ "default.target" ];
     };
+  };
   };
 }

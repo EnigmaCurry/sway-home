@@ -43,14 +43,11 @@
           inherit pkgs;
           extraSpecialArgs = {
             inherit inputs userName unstablePkgs;
-            scriptWizard = inputs.script-wizard.packages.${system}.default;
           };
-          modules = [
-            ./modules/all.nix
-            ({ pkgs, scriptWizard, ... }: {
-              home.packages = (import ./modules/packages.nix { inherit pkgs; }) ++ [ scriptWizard ];
-            })
-          ] ++ extraModules;
+          # all.nix pulls in baseline + the sway desktop content. home.nix
+          # provides home.packages, gated by my.home.sway.enable which
+          # defaults true here (standalone).
+          modules = [ ./modules/all.nix ] ++ extraModules;
         };
     in
     {

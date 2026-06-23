@@ -1,9 +1,10 @@
-{ pkgs, inputs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
 let
   firefox-addons = inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system};
 in
 {
+  config = lib.mkIf config.my.home.sway.enable {
   programs.firefox = {
     enable = true;
 
@@ -187,5 +188,6 @@ in
         "media.autoplay.default" = 5;
       };
     };
+  };
   };
 }

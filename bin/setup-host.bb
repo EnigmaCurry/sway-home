@@ -84,7 +84,7 @@
 ;;; Generated file contents
 ;;; ============================================================
 
-(defn flake-nix [{:keys [host user system ref profile]}]
+(defn flake-nix [{:keys [host user system ref]}]
   (str
    "{\n"
    "  description = \"NixOS host: " host "\";\n\n"
@@ -95,8 +95,8 @@
    "    nixosConfigurations." host " = sway-home.lib.mkHost {\n"
    "      hostName = \"" host "\";\n"
    "      userName = \"" user "\";\n"
-   "      # \"sway\" = full desktop; \"minimal\" = bare server (sshd, no desktop).\n"
-   "      profile = \"" profile "\";\n"
+   ;; Desktop vs server is chosen in config.nix via my.profiles.sway.enable
+   ;; (along with every other profile), so there is no profile arg here.
    ;; system defaults to x86_64-linux in mkHost; only emit it otherwise.
    (when (not= system "x86_64-linux")
      (str "      system = \"" system "\";\n"))
@@ -113,7 +113,7 @@
    "  };\n"
    "}\n"))
 
-(defn config-nix [{:keys [user ssh-keys tz]}]
+(defn config-nix [{:keys [user ssh-keys tz profile]}]
   (str
    "{ inputs, host, config, pkgs, unstablePkgs, lib, ... }:\n\n"
    "{\n"
@@ -147,11 +147,14 @@
    "  # ];\n\n"
    "  # --- Enable services ---\n"
    "  # services.printing.enable = true;\n\n"
-   "  # --- Feature profiles (sway-home) ------------------------------------\n"
+   "  # --- Profiles (sway-home) --------------------------------------------\n"
    "  # Composable toggles -- each enables a fully-wired subsystem (daemon,\n"
    "  # groups, packages and all). Defined in nixos/modules/profiles/ in\n"
-   "  # sway-home. This is the additive counterpart to the base `profile`\n"
-   "  # (minimal | sway) chosen in flake.nix.\n"
+   "  # sway-home. sway = the graphical desktop; the rest are additive add-ons.\n"
+   (str "  my.profiles.sway.enable    = " (if (= profile "sway") "true" "false") ";"
+        (if (= profile "sway")
+          "   # Sway desktop (greetd login + sway + fonts + HM dotfiles)\n"
+          "  # Sway desktop -- set true for a graphical workstation\n"))
    "  # my.profiles.sound.enable   = true;   # PipeWire audio\n"
    "  # my.profiles.podman.enable  = true;   # Podman containers (Docker-compatible)\n"
    "  # my.profiles.flatpak.enable = true;   # Flatpak + Flathub remote\n"
@@ -286,8 +289,8 @@
           (fs/copy disko-src (fs/path repo "disko.nix") {:replace-existing true})
           (fs/copy hw-src (fs/path repo "hardware.nix") {:replace-existing true})
           (spit (str (fs/path repo "flake.nix"))
-                (flake-nix {:host host :user user :system system :ref (:ref opts) :profile profile}))
-          (spit (str (fs/path repo "config.nix")) (config-nix {:user user :ssh-keys ssh-keys :tz tz}))
+                (flake-nix {:host host :user user :system system :ref (:ref opts)}))
+          (spit (str (fs/path repo "config.nix")) (config-nix {:user user :ssh-keys ssh-keys :tz tz :profile profile}))
           (spit (str (fs/path repo "Justfile")) (justfile {:host host}))
           (spit (str (fs/path repo ".gitignore")) gitignore)
           (doseq [f ["flake.nix" "disko.nix" "hardware.nix" "config.nix" "Justfile" ".gitignore"]]

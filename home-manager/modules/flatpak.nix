@@ -6,7 +6,8 @@ let
     || builtins.pathExists "/var/lib/flatpak";
 in
 {
-  services.flatpak = lib.mkIf flatpakExists {
+  # Gated on sway (desktop) AND on flatpak actually being present on the host.
+  services.flatpak = lib.mkIf (config.my.home.sway.enable && flatpakExists) {
     enable = true;
 
     remotes = [

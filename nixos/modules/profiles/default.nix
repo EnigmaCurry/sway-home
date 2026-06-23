@@ -11,6 +11,7 @@
 
 {
   imports = [
+    ./sway.nix
     ./libvirt.nix
     ./podman.nix
     ./flatpak.nix

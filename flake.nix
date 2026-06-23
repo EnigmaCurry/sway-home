@@ -73,10 +73,6 @@
           hostUnstablePackages = host.unstablePackages or [];
           hostExtraPackages = host.extraPackages or [];
 
-          # "sway" (default) = full desktop + home-manager.
-          # "minimal" = core only (sshd, no desktop, no home-manager).
-          isSway = (host.profile or "sway") == "sway";
-
           userName = host.userName;
         in
           stableNixpkgs.lib.nixosSystem {
@@ -128,23 +124,21 @@
               # config.nix.
               ./nixos/modules/profiles
             ]
-            # Sway desktop layer -- only for the "sway" profile.
-            ++ lib.optional isSway ./nixos/modules/desktop.nix
             # Host-specific modules from the per-host repo
-            # (disko.nix + hardware.nix + config.nix).
+            # (disko.nix + hardware.nix + config.nix). This is where a host
+            # sets `my.profiles.sway.enable` (and any other profile flags).
             ++ hostModules
             ++ [
               { networking.hostName = host.hostName; }
 
               (import ./nixos/modules/user.nix { inherit userName; })
             ]
-            # home-manager is included on EVERY profile so that switching
-            # profiles stays fully declarative: a "sway" -> "minimal"
-            # downgrade makes home-manager remove the sway dotfiles it no
-            # longer manages, instead of orphaning them in $HOME. Only the
-            # *content* is gated -- "sway" loads the full desktop
-            # environment; "minimal" loads just the essentials (the `admin`
-            # alias) so it can also clean up on a downgrade.
+            # home-manager is included on EVERY host so that toggling sway
+            # stays fully declarative: disabling it makes home-manager remove
+            # the dotfiles it no longer manages instead of orphaning them in
+            # $HOME. The same module set always loads -- only the *content* is
+            # gated by my.home.sway.enable, mirrored from the system's
+            # my.profiles.sway.enable below.
             ++ [
               moduleInputs.home-manager.nixosModules.home-manager
               ({ ... }: {
@@ -154,17 +148,10 @@
                   backupFileExtension = "backup";
                   extraSpecialArgs = { inputs = moduleInputs; inherit userName host; };
 
-                  users.${userName} = { pkgs, ... }:
-                    if isSway then
-                      let
-                        scriptWizard = moduleInputs.script-wizard.packages.${system}.default;
-                      in {
-                        imports = [ ./home-manager/modules/all.nix ];
-                        home.packages = (import ./home-manager/modules/packages.nix { inherit pkgs; }) ++ [ scriptWizard ];
-                      }
-                    else {
-                      imports = [ ./home-manager/modules/minimal.nix ];
-                    };
+                  users.${userName} = { osConfig, ... }: {
+                    imports = [ ./home-manager/modules/all.nix ];
+                    my.home.sway.enable = osConfig.my.profiles.sway.enable;
+                  };
                 };
               })
             ];

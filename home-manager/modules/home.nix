@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, userName, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 let
   myBashrc = inputs.sway-home + "/bashrc";
@@ -10,15 +10,18 @@ let
   swayBinDir = inputs.sway-home + "/bin";
   swayBinTree = builtins.readDir swayBinDir;
 
+  scriptWizard = inputs.script-wizard.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in {
-  home.username = userName;
-  home.homeDirectory = "/home/${userName}";
-  home.stateVersion = "26.05";
+  # Identity (home.username/homeDirectory/stateVersion) and
+  # programs.home-manager.enable live in baseline.nix, which is always on.
+  # Everything below is the sway desktop content, gated as a single block so
+  # a minimal host (or a sway->minimal downgrade) cleanly drops it.
+  config = lib.mkIf config.my.home.sway.enable {
+    # The desktop user toolbox + the interactive script-wizard pod. (On a
+    # standalone, non-NixOS home-manager this is the user's whole package set.)
+    home.packages = (import ./packages.nix { inherit pkgs; }) ++ [ scriptWizard ];
 
-  # Let home-manager manage itself when running standalone
-  programs.home-manager.enable = true;
-
-  programs.git = {
+    programs.git = {
     enable = true;
     includes = [
       { path = "~/.config/git/config.local"; }
@@ -151,4 +154,5 @@ EOF
       # git-prompt.sh for bash PS1 (fetched at build time, not runtime)
       "git-prompt.sh".source = inputs.git-prompt;
     };
+  };
 }

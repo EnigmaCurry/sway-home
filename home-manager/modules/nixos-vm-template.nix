@@ -26,6 +26,7 @@ let
   '';
 in
 {
+  config = lib.mkIf config.my.home.sway.enable {
   home.file."nixos-vm-template".source = nixosVmTemplateRepo;
 
   home.activation.nixos-vm-template-env = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -45,4 +46,5 @@ EOF
     ln -sf "${nixosVmTemplateRepo}/libvirt/template.xml" "${libvirtDir}/template.xml"
     ln -sf "${nixosVmTemplateRepo}/libvirt/template-mutable.xml" "${libvirtDir}/template-mutable.xml"
   '';
+  };
 }
