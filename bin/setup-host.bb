@@ -113,7 +113,25 @@
    "  };\n"
    "}\n"))
 
-(defn config-nix [{:keys [user ssh-keys tz profile]}]
+;; The composable profiles offered by `setup host` and rendered into the
+;; generated config.nix as `my.profiles.<key>.enable` toggles. Each maps to a
+;; module in sway-home's nixos/modules/profiles/.
+(def profile-catalog
+  [["sway"    "Sway desktop (greetd login, sway, fonts, firefox, emacs, dotfiles)"]
+   ["sound"   "PipeWire audio"]
+   ["podman"  "Podman containers (Docker-compatible)"]
+   ["flatpak" "Flatpak + Flathub remote"]
+   ["libvirt" "libvirt/KVM virtualization (the `vm` command, virt-manager)"]])
+
+;; Render one aligned `my.profiles.<key>.enable = true;` line: uncommented
+;; when selected, a commented example otherwise.
+(defn- profile-line [selected [key desc]]
+  (let [enabled (contains? selected key)
+        lead    (str (if enabled "  " "  # ") "my.profiles." key ".enable")
+        pad     (apply str (repeat (max 1 (- 31 (count lead))) \space))]
+    (str lead pad "= true;   # " desc "\n")))
+
+(defn config-nix [{:keys [user ssh-keys tz profiles]}]
   (str
    "{ inputs, host, config, pkgs, unstablePkgs, lib, ... }:\n\n"
    "{\n"
@@ -151,14 +169,9 @@
    "  # Composable toggles -- each enables a fully-wired subsystem (daemon,\n"
    "  # groups, packages and all). Defined in nixos/modules/profiles/ in\n"
    "  # sway-home. sway = the graphical desktop; the rest are additive add-ons.\n"
-   (str "  my.profiles.sway.enable    = " (if (= profile "sway") "true" "false") ";"
-        (if (= profile "sway")
-          "   # Sway desktop (greetd login + sway + fonts + HM dotfiles)\n"
-          "  # Sway desktop -- set true for a graphical workstation\n"))
-   "  # my.profiles.sound.enable   = true;   # PipeWire audio\n"
-   "  # my.profiles.podman.enable  = true;   # Podman containers (Docker-compatible)\n"
-   "  # my.profiles.flatpak.enable = true;   # Flatpak + Flathub remote\n"
-   "  # my.profiles.libvirt.enable = true;   # libvirt/KVM -- the `vm` command, virt-manager\n\n"
+   "  # (Chosen at install time; flip any of these and run `just switch`.)\n"
+   (apply str (map #(profile-line profiles %) profile-catalog))
+   "\n"
    "  # --- Desktop programs ---\n"
    "  # programs.firefox.enable = true;\n"
    "  # programs.gnupg.agent = { enable = true; enableSSHSupport = true; };\n"
@@ -197,7 +210,8 @@
   (println "Options:")
   (println "  --host NAME           Hostname (prompted if omitted).")
   (println "  --user NAME           Primary username (prompted if omitted).")
-  (println "  --profile NAME        'minimal' (server, default) or 'sway' (full desktop). Prompted if omitted.")
+  (println "  --profiles LIST       Comma-separated profiles to enable: sway,sound,podman,flatpak,libvirt.")
+  (println "                        Multi-select prompt if omitted; none = minimal server.")
   (println "  --sway-home-ref REF   Override the sway-home flake ref.")
   (println "  --root DIR            Target mount (default: /mnt).")
   (println "  -h, --help            Show help."))
@@ -208,7 +222,8 @@
       (case a
         "--host"          (recur (drop 2 args) (assoc opts :host (second args)))
         "--user"          (recur (drop 2 args) (assoc opts :user (second args)))
-        "--profile"       (recur (drop 2 args) (assoc opts :profile (second args)))
+        "--profiles"      (recur (drop 2 args) (assoc opts :profiles (set (remove str/blank? (str/split (second args) #",")))))
+        "--profile"       (recur (drop 2 args) (update opts :profiles (fnil conj #{}) (second args)))
         "--sway-home-ref" (recur (drop 2 args) (assoc opts :ref (second args)))
         "--root"          (recur (drop 2 args) (assoc opts :root (second args)))
         ("-h" "--help")   (do (usage) (System/exit 0))
@@ -242,12 +257,11 @@
                            (do (println "Username is required.") (recur))
                            u))))
             tz   (str/trim (sw/ask "Time zone" :default "America/Denver"))
-            profile (or (:profile opts)
-                        (let [choices [["minimal" "Minimal server (sshd only, no desktop)"]
-                                       ["sway"    "Sway desktop (full environment)"]]
-                              labels  (mapv second choices)
-                              chosen  (sw/choose "Select an install profile:" labels)]
-                          (first (first (filter #(= (second %) chosen) choices)))))
+            profiles (or (:profiles opts)
+                         (let [labels     (mapv (fn [[k d]] (str k " - " d)) profile-catalog)
+                               label->key (zipmap labels (map first profile-catalog))
+                               chosen     (sw/select "Select profiles to enable (space toggles, enter confirms; none = minimal server):" labels)]
+                           (set (keep label->key chosen))))
             ssh-keys (authorized-keys)
             system (str/trim (capture {} "nix" "eval" "--impure" "--raw" "--expr" "builtins.currentSystem"))
             system (if (str/blank? system) "x86_64-linux" system)
@@ -261,7 +275,7 @@
           (println "================ Review =================")
           (println "Hostname:     " host)
           (println "Username:     " user)
-          (println "Profile:      " profile (if (= profile "sway") "(full desktop)" "(minimal server, sshd only)"))
+          (println "Profiles:     " (if (seq profiles) (str/join " " (sort profiles)) "(none -- minimal server, sshd only)"))
           (println "Time zone:    " tz)
           (println "System:       " system)
           (println "SSH keys:     " (if (seq ssh-keys) (str (count ssh-keys) " (seeded from ISO)") "NONE FOUND -- you must add one in config.nix"))
@@ -290,7 +304,7 @@
           (fs/copy hw-src (fs/path repo "hardware.nix") {:replace-existing true})
           (spit (str (fs/path repo "flake.nix"))
                 (flake-nix {:host host :user user :system system :ref (:ref opts)}))
-          (spit (str (fs/path repo "config.nix")) (config-nix {:user user :ssh-keys ssh-keys :tz tz :profile profile}))
+          (spit (str (fs/path repo "config.nix")) (config-nix {:user user :ssh-keys ssh-keys :tz tz :profiles profiles}))
           (spit (str (fs/path repo "Justfile")) (justfile {:host host}))
           (spit (str (fs/path repo ".gitignore")) gitignore)
           (doseq [f ["flake.nix" "disko.nix" "hardware.nix" "config.nix" "Justfile" ".gitignore"]]
