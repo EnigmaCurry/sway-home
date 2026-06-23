@@ -21,6 +21,10 @@ in
     # this one.
     xdg.portal.enable = true;
     xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    # xdg-desktop-portal >= 1.17 wants an explicit backend per interface.
+    # "*" = use the first available portal (the pre-1.17 behaviour), which
+    # silences the eval warning and is the right default for a single backend.
+    xdg.portal.config.common.default = "*";
 
     # Register Flathub once at activation so `flatpak install flathub ...`
     # works out of the box.
