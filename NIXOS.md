@@ -398,21 +398,28 @@ in as an input. Edit `config.nix` (or add modules) for host-specific
 changes, and edit sway-home for changes you want shared across all your
 machines.
 
-After editing, commit (Nix ignores uncommitted files) and apply:
+Apply changes with the **`admin`** alias — it runs this repo's
+`Justfile` from anywhere (no `cd ~/nixos` needed) with recipe and
+argument tab completion. After editing, commit (Nix ignores
+uncommitted files) and switch:
 
 ```
-git commit -am "..."
-just switch          # = sudo nixos-rebuild switch --flake .#<host>
+git commit -am "..."   # in ~/nixos
+admin switch           # = sudo nixos-rebuild switch --flake .#<host>
 ```
 
-To pull newer shared config from sway-home (and other inputs):
+To pull newer shared config from sway-home (and other inputs) **and**
+apply it in one step, use `upgrade` — it updates the flake inputs, then
+switches:
 
 ```
-nix flake update     # or: just update
-just switch
+admin upgrade          # = nix flake update, then switch
+git commit -am "flake.lock: update inputs"   # in ~/nixos, to keep the new pin
 ```
 
-Other recipes are listed by `just help`.
+Run `admin help` to list all recipes (`switch`, `test`, `update`,
+`upgrade`). Each `admin` recipe is just the matching `just` recipe run
+in `~/nixos`, so `just switch` from inside the repo still works too.
 
 ## Important concepts and reminders
 
