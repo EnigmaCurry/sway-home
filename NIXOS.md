@@ -14,6 +14,25 @@ which has an included profile for sway-home.
 
 ## Install NixOS
 
+There are two ways to get a machine onto sway-home:
+
+ * **[Option A: Custom network installer ISO](#option-a-build-a-custom-nixos-network-installer-iso)**
+   — build a headless, SSH-ready installer ISO (optional pre-seeded
+   WiFi, serial console, boot webhook), then run `setup nixos` to
+   partition the disk (via [disko]) and generate this host's `~/nixos`
+   repo automatically. Best for headless machines and for installing to
+   several boxes on a network — no monitor or keyboard required.
+
+ * **[Option B: Official NixOS installer](#option-b-use-the-official-nixos-installer)**
+   — install stock NixOS with the upstream graphical installer, then
+   follow the [bridge steps](#bridge-convert-an-official-installer-machine-into-a-sway-home-host)
+   to build the `~/nixos` repo by hand. Best when you already have a
+   monitor and keyboard (or an IP KVM) and don't want to build an ISO
+   first.
+
+Both routes end at the same place: a per-host `~/nixos` flake repo that
+depends on sway-home, which you then `just switch` from going forward.
+
 ### Option A: Build a custom NixOS network installer ISO
 
 This builds a **headless** NixOS installer ISO that boots straight
