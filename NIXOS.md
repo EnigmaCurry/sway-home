@@ -238,12 +238,13 @@ your install password. sway-home turns sshd key-only once you switch
 to it, so add a key first; see the caveats below.)
 
 Then run the generator as your **normal user** (not root) with
-`--adopt`. It needs only Nix on the host — `nix shell` pulls in Babashka
-and script-wizard, exactly like the ISO build in Option A:
+`--adopt`. It needs only Nix on the host — `nix shell` pulls in Babashka,
+git, and script-wizard (a bare official install has no `git` on `PATH`
+yet, so the shell provides it):
 
 ```bash
 nix shell --extra-experimental-features "nix-command flakes" \
-  nixpkgs#babashka github:EnigmaCurry/script-wizard --command \
+  nixpkgs#babashka nixpkgs#git github:EnigmaCurry/script-wizard --command \
   bb -e '(load-string (slurp "https://raw.githubusercontent.com/EnigmaCurry/sway-home/master/bin/setup-host.bb"))' \
   -- --adopt
 ```
