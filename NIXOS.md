@@ -248,19 +248,21 @@ mkdir -p ~/nixos && cd ~/nixos
 cp /etc/nixos/hardware-configuration.nix hardware.nix
 ```
 
-Create **`~/nixos/flake.nix`** — note the `modules` list is just
-`hardware.nix` + `config.nix`, with **no** `disko.nix`:
+Write **`~/nixos/flake.nix`** — the `$HOST`/`$USER` vars from above
+fill it in; note the `modules` list is just `hardware.nix` +
+`config.nix`, with **no** `disko.nix`:
 
-```nix
+```bash
+cat > flake.nix <<EOF
 {
-  description = "NixOS host: mybox";
+  description = "NixOS host: $HOST";
 
   inputs.sway-home.url = "github:EnigmaCurry/sway-home/master";
 
   outputs = { self, sway-home, ... }: {
-    nixosConfigurations.mybox = sway-home.lib.mkHost {
-      hostName = "mybox";
-      userName = "youruser";
+    nixosConfigurations.$HOST = sway-home.lib.mkHost {
+      hostName = "$HOST";
+      userName = "$USER";
       modules = [
         ./hardware.nix
         ./config.nix
@@ -268,26 +270,29 @@ Create **`~/nixos/flake.nix`** — note the `modules` list is just
     };
   };
 }
+EOF
 ```
 
-Create **`~/nixos/config.nix`** (this mirrors what `setup host`
-generates; flip the profile toggles you want):
+Write **`~/nixos/config.nix`** (the `$USER`/`$TZ` vars fill it in; this
+mirrors what `setup host` generates — flip the profile toggles you
+want):
 
-```nix
+```bash
+cat > config.nix <<EOF
 { inputs, host, config, pkgs, unstablePkgs, lib, ... }:
 
 {
-  time.timeZone = "America/Denver";
+  time.timeZone = "$TZ";
   i18n.defaultLocale = "en_US.UTF-8";
   services.xserver.xkb = { layout = "us"; variant = ""; options = "ctrl:nocaps"; };
   console.useXkbConfig = true;
 
   # sshd is key-only — add at least one key or you can only log in at the console.
-  users.users."youruser".openssh.authorizedKeys.keys = [
+  users.users."$USER".openssh.authorizedKeys.keys = [
     # "ssh-ed25519 AAAA..."
   ];
 
-  programs.git.config.safe.directory = "/home/youruser/nixos";
+  programs.git.config.safe.directory = "/home/$USER/nixos";
 
   # --- Profiles (sway-home) ---
   my.profiles.sway.enable     = true;   # Sway desktop (implies dotfiles)
@@ -297,12 +302,15 @@ generates; flip the profile toggles you want):
   # my.profiles.flatpak.enable  = true;
   # my.profiles.libvirt.enable  = true;
 }
+EOF
 ```
 
-Create **`~/nixos/Justfile`** — this is what wires up the `admin`
-alias and the `just switch` workflow below, so don't skip it:
+Write **`~/nixos/Justfile`** (the `$HOST` var fills it in) — this is
+what wires up the `admin` alias and the `just switch` workflow below,
+so don't skip it:
 
-```make
+```bash
+cat > Justfile <<EOF
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
 # print help
@@ -311,11 +319,11 @@ help:
 
 # Rebuild NixOS and switch to the new generation
 switch:
-    sudo nixos-rebuild switch --flake .#mybox
+    sudo nixos-rebuild switch --flake .#$HOST
 
 # Rebuild and test (reverts on reboot)
 test:
-    sudo nixos-rebuild test --flake .#mybox
+    sudo nixos-rebuild test --flake .#$HOST
 
 # Update the sway-home pin (and other inputs)
 update:
@@ -323,10 +331,12 @@ update:
 
 # Update inputs, then rebuild and switch
 upgrade: update switch
+EOF
 ```
 
-Replace the `mybox` / `youruser` / time-zone placeholders to match
-your variables, then commit, pin sway-home, and apply:
+That's the whole repo. Drop your SSH public key into `config.nix`
+(the commented `authorizedKeys.keys` line), then commit, pin
+sway-home, and apply:
 
 ```bash
 cd ~/nixos
@@ -335,7 +345,7 @@ git add -A
 nix --extra-experimental-features "nix-command flakes" flake lock
 git add flake.lock && git commit -m "Initial config for $HOST"
 
-sudo nixos-rebuild switch --flake .#mybox
+sudo nixos-rebuild switch --flake .#"$HOST"
 ```
 
 From here the repo is identical to one created by `setup host`, and
