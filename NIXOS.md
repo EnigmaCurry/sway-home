@@ -249,9 +249,12 @@ nix shell --extra-experimental-features "nix-command flakes" \
 ```
 
 It prompts for the hostname, your username (defaulting to the current
-login), time zone, and the profiles to enable; seeds any SSH keys
-already authorized for you into `config.nix`; then writes `~/nixos` and
-runs `git init` + `nix flake lock`. The result is the same `flake.nix` /
+login), time zone, the profiles to enable, and whether to rotate the
+machine's SSH host keys (default **no** — say yes only if this disk was
+cloned from an image, so siblings don't share an identity; rotating
+makes clients' `known_hosts` warn on the next connection). It then seeds
+any SSH keys already authorized for you into `config.nix` and writes
+`~/nixos`, running `git init` + `nix flake lock`. The result is the same `flake.nix` /
 `config.nix` / `Justfile` that `setup host` produces on the ISO — only
 **without** `disko.nix` (the `modules` list is just `hardware.nix` +
 `config.nix`, reusing the installer's `hardware-configuration.nix` with
