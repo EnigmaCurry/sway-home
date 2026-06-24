@@ -271,6 +271,16 @@ cd ~/nixos
 sudo nixos-rebuild switch --flake .#myhost   # the tool prints this with your hostname
 ```
 
+If you answered **yes** to rotating the host keys, the tool prints a
+second command to run first — delete the old keys so the switch
+regenerates fresh ones (clients will then warn until you update their
+`known_hosts`):
+
+```bash
+sudo rm -f /etc/ssh/ssh_host_*
+sudo nixos-rebuild switch --flake .#myhost
+```
+
 From here the repo is identical to one created by `setup host`, and the
 rest of this document applies unchanged (`just switch`, `just update`,
 etc.). Open a fresh shell after the switch and `admin` will be defined
