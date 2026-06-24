@@ -394,8 +394,11 @@ It contains:
 
  * `flake.nix` — depends on `sway-home` (pinned) and calls
    `sway-home.lib.mkHost`,
- * `disko.nix` — the declarative disk layout,
- * `hardware.nix` — detected hardware (no filesystems; disko owns those),
+ * `hardware.nix` — detected hardware (with the custom ISO this has no
+   filesystems, since `disko.nix` owns them; via the official-installer
+   bridge it keeps the filesystems),
+ * `disko.nix` — the declarative disk layout (custom-ISO installs only;
+   the bridge omits it),
  * `config.nix` — your host-specific overrides.
 
 sway-home itself is a shared **library** of modules; this repo pulls it
@@ -432,49 +435,46 @@ from anywhere). Each is the matching `just` recipe run in `~/nixos`, so
 
 ## Important concepts and reminders
 
- * You need to keep your config files safe by commiting it with `git`
-   and pushing it, often, to a remote host. NixOS lets you reboot into
-   previous generations (state), but you are responsible for
-   maintaining the history of the declarative config, and so you need
-   to prevent their corruption or accidental deletion by archiving it
-   remotely in `git`.
+ * **Back up the repo with git.** NixOS can roll back to previous
+   *generations* (whole prior system builds) from the boot menu, but
+   that only covers systems already built on this machine — it does
+   **not** preserve the history of your declarative source. That history
+   lives only in this `~/nixos` git repo, so commit often and push it to
+   a remote you control.
 
- * When working on any of these config files, remember to `git add` /
-   `git commit` your changes *before* running `just switch`. If you
-   forget, you will see warnings like `warning: Git tree
-   '/home/ryan/git/vendor/enigmacurry/sway-home' is dirty`. That's
-   just a reminder to you that you should cancel the operation with
-   `Ctrl-C` and you should add and commit your changes before you
-   reattempt. (Therefore its recommended to always be working in a
-   story branch when trying out new configs, not `master`.) It may not
-   seem like it's always necessary to commit your changes, but
-   sometimes files will be ignored by nix if they are not at least
-   staged for commit.
+ * **Commit (or at least `git add`) before you switch.** A flake builds
+   only from files git tracks: a **new** file you haven't `git add`ed is
+   invisible to Nix and silently left out of the build. A *modified*
+   tracked file is still picked up, but you'll see a `warning: Git tree
+   '/home/<user>/nixos' is dirty`. That warning is harmless — the
+   rebuild proceeds — but commit anyway so the generation you just built
+   is reproducible from a clean checkout. Trying something risky? Do it
+   on a branch, not your main one.
 
- * All of the files that end up in `~/.config` (and indeed all of
-   `/usr/bin` too) are actually symlinks into `/nix/store/...`. All of
-   `/nix/store` is read-only, so that means you cannot edit your dot
-   files directly. You must edit their source in this repository and
-   re-apply with `just switch` to get them into `/nix/store/....`.
-   This is a minor pain point, but this enforced ritual will ensure
-   that your config remains declarative and reproducible.
+ * **You can't edit the live dotfiles in place.** The files home-manager
+   manages in `~/.config`, and the system binaries on your `PATH` (under
+   `/run/current-system/sw/bin`), are symlinks into `/nix/store`, which
+   is read-only. To change them you edit their source here and re-apply
+   with `admin switch`, which rebuilds the store paths and repoints the
+   symlinks. (NixOS does not populate `/usr/bin` at all, apart from
+   `/usr/bin/env` — there's no system directory of editable binaries to
+   tweak.) The ritual is a minor pain, but it keeps your config
+   declarative and reproducible.
 
- * If you don't want to make permanent changes to your system (e.g.,
-   you are working in a git story branch for some experiments), you
-   can use `just test` instead of `just switch`. When using `just
-   test`, all new generations are *temporary* and will not be added to
-   your boot menu. If you do reboot, you will be forced to choose an
-   older normal generation that was made by `just switch` (by default,
-   it will reboot into the latest generation from *before you ran
-   `just test`*. ).
+ * **Use `admin test` for throwaway experiments.** `admin test`
+   (`nixos-rebuild test`) builds and activates a configuration but does
+   **not** add it to the boot menu or make it the default. Reboot and
+   you are back on the last generation you `admin switch`ed. Use it to
+   try a change without committing to it across reboots.
 
- * This configuration is designed to support multiple machines you
-   own/control, but it keeps **no** per-host config itself. Each machine
-   has its own small flake repo (at `~/nixos`, created by `setup host`)
-   that depends on sway-home and calls `sway-home.lib.mkHost`. That repo
-   holds the machine's `disko.nix` (disk layout), `hardware.nix`
-   (detected by `nixos-generate-config --no-filesystems`), and
-   `config.nix` (your overrides). To stand up another machine, install
-   it with `setup nixos` — it generates that machine's own repo. Shared
-   changes go in sway-home; machine-specific changes go in `~/nixos`.
+ * **One small repo per machine; sway-home is shared.** This setup keeps
+   **no** per-host config in sway-home itself. Each machine has its own
+   flake repo at `~/nixos` that depends on sway-home and calls
+   `sway-home.lib.mkHost`, holding that machine's `hardware.nix` and
+   `config.nix` (plus a `disko.nix` when the disk was provisioned by the
+   custom ISO / [disko] — the official-installer bridge omits it and
+   keeps the filesystems in `hardware.nix` instead). Stand up another
+   machine via `setup nixos` (custom ISO) or the bridge steps above
+   (official installer). Shared changes go in sway-home; machine-specific
+   changes go in `~/nixos`.
 
