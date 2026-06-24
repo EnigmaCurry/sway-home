@@ -217,6 +217,16 @@ entirely and reuse that file** instead of generating a `disko.nix`.
 This walkthrough has been verified end to end — a vanilla `No desktop`
 install converted cleanly into a full sway host with these steps.
 
+The same approach works on top of **any** existing NixOS install, not
+just a fresh one: `nixos-rebuild switch --flake` builds a complete
+system from this repo and fully **replaces** the old configuration (it
+never reads the previous `/etc/nixos/configuration.nix`), so adopt it
+in place without a disk-wiping reinstall. Your data is left alone —
+partitions and home directories are untouched. On an
+already-customized machine you'd just re-express anything worth keeping
+from the old `configuration.nix` in your new `config.nix`, since that
+old file is no longer in effect.
+
 Boot into the freshly installed system and log in as the user you
 created during the install. (To do this remotely, first enable sshd on
 the stock system: add `services.openssh.enable = true;` to
