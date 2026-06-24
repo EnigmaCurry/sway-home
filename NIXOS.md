@@ -14,20 +14,7 @@ which has an included profile for sway-home.
 
 ## Install NixOS
 
-### Option A: Use the official NixOS installer
-
-The official installation instructions are in the [NixOS
-manual](https://nixos.org/manual/nixos/stable/). Use the official
-graphical installer. During the install, select `No desktop` — that
-setting will be overridden by sway-home anyway. This method is only a
-good option when you have a monitor and keyboard or IP KVM.
-
-This route does not give you the `setup-*` tools, so afterward follow
-[Bridge: convert an official-installer machine into a sway-home
-host](#bridge-convert-an-official-installer-machine-into-a-sway-home-host)
-to build the `~/nixos` repo by hand.
-
-### Option B: Build a custom NixOS network installer ISO
+### Option A: Build a custom NixOS network installer ISO
 
 This builds a **headless** NixOS installer ISO that boots straight
 into an SSH-ready environment (with optional serial console,
@@ -187,10 +174,20 @@ growing `PATH`, and a reboot reverts to the baked-in tools (root's home
 is tmpfs). Point it at another branch with
 `setup dev github:EnigmaCurry/sway-home/SOMEBRANCH`.
 
+### Option B: Use the official NixOS installer
+
+The official installation instructions are in the [NixOS
+manual](https://nixos.org/manual/nixos/stable/). Use the official
+graphical installer. During the install, select `No desktop` — that
+setting will be overridden by sway-home anyway. This method is only a
+good option when you have a monitor and keyboard or IP KVM. It does not
+give you the `setup-*` tools, so afterward follow the bridge steps
+below to build the `~/nixos` repo by hand.
+
 ### Bridge: convert an official-installer machine into a sway-home host
 
 If you installed with the **official graphical installer** ([Option
-A](#option-a-use-the-official-nixos-installer)) instead of the custom
+B](#option-b-use-the-official-nixos-installer)) instead of the custom
 ISO, you don't have the `setup-*` tools — but you can build the same
 `~/nixos` host repo by hand. The only real difference from the
 ISO/[disko] flow is the disk: the graphical installer already
