@@ -236,14 +236,14 @@ your install password. sway-home turns sshd key-only once you switch
 to it, so add a key first; see the caveats below.)
 
 ```bash
-# Pick your values
-HOST=mybox                 # hostname
-USER=$(whoami)             # the user you created during install
-TZ=America/Denver          # your time zone
+# Your hostname, the user you created during install, and your time zone:
+HOST=mybox
+USER=$(whoami)
+TZ=America/Denver
 
 mkdir -p ~/nixos && cd ~/nixos
 
-# Reuse the installer's detected hardware — KEEP the filesystems
+# Reuse the installer's detected hardware, keeping the filesystems
 # (no disko here; the graphical installer owns the partitioning).
 cp /etc/nixos/hardware-configuration.nix hardware.nix
 ```
@@ -312,6 +312,7 @@ so don't skip it:
 ```bash
 cat > Justfile <<EOF
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
+set positional-arguments
 
 # print help
 help:
@@ -331,6 +332,10 @@ update:
 
 # Update inputs, then rebuild and switch
 upgrade: update switch
+
+# Run git in this config repo from any directory (e.g. admin git status)
+git *args:
+    @git -C "{{justfile_directory()}}" "\$@"
 EOF
 ```
 
@@ -398,28 +403,32 @@ in as an input. Edit `config.nix` (or add modules) for host-specific
 changes, and edit sway-home for changes you want shared across all your
 machines.
 
-Apply changes with the **`admin`** alias — it runs this repo's
-`Justfile` from anywhere (no `cd ~/nixos` needed) with recipe and
-argument tab completion. After editing, commit (Nix ignores
-uncommitted files) and switch:
+Apply changes with the **`admin`** alias. It runs this host's
+`Justfile` from **any** directory — no `cd ~/nixos` needed — with
+recipe and argument tab completion, and it even wraps git, so the whole
+loop is directory-independent. Nix ignores uncommitted files, so commit
+before you switch:
 
 ```
-git commit -am "..."   # in ~/nixos
-admin switch           # = sudo nixos-rebuild switch --flake .#<host>
+admin git status
+admin git commit -am "progress"
+admin switch
 ```
 
-To pull newer shared config from sway-home (and other inputs) **and**
-apply it in one step, use `upgrade` — it updates the flake inputs, then
-switches:
+`admin switch` runs `sudo nixos-rebuild switch --flake .#<host>`. To
+pull newer shared config from sway-home (and other inputs) and apply it
+in one step, use `admin upgrade` — it runs `nix flake update` then
+switches. Commit the refreshed lockfile afterward:
 
 ```
-admin upgrade          # = nix flake update, then switch
-git commit -am "flake.lock: update inputs"   # in ~/nixos, to keep the new pin
+admin upgrade
+admin git commit -am "update flake inputs"
 ```
 
-Run `admin help` to list all recipes (`switch`, `test`, `update`,
-`upgrade`). Each `admin` recipe is just the matching `just` recipe run
-in `~/nixos`, so `just switch` from inside the repo still works too.
+Run `admin help` to list all recipes: `switch`, `test`, `update`,
+`upgrade`, and `git` (which is `git -C ~/nixos`, so `admin git …` works
+from anywhere). Each is the matching `just` recipe run in `~/nixos`, so
+`just switch` from inside the repo still works too.
 
 ## Important concepts and reminders
 

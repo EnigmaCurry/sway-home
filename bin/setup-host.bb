@@ -180,7 +180,8 @@
 
 (defn justfile [{:keys [host]}]
   (str
-   "set shell := [\"bash\", \"-eu\", \"-o\", \"pipefail\", \"-c\"]\n\n"
+   "set shell := [\"bash\", \"-eu\", \"-o\", \"pipefail\", \"-c\"]\n"
+   "set positional-arguments\n\n"
    "# print help\n"
    "help:\n"
    "    @just -l\n\n"
@@ -194,7 +195,10 @@
    "update:\n"
    "    nix flake update\n\n"
    "# Update inputs, then rebuild and switch\n"
-   "upgrade: update switch\n"))
+   "upgrade: update switch\n\n"
+   "# Run git in this config repo from any directory (e.g. admin git status)\n"
+   "git *args:\n"
+   "    @git -C \"{{justfile_directory()}}\" \"$@\"\n"))
 
 (def gitignore "result\nresult-*\n")
 
