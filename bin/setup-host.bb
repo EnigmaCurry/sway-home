@@ -324,13 +324,6 @@
                              (do (println "Username is required.") (recur))
                              u)))))
             tz   (str/trim (sw/ask "Time zone" :default "America/Denver"))
-            ;; Adopt inherits the existing install's SSH host keys (preserved
-            ;; across rebuilds). Offer to rotate them -- only really needed if
-            ;; this disk was cloned from an image, so siblings don't share an
-            ;; identity. Default no: rotating breaks clients' known_hosts.
-            rotate-keys? (and adopt?
-                              (sw/confirm "Rotate SSH host keys? (only if this disk was cloned from an image)"
-                                          :default :no))
             profiles (or (:profiles opts)
                          (let [labels     (mapv (fn [[k d]] (str k " - " d)) profile-catalog)
                                label->key (zipmap labels (map first profile-catalog))
@@ -355,8 +348,6 @@
           (println "Time zone:    " tz)
           (println "System:       " system)
           (println "Disk:         " (if adopt? "reuse existing partitions (no disko)" "disko (from `setup disk`)"))
-          (when adopt?
-            (println "Host keys:    " (if rotate-keys? "ROTATE (clients' known_hosts will warn)" "keep existing")))
           (println "SSH keys:     " (if (seq ssh-keys)
                                       (str (count ssh-keys) (if adopt? " (from your authorized_keys)" " (seeded from ISO)"))
                                       "NONE FOUND -- you must add one in config.nix"))
@@ -428,10 +419,7 @@
           (println)
           (println "Next step:")
           (if adopt?
-            (do (println (str "  cd " repo))
-                (when rotate-keys?
-                  (println "  sudo rm -f /etc/ssh/ssh_host_*    # rotate host keys; update clients' known_hosts after"))
-                (println (str "  sudo nixos-rebuild switch --flake .#" host)))
+            (println (str "  cd " repo " && sudo nixos-rebuild switch --flake .#" host))
             (println (str "  setup install   # nixos-install --flake " repo "#" host))))))))
 
 (-main)

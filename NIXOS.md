@@ -249,12 +249,9 @@ nix shell --extra-experimental-features "nix-command flakes" \
 ```
 
 It prompts for the hostname, your username (defaulting to the current
-login), time zone, the profiles to enable, and whether to rotate the
-machine's SSH host keys (default **no** — say yes only if this disk was
-cloned from an image, so siblings don't share an identity; rotating
-makes clients' `known_hosts` warn on the next connection). It then seeds
-any SSH keys already authorized for you into `config.nix` and writes
-`~/nixos`, running `git init` + `nix flake lock`. The result is the same `flake.nix` /
+login), time zone, and the profiles to enable; seeds any SSH keys
+already authorized for you into `config.nix`; then writes `~/nixos` and
+runs `git init` + `nix flake lock`. The result is the same `flake.nix` /
 `config.nix` / `Justfile` that `setup host` produces on the ISO — only
 **without** `disko.nix` (the `modules` list is just `hardware.nix` +
 `config.nix`, reusing the installer's `hardware-configuration.nix` with
@@ -271,13 +268,15 @@ cd ~/nixos
 sudo nixos-rebuild switch --flake .#myhost   # the tool prints this with your hostname
 ```
 
-If you answered **yes** to rotating the host keys, the tool prints a
-second command to run first — delete the old keys so the switch
-regenerates fresh ones (clients will then warn until you update their
-`known_hosts`):
+The adopted machine keeps the SSH host keys the official installer
+generated for it, which is almost always what you want. The one
+exception is a disk **cloned from an image** — its host keys are shared
+with every sibling clone, so rotate them by deleting the old keys before
+the switch, which regenerates fresh ones (clients will then warn until
+you update their `known_hosts`):
 
 ```bash
-sudo rm -f /etc/ssh/ssh_host_*
+sudo rm -f /etc/ssh/ssh_host_*   # only if this disk was cloned from an image
 sudo nixos-rebuild switch --flake .#myhost
 ```
 
