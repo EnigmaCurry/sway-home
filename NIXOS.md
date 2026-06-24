@@ -199,23 +199,25 @@ The official installation instructions are in the [NixOS
 manual](https://nixos.org/manual/nixos/stable/). Use the official
 graphical installer. During the install, select `No desktop` — that
 setting will be overridden by sway-home anyway. This method is only a
-good option when you have a monitor and keyboard or IP KVM. It does not
-give you the `setup-*` tools, so afterward follow the bridge steps
-below to build the `~/nixos` repo by hand.
+good option when you have a monitor and keyboard or IP KVM. Afterward,
+follow the bridge steps below to build the `~/nixos` repo — the same
+`setup-host` tool, run straight from GitHub with `--adopt`.
 
 ### Bridge: convert an official-installer machine into a sway-home host
 
 If you installed with the **official graphical installer** ([Option
 B](#option-b-use-the-official-nixos-installer)) instead of the custom
-ISO, you don't have the `setup-*` tools — but you can build the same
-`~/nixos` host repo by hand. The only real difference from the
-ISO/[disko] flow is the disk: the graphical installer already
-partitioned it and wrote the filesystems (and bootloader detection)
-into `/etc/nixos/hardware-configuration.nix`, so **you skip disko
-entirely and reuse that file** instead of generating a `disko.nix`.
+ISO, you don't have the `setup-*` tools on a live medium — but you can
+run the very same `setup-host` generator straight from GitHub with its
+`--adopt` flag, and it builds the `~/nixos` host repo for you. The only
+real difference from the ISO/[disko] flow is the disk: the graphical
+installer already partitioned it and wrote the filesystems (and
+bootloader detection) into `/etc/nixos/hardware-configuration.nix`, so
+`--adopt` **skips disko entirely and reuses that file** instead of
+generating a `disko.nix`.
 
-This walkthrough has been verified end to end — a vanilla `No desktop`
-install converted cleanly into a full sway host with these steps.
+This has been verified end to end — a vanilla `No desktop` install
+converted cleanly into a full sway host.
 
 The same approach works on top of **any** existing NixOS install, not
 just a fresh one: `nixos-rebuild switch --flake` builds a complete
@@ -235,128 +237,41 @@ the stock default still allows password auth, so you can SSH in with
 your install password. sway-home turns sshd key-only once you switch
 to it, so add a key first; see the caveats below.)
 
-```bash
-# Your hostname, the user you created during install, and your time zone:
-HOST=mybox
-USER=$(whoami)
-TZ=America/Denver
-
-mkdir -p ~/nixos && cd ~/nixos
-
-# Reuse the installer's detected hardware, keeping the filesystems
-# (no disko here; the graphical installer owns the partitioning).
-cp /etc/nixos/hardware-configuration.nix hardware.nix
-```
-
-Write **`~/nixos/flake.nix`** — the `$HOST`/`$USER` vars from above
-fill it in; note the `modules` list is just `hardware.nix` +
-`config.nix`, with **no** `disko.nix`:
+Then run the generator as your **normal user** (not root) with
+`--adopt`. It needs only Nix on the host — `nix shell` pulls in Babashka
+and script-wizard, exactly like the ISO build in Option A:
 
 ```bash
-cat > flake.nix <<EOF
-{
-  description = "NixOS host: $HOST";
-
-  inputs.sway-home.url = "github:EnigmaCurry/sway-home/master";
-
-  outputs = { self, sway-home, ... }: {
-    nixosConfigurations.$HOST = sway-home.lib.mkHost {
-      hostName = "$HOST";
-      userName = "$USER";
-      modules = [
-        ./hardware.nix
-        ./config.nix
-      ];
-    };
-  };
-}
-EOF
+nix shell --extra-experimental-features "nix-command flakes" \
+  nixpkgs#babashka github:EnigmaCurry/script-wizard --command \
+  bb -e '(load-string (slurp "https://raw.githubusercontent.com/EnigmaCurry/sway-home/master/bin/setup-host.bb"))' \
+  -- --adopt
 ```
 
-Write **`~/nixos/config.nix`** (the `$USER`/`$TZ` vars fill it in; this
-mirrors what `setup host` generates — flip the profile toggles you
-want):
+It prompts for the hostname, your username (defaulting to the current
+login), time zone, and the profiles to enable; seeds any SSH keys
+already authorized for you into `config.nix`; then writes `~/nixos` and
+runs `git init` + `nix flake lock`. The result is the same `flake.nix` /
+`config.nix` / `Justfile` that `setup host` produces on the ISO — only
+**without** `disko.nix` (the `modules` list is just `hardware.nix` +
+`config.nix`, reusing the installer's `hardware-configuration.nix` with
+its filesystems intact).
 
-```bash
-cat > config.nix <<EOF
-{ inputs, host, config, pkgs, unstablePkgs, lib, ... }:
-
-{
-  time.timeZone = "$TZ";
-  i18n.defaultLocale = "en_US.UTF-8";
-  services.xserver.xkb = { layout = "us"; variant = ""; options = "ctrl:nocaps"; };
-  console.useXkbConfig = true;
-
-  # sshd is key-only — add at least one key or you can only log in at the console.
-  users.users."$USER".openssh.authorizedKeys.keys = [
-    # "ssh-ed25519 AAAA..."
-  ];
-
-  programs.git.config.safe.directory = "/home/$USER/nixos";
-
-  # --- Profiles (sway-home) ---
-  my.profiles.sway.enable     = true;   # Sway desktop (implies dotfiles)
-  # my.profiles.dotfiles.enable = true; # shell/CLI env only, no GUI
-  # my.profiles.sound.enable    = true;
-  # my.profiles.podman.enable   = true;
-  # my.profiles.flatpak.enable  = true;
-  # my.profiles.libvirt.enable  = true;
-}
-EOF
-```
-
-Write **`~/nixos/Justfile`** (the `$HOST` var fills it in) — this is
-what wires up the `admin` alias and the `just switch` workflow below,
-so don't skip it:
-
-```bash
-cat > Justfile <<EOF
-set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
-set positional-arguments
-
-# print help
-help:
-    @just -l
-
-# Rebuild NixOS and switch to the new generation
-switch:
-    sudo nixos-rebuild switch --flake .#$HOST
-
-# Rebuild and test (reverts on reboot)
-test:
-    sudo nixos-rebuild test --flake .#$HOST
-
-# Update the sway-home pin (and other inputs)
-update:
-    nix flake update
-
-# Update inputs, then rebuild and switch
-upgrade: update switch
-
-# Run git in this config repo from any directory (e.g. admin git status)
-git *args:
-    @git -C "{{justfile_directory()}}" "\$@"
-EOF
-```
-
-That's the whole repo. Drop your SSH public key into `config.nix`
-(the commented `authorizedKeys.keys` line), then commit, pin
-sway-home, and apply:
+When it finishes it prints the exact apply command for your hostname.
+Review `~/nixos/config.nix` first (add an SSH key if none was found, flip
+any profile toggles, uncomment the optional Solokey `sudo` block if you
+want it), then apply — this is the step that **replaces** the stock
+configuration:
 
 ```bash
 cd ~/nixos
-git init -b main
-git add -A
-nix --extra-experimental-features "nix-command flakes" flake lock
-git add flake.lock && git commit -m "Initial config for $HOST"
-
-sudo nixos-rebuild switch --flake .#"$HOST"
+sudo nixos-rebuild switch --flake .#myhost   # the tool prints this with your hostname
 ```
 
-From here the repo is identical to one created by `setup host`, and
-the rest of this document applies unchanged (`just switch`, `just
-update`, etc.). Open a fresh shell after the switch and `admin` will
-be defined (the `Justfile` above is what unlocks it).
+From here the repo is identical to one created by `setup host`, and the
+rest of this document applies unchanged (`just switch`, `just update`,
+etc.). Open a fresh shell after the switch and `admin` will be defined
+(the generated `Justfile` is what unlocks it).
 
 #### Caveats specific to skipping the ISO
 

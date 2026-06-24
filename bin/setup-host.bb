@@ -84,7 +84,7 @@
 ;;; Generated file contents
 ;;; ============================================================
 
-(defn flake-nix [{:keys [host user system ref]}]
+(defn flake-nix [{:keys [host user system ref adopt?]}]
   (str
    "{\n"
    "  description = \"NixOS host: " host "\";\n\n"
@@ -101,11 +101,18 @@
    (when (not= system "x86_64-linux")
      (str "      system = \"" system "\";\n"))
    "\n"
-   "      # Per-host config: disko.nix (disk layout), hardware.nix (detected\n"
-   "      # hardware, no filesystems), config.nix (everything else, incl.\n"
-   "      # locale, packages, services).\n"
+   ;; Adopt reuses the installer's hardware-configuration.nix (filesystems
+   ;; and all) in place of a disko.nix; the ISO flow generates disko + a
+   ;; filesystem-less hardware.nix instead.
+   (if adopt?
+     (str "      # Per-host config: hardware.nix (the installer's existing\n"
+          "      # hardware-configuration.nix, kept WITH its filesystems) and\n"
+          "      # config.nix (everything else: locale, packages, services).\n")
+     (str "      # Per-host config: disko.nix (disk layout), hardware.nix (detected\n"
+          "      # hardware, no filesystems), config.nix (everything else, incl.\n"
+          "      # locale, packages, services).\n"))
    "      modules = [\n"
-   "        ./disko.nix\n"
+   (when-not adopt? "        ./disko.nix\n")
    "        ./hardware.nix\n"
    "        ./config.nix\n"
    "      ];\n"
@@ -147,7 +154,7 @@
    "  # SSH is enabled (key-only) by the shared config. These are the public\n"
    "  # keys allowed to log in as " user ".\n"
    (if (seq ssh-keys)
-     (str "  # (Seeded from the install ISO -- add/remove keys here.)\n"
+     (str "  # (Pre-filled from the keys already authorized for you -- add/remove.)\n"
           "  users.users.\"" user "\".openssh.authorizedKeys.keys = [\n"
           (str/join "" (map #(str "    \"" % "\"\n") ssh-keys))
           "  ];\n\n")
@@ -241,16 +248,24 @@
 (defn usage []
   (println "Usage: setup-host [options]   (or: setup host [options])")
   (println)
-  (println "Generate a per-host NixOS flake repo at /mnt/home/<user>/nixos that")
-  (println "depends on sway-home, then commit it. Run after `setup disk`.")
+  (println "Generate a per-host NixOS flake repo that depends on sway-home, then")
+  (println "commit it. Two flows:")
+  (println)
+  (println "  (default)  ISO install: writes /mnt/home/<user>/nixos, run as root")
+  (println "             after `setup disk` (uses disko + a filesystem-less hardware.nix).")
+  (println "  --adopt    Adopt an existing install (e.g. the official NixOS installer):")
+  (println "             writes ~/nixos as your normal user, reusing the existing")
+  (println "             /etc/nixos/hardware-configuration.nix instead of disko. Run")
+  (println "             `sudo nixos-rebuild switch` yourself afterward.")
   (println)
   (println "Options:")
   (println "  --host NAME           Hostname (prompted if omitted).")
-  (println "  --user NAME           Primary username (prompted if omitted).")
+  (println "  --user NAME           Primary username (prompted; --adopt defaults to you).")
   (println "  --profiles LIST       Comma-separated profiles to enable: sway,sound,podman,flatpak,libvirt.")
   (println "                        Multi-select prompt if omitted; none = minimal server.")
+  (println "  --adopt               Adopt the running system instead of a /mnt install target.")
   (println "  --sway-home-ref REF   Override the sway-home flake ref.")
-  (println "  --root DIR            Target mount (default: /mnt).")
+  (println "  --root DIR            Target mount (default: /mnt; ignored with --adopt).")
   (println "  -h, --help            Show help."))
 
 (defn parse-args [args]
@@ -262,6 +277,7 @@
         "--profiles"      (recur (drop 2 args) (assoc opts :profiles (set (remove str/blank? (str/split (second args) #",")))))
         "--profile"       (recur (drop 2 args) (update opts :profiles (fnil conj #{}) (second args)))
         "--sway-home-ref" (recur (drop 2 args) (assoc opts :ref (second args)))
+        "--adopt"         (recur (drop 1 args) (assoc opts :adopt true))
         "--root"          (recur (drop 2 args) (assoc opts :root (second args)))
         ("-h" "--help")   (do (usage) (System/exit 0))
         (do (stderr "Unknown option:" a) (usage) (System/exit 2)))
@@ -272,27 +288,41 @@
 ;;; ============================================================
 
 (defn -main []
-  (let [opts (parse-args *command-line-args*)
-        root (:root opts)]
-    (when-not (root?) (die "must run as root (it writes under" (str root "/home") "and runs nixos-generate-config)."))
-    (doseq [bin ["nix" "git" "nixos-generate-config"]]
+  (let [opts   (parse-args *command-line-args*)
+        adopt? (:adopt opts)
+        ;; ISO flow installs into a mounted target (/mnt); adopt runs on the
+        ;; already-booted system and builds the repo in the live root.
+        root   (if adopt? "/" (:root opts))]
+    (when (and (not adopt?) (not (root?)))
+      (die "must run as root (it writes under" (str root "/home") "and runs nixos-generate-config)."))
+    (when (and adopt? (root?))
+      (die "run --adopt as your normal user, not root -- it builds ~/nixos and git-inits it as you."))
+    (doseq [bin (cond-> ["nix" "git"] (not adopt?) (conj "nixos-generate-config"))]
       (when-not (fs/which bin) (die (str "'" bin "' not found."))))
     (when-not (fs/exists? root)
       (die (str root " does not exist -- run `setup disk` first to mount the target.")))
-    (let [disko-src (str (fs/path root "etc/nixos/disko.nix"))]
-      (when-not (fs/exists? disko-src)
+    (let [disko-src   (str (fs/path root "etc/nixos/disko.nix"))
+          hw-existing (str (fs/path root "etc/nixos/hardware-configuration.nix"))]
+      (when (and (not adopt?) (not (fs/exists? disko-src)))
         (die (str disko-src " not found -- run `setup disk` first.")))
+      (when (and adopt? (not (fs/exists? hw-existing)))
+        (die (str hw-existing " not found -- expected on a machine installed by\n"
+                  "the official NixOS installer. --adopt reuses it instead of disko.")))
 
-      (println "== Generate a per-host NixOS config ==")
+      (println (if adopt?
+                 "== Adopt this machine as a sway-home host =="
+                 "== Generate a per-host NixOS config =="))
       (println)
 
       (let [host (or (:host opts) (str/trim (sw/ask "Hostname" :default "nixos")))
             user (or (:user opts)
-                     (loop []
-                       (let [u (str/trim (sw/ask "Primary username"))]
-                         (if (str/blank? u)
-                           (do (println "Username is required.") (recur))
-                           u))))
+                     (if adopt?
+                       (str/trim (sw/ask "Primary username" :default (str/trim (capture {} "id" "-un"))))
+                       (loop []
+                         (let [u (str/trim (sw/ask "Primary username"))]
+                           (if (str/blank? u)
+                             (do (println "Username is required.") (recur))
+                             u)))))
             tz   (str/trim (sw/ask "Time zone" :default "America/Denver"))
             profiles (or (:profiles opts)
                          (let [labels     (mapv (fn [[k d]] (str k " - " d)) profile-catalog)
@@ -302,7 +332,9 @@
             ssh-keys (authorized-keys)
             system (str/trim (capture {} "nix" "eval" "--impure" "--raw" "--expr" "builtins.currentSystem"))
             system (if (str/blank? system) "x86_64-linux" system)
-            repo (str (fs/path root "home" user "nixos"))]
+            repo (if adopt?
+                   (str (fs/path (System/getProperty "user.home") "nixos"))
+                   (str (fs/path root "home" user "nixos")))]
 
         (when (and (str/blank? host) (str/blank? user))
           (die "hostname and username are required."))
@@ -315,7 +347,10 @@
           (println "Profiles:     " (if (seq profiles) (str/join " " (sort profiles)) "(none -- minimal server, sshd only)"))
           (println "Time zone:    " tz)
           (println "System:       " system)
-          (println "SSH keys:     " (if (seq ssh-keys) (str (count ssh-keys) " (seeded from ISO)") "NONE FOUND -- you must add one in config.nix"))
+          (println "Disk:         " (if adopt? "reuse existing partitions (no disko)" "disko (from `setup disk`)"))
+          (println "SSH keys:     " (if (seq ssh-keys)
+                                      (str (count ssh-keys) (if adopt? " (from your authorized_keys)" " (seeded from ISO)"))
+                                      "NONE FOUND -- you must add one in config.nix"))
           (println "sway-home:    " (:ref opts))
           (println "Host repo:    " repo (when exists? "  (EXISTS -- will be overwritten)"))
           (println "=========================================")
@@ -325,11 +360,15 @@
           ;; Overwrite an existing repo (re-runnable dev loop) after confirm.
           (when exists? (fs/delete-tree repo)))
 
-        ;; 1. Detect hardware WITHOUT filesystems (disko owns those).
+        ;; 1. Hardware. ISO: generate it WITHOUT filesystems (disko owns those).
+        ;;    Adopt: reuse the installer's hardware-configuration.nix as-is,
+        ;;    keeping the filesystems it detected (there is no disko).
         (println)
-        (println "== Detecting hardware (nixos-generate-config --no-filesystems) ==")
-        (run! {} "nixos-generate-config" "--root" root "--no-filesystems")
-        (let [hw-src (str (fs/path root "etc/nixos/hardware-configuration.nix"))]
+        (if adopt?
+          (println "== Reusing existing hardware-configuration.nix (with filesystems) ==")
+          (do (println "== Detecting hardware (nixos-generate-config --no-filesystems) ==")
+              (run! {} "nixos-generate-config" "--root" root "--no-filesystems")))
+        (let [hw-src hw-existing]
           (when-not (fs/exists? hw-src)
             (die (str "expected " hw-src " after nixos-generate-config.")))
 
@@ -337,14 +376,16 @@
           (println)
           (println "== Writing host repo:" repo "==")
           (fs/create-dirs repo)
-          (fs/copy disko-src (fs/path repo "disko.nix") {:replace-existing true})
+          (when-not adopt?
+            (fs/copy disko-src (fs/path repo "disko.nix") {:replace-existing true}))
           (fs/copy hw-src (fs/path repo "hardware.nix") {:replace-existing true})
           (spit (str (fs/path repo "flake.nix"))
-                (flake-nix {:host host :user user :system system :ref (:ref opts)}))
+                (flake-nix {:host host :user user :system system :ref (:ref opts) :adopt? adopt?}))
           (spit (str (fs/path repo "config.nix")) (config-nix {:user user :ssh-keys ssh-keys :tz tz :profiles profiles}))
           (spit (str (fs/path repo "Justfile")) (justfile {:host host}))
           (spit (str (fs/path repo ".gitignore")) gitignore)
-          (doseq [f ["flake.nix" "disko.nix" "hardware.nix" "config.nix" "Justfile" ".gitignore"]]
+          (doseq [f (cond->> ["flake.nix" "hardware.nix" "config.nix" "Justfile" ".gitignore"]
+                      (not adopt?) (cons "disko.nix"))]
             (println (str "  wrote " f)))
 
           ;; 3. Show the generated flake (the part that wires it together).
@@ -373,9 +414,12 @@
 
           (println)
           (println "✅ Host repo ready at" repo)
-          (println "   (still root-owned; `setup install` fixes ownership after install.)")
+          (when-not adopt?
+            (println "   (still root-owned; `setup install` fixes ownership after install.)"))
           (println)
           (println "Next step:")
-          (println (str "  setup install   # nixos-install --flake " repo "#" host)))))))
+          (if adopt?
+            (println (str "  cd " repo " && sudo nixos-rebuild switch --flake .#" host))
+            (println (str "  setup install   # nixos-install --flake " repo "#" host))))))))
 
 (-main)
