@@ -34,7 +34,8 @@ fi
 # home-manager) and defines the `nixos-vm-template-alias` helper.
 if [ -f "$HOME/nixos-vm-template/completions/vm.bash" ]; then
   source "$HOME/nixos-vm-template/completions/vm.bash"
-  nixos-vm-template-alias vm  "$HOME/.config/nixos-vm-template/env"      # libvirt
-  nixos-vm-template-alias pve "$HOME/.config/nixos-vm-template/pve.env"  # proxmox
+  nixos-vm-template-alias vm      "$HOME/.config/nixos-vm-template/env"      # libvirt
+  nixos-vm-template-alias pve     "$HOME/.config/nixos-vm-template/pve.env"  # proxmox (KVM)
+  nixos-vm-template-alias pve-lxc "$HOME/.config/nixos-vm-template/lxc.env"  # proxmox-lxc
 fi
 vars() { set -o posix; set | cut -d= -f1 | column; }
