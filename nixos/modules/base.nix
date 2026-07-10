@@ -36,13 +36,6 @@
   # without git's "dubious ownership" error.
   programs.git.enable = true;
 
-  environment.systemPackages = with pkgs; [
-    curl
-    ripgrep
-    jq
-    just
-  ];
-
   # Bash completion, system-wide (generally welcome on a headless box; the
   # per-user interactive shells get their own completion via home-manager).
   programs.bash.completion.enable = true;

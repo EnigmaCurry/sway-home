@@ -4,6 +4,7 @@
 # profile (no GUI). Wayland/desktop packages live in packages-gui.nix.
 
 with pkgs; [
+  curl
   libtool
   openssl.dev
   cargo-generate
