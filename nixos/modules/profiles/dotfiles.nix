@@ -2,7 +2,8 @@
 
 # The shell / CLI home-manager environment WITHOUT the GUI desktop: bashrc,
 # bash_profile, ~/bin scripts, the ~/.config dotfiles, git config, emacs, the
-# nixos-vm-template env, and the CLI package toolbox (packages.nix). Enable
+# nixos-vm-template env, and the CLI package toolbox
+# (packages-{dev,devops,net,shell,media}.nix). Enable
 # with `my.profiles.dotfiles.enable = true;`.
 #
 # This profile has no system-level config of its own -- it only drives the

@@ -62,7 +62,12 @@
       # Export modules for NixOS flake to import
       homeModules = {
         home = ./modules/home.nix;
-        packages = ./modules/packages.nix;
+        packages-dev = ./modules/packages-dev.nix;
+        packages-devops = ./modules/packages-devops.nix;
+        packages-net = ./modules/packages-net.nix;
+        packages-shell = ./modules/packages-shell.nix;
+        packages-media = ./modules/packages-media.nix;
+        packages-gui = ./modules/packages-gui.nix;
         emacs = ./modules/emacs.nix;
         nixos-vm-template = ./modules/nixos-vm-template.nix;
         rust = ./modules/rust.nix;

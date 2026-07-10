@@ -1,7 +1,8 @@
 { pkgs }:
 
 # Wayland / Sway desktop user packages. Only installed with the `sway`
-# profile; the CLI toolbox in packages.nix comes with `dotfiles`.
+# profile; the CLI toolbox (packages-{dev,devops,net,shell,media}.nix)
+# comes with `dotfiles`.
 
 with pkgs; [
   foot                    # terminal

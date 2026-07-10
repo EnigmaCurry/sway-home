@@ -14,4 +14,6 @@ with pkgs; [
   s3cmd
   tor
   apacheHttpd
+  irssi
+  keychain
 ]

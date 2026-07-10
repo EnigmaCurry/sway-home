@@ -17,4 +17,8 @@ with pkgs; [
   tmux
   pv
   moreutils
+  rlwrap
+  unar
+  ispell
+  conceal
 ]

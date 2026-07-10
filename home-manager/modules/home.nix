@@ -20,8 +20,7 @@ in {
    (lib.mkIf config.my.home.dotfiles.enable {
     # The CLI toolbox + the interactive script-wizard pod.
     home.packages =
-      (import ./packages.nix { inherit pkgs; })
-      ++ (import ./packages-dev.nix { inherit pkgs; })
+      (import ./packages-dev.nix { inherit pkgs; })
       ++ (import ./packages-devops.nix { inherit pkgs; })
       ++ (import ./packages-net.nix { inherit pkgs; })
       ++ (import ./packages-shell.nix { inherit pkgs; })
