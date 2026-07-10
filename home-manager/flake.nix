@@ -70,7 +70,6 @@
         packages-gui = ./modules/packages-gui.nix;
         emacs = ./modules/emacs.nix;
         nixos-vm-template = ./modules/nixos-vm-template.nix;
-        rust = ./modules/rust.nix;
         flatpak = ./modules/flatpak.nix;
         fluidsynth = ./modules/fluidsynth.nix;
         firefox = ./modules/firefox.nix;

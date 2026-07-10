@@ -154,6 +154,7 @@
                     my.home.dotfiles.enable =
                       osConfig.my.profiles.dotfiles.enable || osConfig.my.profiles.sway.enable;
                     my.home.sway.enable = osConfig.my.profiles.sway.enable;
+                    my.home.flatpak.enable = osConfig.my.profiles.flatpak.enable;
                   };
                 };
               })

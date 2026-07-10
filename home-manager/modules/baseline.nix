@@ -33,6 +33,18 @@
     '';
   };
 
+  options.my.home.flatpak.enable = lib.mkOption {
+    type = lib.types.bool;
+    # Off by default -- flatpak is a NixOS-level opt-in. On NixOS, lib.mkHost
+    # overrides this from my.profiles.flatpak.enable. Standalone home-manager
+    # users can flip it on manually if they have flatpak on their host.
+    default = false;
+    description = ''
+      Whether to declare the user's flatpak package set via nix-flatpak
+      (adds the flathub remote and installs Bazaar).
+    '';
+  };
+
   config = {
     home.username = userName;
     home.homeDirectory = "/home/${userName}";
