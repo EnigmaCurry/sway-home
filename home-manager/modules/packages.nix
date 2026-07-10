@@ -1,72 +1,15 @@
 { pkgs }:
 
-# CLI / TUI user packages -- the shell + dev toolbox. Part of the `dotfiles`
-# profile (no GUI). Wayland/desktop packages live in packages-gui.nix.
+# Miscellaneous CLI / TUI user packages that don't fit a topical split.
+# Categorized packages live in packages-{dev,devops,net,shell,media}.nix;
+# Wayland/desktop packages live in packages-gui.nix. Part of the
+# `dotfiles` profile.
 
 with pkgs; [
-  curl
-  libtool
-  openssl.dev
-  cargo-generate
-  cargo-watch
-  live-server
-  wasm-pack
-  pgformatter
-  tree-sitter
-  pkg-config
-  gcc
-  gnumake
-  cmake
-  uv
-  distrobox
-  jq
-  ruff
-  ripgrep
-  git
   keychain
-  s3cmd
-  quickemu
-  just
-  socat
-  yt-dlp
   ispell
-  btop
-  wget
-  git-lfs
-  duf
-  ncdu
   conceal
-  fzf
-  bat
-  eza
-  delta
-  gh
-  entr
-  shellcheck
-  ripgrep-all
-  nmap
-  dust
-  rclone
   unar
-  ffmpeg
-  apacheHttpd
-  moreutils
-  inotify-tools
-  tmux
-  sshfs
-  ansible
-  babashka
-  docker
   irssi
-  kubectl
-  natscli
-  nodejs
-  pnpm
-  pv
   rlwrap
-  rustup
-  talosctl
-  tcpdump
-  tor
-  leiningen
 ]
