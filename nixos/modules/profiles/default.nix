@@ -17,5 +17,6 @@
     ./podman.nix
     ./flatpak.nix
     ./sound.nix
+    ./dark-mode.nix
   ];
 }

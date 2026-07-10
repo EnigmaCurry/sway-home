@@ -181,6 +181,12 @@
    "  # (Chosen at install time; flip any of these and run `just switch`.)\n"
    (apply str (map #(profile-line profiles %) profile-catalog))
    "\n"
+   "  # --- Appearance ------------------------------------------------------\n"
+   "  # Dark UI for GTK4/libadwaita apps (including sandboxed Flatpaks like\n"
+   "  # Bazaar, via xdg-desktop-portal-gtk). Only takes effect when the sway\n"
+   "  # profile is enabled. Set false for light mode.\n"
+   "  my.profiles.darkMode.enable = true;\n"
+   "\n"
    "  # --- Optional: Solokey (FIDO2) sudo authentication -------------------\n"
    "  # Touch a hardware key instead of typing a password for sudo. Full\n"
    "  # walkthrough (PIN, registration, the modes, escape hatches) is in the\n"

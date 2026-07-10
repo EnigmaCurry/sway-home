@@ -1,5 +1,5 @@
-# Apply gtk theming
-exec_always ~/.config/sway/scripts/import-gsettings
+# GTK theming is applied declaratively via home-manager
+# (dconf.settings for color-scheme + config/gtk-3.0/settings.ini).
 
 # Set inner/outer gaps
 gaps inner 0

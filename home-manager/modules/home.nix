@@ -165,5 +165,14 @@ EOF
      # GUI desktop packages (Wayland/Sway) -- added on top of the dotfiles.
      home.packages = import ./packages-gui.nix { inherit pkgs; };
    })
+   (lib.mkIf (config.my.home.sway.enable && config.my.home.darkMode.enable) {
+     # Dark mode preference for GTK4/libadwaita apps, including sandboxed
+     # Flatpaks (Bazaar, etc.) that can only see the host theme via
+     # xdg-desktop-portal-gtk's org.freedesktop.appearance interface.
+     dconf.settings."org/gnome/desktop/interface" = {
+       color-scheme = "prefer-dark";
+       gtk-theme = "Adwaita-dark";
+     };
+   })
   ];
 }

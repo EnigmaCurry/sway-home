@@ -13,5 +13,6 @@ with pkgs; [
   sway-contrib.grimshot   # screenshot helper
   wl-clipboard            # clipboard
   wdisplays               # display layout GUI
+  glib                    # gsettings CLI
   nerd-fonts.jetbrains-mono
 ]

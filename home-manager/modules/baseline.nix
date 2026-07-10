@@ -45,6 +45,17 @@
     '';
   };
 
+  options.my.home.darkMode.enable = lib.mkOption {
+    type = lib.types.bool;
+    default = true;
+    description = ''
+      Whether to prefer a dark UI for GTK4/libadwaita apps, including
+      sandboxed Flatpaks that read the theme via xdg-desktop-portal-gtk's
+      org.freedesktop.appearance interface. Applied via dconf under the
+      sway desktop profile.
+    '';
+  };
+
   config = {
     home.username = userName;
     home.homeDirectory = "/home/${userName}";
