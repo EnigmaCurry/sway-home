@@ -11,12 +11,22 @@
 ;;; directly as `setup-disk`, or via the dispatcher as `setup disk`.
 ;;;
 ;;; Scope:
-;;;   - pick a single target disk
+;;;   - pick a target layout: single disk OR multi-disk btrfs raid (raid1,
+;;;     raid1c3, raid10, raid1c4 -- the count-appropriate levels are
+;;;     offered based on the number of disks selected)
 ;;;   - GPT layout: ESP (UEFI) or bios_grub (legacy BIOS) + btrfs root
+;;;     - single disk: ESP + optional swap + btrfs (optionally in LUKS)
+;;;     - raid: ESP on the FIRST disk only (losing that disk requires
+;;;       reinstalling the bootloader on another member); every disk gets
+;;;       its own optional swap; every disk's root partition is either a
+;;;       LUKS container (encrypted) or a labeled bare partition
+;;;       (unencrypted); the btrfs pool is declared on the LAST disk with
+;;;       `extraArgs` referencing the other members
 ;;;   - btrfs subvolumes: @ (/), @home (/home), @nix (/nix)
-;;;   - optional swap partition
-;;;   - optional full-disk LUKS encryption of the btrfs root (and, when
-;;;     swap is present, random-key encryption of swap)
+;;;   - optional swap partitions (per disk; total = N * size for raid)
+;;;   - optional full-disk LUKS encryption of the btrfs root (per-disk
+;;;     LUKS in the raid case) and, when swap is present, random-key
+;;;     encryption of swap
 ;;;   - apply declaratively with `disko` and mount everything under /mnt
 ;;;
 ;;; Encryption note: we never touch the passphrase ourselves. With no
@@ -24,10 +34,12 @@
 ;;; defaults on -- it prompts for (and confirms) the passphrase via
 ;;; cryptsetup at format time. `initrdUnlock` likewise defaults on, so
 ;;; the disko NixOS module (imported by the host flake) generates the
-;;; boot.initrd.luks unlock entry and the system prompts at boot.
+;;; boot.initrd.luks unlock entry and the system prompts at boot. For
+;;; multi-disk raid this means one prompt per LUKS container: disko will
+;;; ask N times during formatting -- type the same passphrase each time.
 ;;;
-;;; Future features (ext4/xfs, multi-disk) slot into the same
-;;; generate-a-Nix-file-then-apply structure.
+;;; Future features (ext4/xfs, ZFS raid, ESP mirroring) slot into the
+;;; same generate-a-Nix-file-then-apply structure.
 ;;;
 ;;; This runs on the installer ISO, which already ships babashka and
 ;;; the script-wizard pod binary, so the pod loads from PATH (no
@@ -201,18 +213,72 @@
           (finally (sh {:continue true} "umount" tmp))))
       (finally (fs/delete-tree tmp)))))
 
+(defn btrfs-pool-members
+  "Every partition device that's a member of the btrfs pool at `part`.
+  Mount the top-level (subvolid=5) and read `btrfs filesystem show`
+  against it -- disko's raid layout puts N members in one pool, and
+  mounting any single member exposes the whole thing. For a single-disk
+  btrfs this is just #{part}. Empty set on any failure."
+  [part]
+  (let [tmp (str (fs/create-temp-dir {:prefix "btrfs-members-"}))]
+    (try
+      (if-not (zero? (:exit (sh {:err :string :continue true}
+                                "mount" "-o" "ro,subvolid=5" part tmp)))
+        #{}
+        (try
+          (let [r (sh {:out :string :err :string :continue true}
+                      "btrfs" "filesystem" "show" tmp)]
+            (->> (str/split-lines (str (:out r)))
+                 (keep #(second (re-find #"\bpath\s+(/dev\S+)" %)))
+                 set))
+          (finally (sh {:continue true} "umount" tmp))))
+      (finally (fs/delete-tree tmp)))))
+
+(defn partition-parent-disk
+  "The parent disk device (/dev/...) for a partition path (/dev/sda1
+  -> /dev/sda; /dev/nvme0n1p3 -> /dev/nvme0n1). Uses `lsblk -no PKNAME`
+  because sysfs walks and name-munging both misbehave on nvme."
+  [part]
+  (let [r (proc/shell {:out :string :err :string :continue true}
+                      "lsblk" "-no" "PKNAME" part)
+        parent (some-> (:out r) str/split-lines first str/trim)]
+    (when-not (str/blank? parent)
+      (str "/dev/" parent))))
+
 (defn detect-reinstall
-  "If `device` already holds a btrfs with @, @home and @nix subvolumes,
-  return {:btrfs-part :esp-part :swap-part}; otherwise nil. This is the
-  layout `setup disk` itself creates, so its presence means we can wipe
-  just the root (@) and keep the user's /home and /nix."
-  [device]
-  (when-let [btrfs-part (partition-of-fstype device "btrfs")]
-    (let [subvols (btrfs-subvol-paths btrfs-part)]
-      (when (every? subvols ["@" "@home" "@nix"])
-        {:btrfs-part btrfs-part
-         :esp-part   (partition-of-fstype device "vfat")
-         :swap-part  (partition-of-fstype device "swap")}))))
+  "If the given `devices` (vector of {:device ...} maps) already hold a
+  btrfs with @/@home/@nix and -- for raid -- all pool members are in
+  the selected set, return
+      {:devices :btrfs-part :esp-part :swap-parts}
+  otherwise nil. For a single-disk layout this is unchanged behavior;
+  for raid, mounting any member exposes the pool so we probe each disk
+  until we find one, then verify member coverage.
+
+  Encrypted layouts show crypto_LUKS rather than btrfs at the partition
+  level, so this returns nil for them (matching the existing behavior
+  -- reinstall requires unlocking, which would need the passphrase we
+  deliberately don't handle)."
+  [devices]
+  (let [dev-paths (set (map :device devices))
+        ;; find the first disk that carries a btrfs partition
+        probe (some (fn [d]
+                      (when-let [p (partition-of-fstype (:device d) "btrfs")]
+                        {:disk d :btrfs-part p}))
+                    devices)]
+    (when probe
+      (let [{:keys [btrfs-part]} probe
+            subvols (btrfs-subvol-paths btrfs-part)]
+        (when (every? subvols ["@" "@home" "@nix"])
+          (let [members         (btrfs-pool-members btrfs-part)
+                member-parents  (into #{} (keep partition-parent-disk members))
+                coverage-ok?    (and (seq member-parents)
+                                     (every? dev-paths member-parents)
+                                     (= (count member-parents) (count devices)))]
+            (when coverage-ok?
+              {:devices    devices
+               :btrfs-part btrfs-part
+               :esp-part   (some #(partition-of-fstype (:device %) "vfat") devices)
+               :swap-parts (vec (keep #(partition-of-fstype (:device %) "swap") devices))})))))))
 
 ;;; ============================================================
 ;;; disko.nix generation
@@ -235,12 +301,21 @@
 (defn btrfs-content
   "The `type = \"btrfs\"` content block (with subvolumes), indented by
   `pad`. Used directly as the root content, or nested inside the luks
-  block when the disk is encrypted."
-  [pad]
-  (str
-   pad "type = \"btrfs\";\n"
-   pad "extraArgs = [ \"-f\" ];\n"
-   (btrfs-subvolumes pad)))
+  block when the disk is encrypted.
+
+  `extra-args` is a vector of additional extraArgs elements appended
+  after \"-f\". For a multi-disk raid, callers pass the raid level flags
+  and the paths of the OTHER pool members (disko implicitly uses the
+  owning member's own device as the primary), e.g.
+    [\"-d raid1\" \"-m raid1\" \"/dev/mapper/root1\" \"/dev/mapper/root2\"]"
+  ([pad] (btrfs-content pad []))
+  ([pad extra-args]
+   (let [args    (into ["-f"] extra-args)
+         arg-str (str/join " " (map #(str "\"" % "\"") args))]
+     (str
+      pad "type = \"btrfs\";\n"
+      pad "extraArgs = [ " arg-str " ];\n"
+      (btrfs-subvolumes pad)))))
 
 (defn esp-partition []
   (str
@@ -283,79 +358,207 @@
    "            };\n"))
 
 (defn root-partition
-  "The 100% root partition. When `encrypt?`, the btrfs lives inside a
-  LUKS container exposed as /dev/mapper/cryptroot: disko prompts for the
-  passphrase interactively at format time (askPassword defaults on with
-  no key/password file) and the disko NixOS module adds the
-  boot.initrd.luks unlock entry (initrdUnlock) automatically.
-  allowDiscards passes TRIM through to the SSD."
-  [encrypt?]
-  (str
-   "            root = {\n"
-   "              size = \"100%\";\n"
-   "              content = {\n"
-   (if encrypt?
-     (str
-      "                type = \"luks\";\n"
-      "                name = \"cryptroot\";\n"
-      "                settings = { allowDiscards = true; };\n"
-      "                content = {\n"
-      (btrfs-content "                  ")
-      "                };\n")
-     (btrfs-content "                "))
-   "              };\n"
-   "            };\n"))
+  "The 100% root partition.
 
-(defn disko-nix [{:keys [device uefi? swap-size encrypt?]}]
+  Options:
+    :encrypt?    wrap the partition in a LUKS container (the disko
+                 NixOS module adds the boot.initrd.luks unlock entry;
+                 allowDiscards passes TRIM through to the SSD).
+    :luks-name   LUKS mapper name (default \"cryptroot\"). For a raid
+                 layout each member gets its own name (\"root1\",
+                 \"root2\", ...) so /dev/mapper/rootN is stable.
+    :label       GPT partlabel to set on the raw partition. Used by
+                 the non-encrypted raid layout so members can be
+                 referenced as /dev/disk/by-partlabel/rootN.
+    :empty?      true for raid non-last members: emit the LUKS
+                 container (or bare labeled partition) with NO inner
+                 content -- the btrfs pool declared on the LAST member
+                 formats them via extraArgs.
+    :raid-extra  extra extraArgs elements (raid level flags + other
+                 members' paths) for the pool-owning last member;
+                 empty vector for a single-disk btrfs.
+
+  We never touch the passphrase ourselves: with no key/password file,
+  disko's askPassword defaults on and prompts via cryptsetup at format
+  time. In the raid case that means one prompt per LUKS container
+  (N times) -- type the same passphrase each time."
+  [{:keys [encrypt? luks-name label empty? raid-extra]
+    :or   {luks-name "cryptroot" raid-extra []}}]
+  (let [pad-encrypted   "                  "  ;; content nested in LUKS
+        pad-unencrypted "                "]   ;; content at partition level
+    (str
+     "            root = {\n"
+     "              size = \"100%\";\n"
+     (when label (str "              label = \"" label "\";\n"))
+     (cond
+       encrypt?
+       (str
+        "              content = {\n"
+        "                type = \"luks\";\n"
+        "                name = \"" luks-name "\";\n"
+        "                settings = { allowDiscards = true; };\n"
+        (when-not empty?
+          (str
+           "                content = {\n"
+           (btrfs-content pad-encrypted raid-extra)
+           "                };\n"))
+        "              };\n")
+       (not empty?)
+       (str
+        "              content = {\n"
+        (btrfs-content pad-unencrypted raid-extra)
+        "              };\n")
+       ;; empty AND unencrypted -> bare labeled partition, no content.
+       :else "")
+     "            };\n")))
+
+(defn disk-block
+  "Emit one `diskN = { ... }` entry inside `disko.devices.disk`. `esp?`
+  places the ESP (UEFI) or bios_grub (legacy BIOS) partition on this
+  disk; for a raid layout, only the first disk carries it. Swap and the
+  root partition are per-disk. `root-str` is the pre-rendered root
+  block from `root-partition`."
+  [{:keys [name device uefi? swap-size encrypt? esp? root-str]}]
   (str
-   "# Generated by disk_config.bb -- declarative disk layout (disko).\n"
-   "# Apply:  disko --mode destroy,format,mount ./disko.nix\n"
-   "{\n"
-   "  disko.devices = {\n"
-   "    disk = {\n"
-   "      main = {\n"
+   "      " name " = {\n"
    "        type = \"disk\";\n"
    "        device = \"" device "\";\n"
    "        content = {\n"
    "          type = \"gpt\";\n"
    "          partitions = {\n"
-   (if uefi? (esp-partition) (bios-boot-partition))
+   (when esp? (if uefi? (esp-partition) (bios-boot-partition)))
    (when swap-size (swap-partition swap-size encrypt?))
-   (root-partition encrypt?)
+   root-str
    "          };\n"
    "        };\n"
-   "      };\n"
-   "    };\n"
-   "  };\n"
-   "}\n"))
+   "      };\n"))
+
+(defn disko-nix
+  "Generate the disko config. `:devices` is a vector of {:device ...}
+  maps -- 1 entry for the single-disk layout, 2+ for a btrfs raid.
+  `:raid-level` is nil for single-disk, or one of \"raid1\" /
+  \"raid1c3\" / \"raid10\" / \"raid1c4\" for multi-disk.
+
+  Raid layout details:
+   - ESP (or bios_grub) lives on the FIRST disk only. Losing that disk
+     requires manually reinstalling the bootloader on another member.
+   - Each disk gets its own root partition. When encrypted, each is a
+     LUKS container named rootN, referenced as /dev/mapper/rootN.
+     When not encrypted, each is a bare partition with GPT partlabel
+     rootN, referenced as /dev/disk/by-partlabel/rootN.
+   - The btrfs pool is declared on the LAST disk's root partition with
+     `extraArgs = [ \"-f\" \"-d LEVEL\" \"-m LEVEL\" <other members> ]`
+     (disko implicitly passes the last member as the primary device to
+     mkfs.btrfs)."
+  [{:keys [devices uefi? swap-size encrypt? raid-level]}]
+  (let [n         (count devices)
+        single?   (= 1 n)
+        ;; per-disk metadata: name, mapper/label, and how the pool
+        ;; references this member from the last disk's extraArgs.
+        entries   (map-indexed
+                   (fn [i {:keys [device]}]
+                     (let [idx (inc i)
+                           luks-name (if single? "cryptroot" (str "root" idx))
+                           label     (when-not single? (str "root" idx))
+                           ref       (if encrypt?
+                                       (str "/dev/mapper/" luks-name)
+                                       (str "/dev/disk/by-partlabel/" label))]
+                       {:name      (if single? "main" (str "disk" idx))
+                        :device    device
+                        :first?    (zero? i)
+                        :last?     (= i (dec n))
+                        :luks-name luks-name
+                        :label     label
+                        :ref       ref}))
+                   devices)
+        ;; The last member owns the btrfs pool declaration; its
+        ;; extraArgs list carries the raid flags plus paths to the OTHER
+        ;; members (disko passes the owning member's own device
+        ;; implicitly). For a single disk this is empty.
+        raid-extra (if single?
+                     []
+                     (into [(str "-d " raid-level) (str "-m " raid-level)]
+                           (->> entries butlast (mapv :ref))))
+        blocks
+        (mapv (fn [{:keys [name device first? last? luks-name label]}]
+                (let [root-str (root-partition
+                                {:encrypt?   encrypt?
+                                 :luks-name  luks-name
+                                 :label      label
+                                 :empty?     (not last?)
+                                 :raid-extra (when last? raid-extra)})]
+                  (disk-block
+                   {:name      name
+                    :device    device
+                    :uefi?     uefi?
+                    :swap-size swap-size
+                    :encrypt?  encrypt?
+                    :esp?      first?
+                    :root-str  root-str})))
+              entries)]
+    (str
+     "# Generated by setup-disk -- declarative disk layout (disko).\n"
+     "# Apply:  disko --mode destroy,format,mount ./disko.nix\n"
+     "{\n"
+     "  disko.devices = {\n"
+     "    disk = {\n"
+     (str/join blocks)
+     "    };\n"
+     "  };\n"
+     "}\n")))
 
 ;;; ============================================================
 ;;; Review + apply
 ;;; ============================================================
 
-(defn confirm-review [{:keys [device uefi? swap-size encrypt? config-path]}]
-  (println)
-  (println "================ Review =================")
-  (println "Target disk: " device)
-  (println "Firmware:    " (if uefi? "UEFI (ESP /boot)" "Legacy BIOS (bios_grub)"))
-  (println "Filesystem:   btrfs")
-  (println "Encryption:  " (if encrypt? "LUKS2 (passphrase set during format, prompted at boot)" "none"))
-  (println "Subvolumes:   @ -> /, @home -> /home, @nix -> /nix")
-  (println "Swap:        " (cond (and swap-size encrypt?) (str swap-size " (random-key encrypted)")
-                                 swap-size                 swap-size
-                                 :else                     "none"))
-  (println "Config:      " config-path)
-  (println "=========================================")
-  (println)
-  (println (str "⚠️  This ERASES ALL DATA on " device " and mounts the new"))
-  (println "    filesystems under /mnt.")
-  (when encrypt?
+(defn confirm-review [{:keys [devices uefi? swap-size encrypt? raid-level config-path]}]
+  (let [n       (count devices)
+        single? (= 1 n)
+        first-dev (:device (first devices))
+        target-line (if single?
+                      first-dev
+                      (str "raid (" n " disks): "
+                           (str/join ", " (map :device devices))))]
     (println)
-    (println "    disko will prompt you to set the LUKS passphrase during"))
-  (when encrypt?
-    (println "    formatting -- keep it safe, it cannot be recovered."))
-  (println)
-  (sw/confirm "Proceed?" :default :no))
+    (println "================ Review =================")
+    (println "Target disks:" target-line)
+    (println "Firmware:    " (if uefi? "UEFI (ESP /boot)" "Legacy BIOS (bios_grub)"))
+    (println "Filesystem:   btrfs"
+             (if single? "" (str "(" raid-level " across " n " disks)")))
+    (when-not single?
+      (println (str "ESP:          on " first-dev " only"
+                    " (losing this disk requires reinstalling the bootloader on another member)")))
+    (println "Encryption:  " (if encrypt?
+                               (if single?
+                                 "LUKS2 (passphrase set during format, prompted at boot)"
+                                 (str "LUKS2 per disk (" n " containers rootN, one prompt each -- type the same passphrase)"))
+                               "none"))
+    (println "Subvolumes:   @ -> /, @home -> /home, @nix -> /nix")
+    (println "Swap:        " (cond
+                               (and swap-size (not single?) encrypt?)
+                               (str swap-size " per disk, " n " disks (random-key encrypted)")
+                               (and swap-size (not single?))
+                               (str swap-size " per disk, " n " disks")
+                               (and swap-size encrypt?)
+                               (str swap-size " (random-key encrypted)")
+                               swap-size swap-size
+                               :else "none"))
+    (println "Config:      " config-path)
+    (println "=========================================")
+    (println)
+    (println (if single?
+               (str "⚠️  This ERASES ALL DATA on " first-dev " and mounts the new")
+               (str "⚠️  This ERASES ALL DATA on ALL " n " disks and mounts the new")))
+    (println "    filesystems under /mnt.")
+    (when encrypt?
+      (println)
+      (println (str "    disko will prompt " (if single? "" (str n " times ")) "for the LUKS passphrase during")))
+    (when encrypt?
+      (if single?
+        (println "    formatting -- keep it safe, it cannot be recovered.")
+        (println "    formatting -- enter the SAME passphrase each time. Keep it safe, it cannot be recovered.")))
+    (println)
+    (sw/confirm "Proceed?" :default :no)))
 
 (defn apply-disko! [config-path]
   ;; disko is fetched on demand via `nix run` -- it's not bundled into
@@ -376,12 +579,13 @@
         (die "disko failed -- the disk may be in a partial state.")))))
 
 (defn ensure-swap-active!
-  "Make sure the swap partition(s) on `device` are active for the rest of
-  the install (nixos-install can spill there instead of the live ISO's
-  RAM-backed store). disko's mount phase already runs `swapon` with a
-  no-double-activation guard, so this is a confirmation + fallback."
-  [device]
-  (doseq [p (swap-partitions device)]
+  "Make sure swap partition(s) across the given `devices` are active for
+  the rest of the install (nixos-install can spill there instead of the
+  live ISO's RAM-backed store). disko's mount phase already runs `swapon`
+  with a no-double-activation guard, so this is a confirmation + fallback."
+  [devices]
+  (doseq [d     devices
+          p     (swap-partitions (:device d))]
     (let [base ["swapon" p]
           cmd  (if (root?) base (into ["sudo"] base))
           r    (apply proc/shell {:out :string :err :string :continue true} cmd)
@@ -432,8 +636,9 @@
 (defn mount-reinstall!
   "Mount the preserved layout under /mnt for nixos-install: @ at /, @home
   at /home, @nix at /nix, plus a freshly-formatted ESP at /boot (UEFI) and
-  any swap. Mount options mirror what `setup disk` writes into disko.nix."
-  [{:keys [btrfs-part esp-part swap-part uefi?]}]
+  any swap. Mount options mirror what `setup disk` writes into disko.nix.
+  For a raid layout, mounting any single member exposes the whole pool."
+  [{:keys [btrfs-part esp-part swap-parts uefi?]}]
   (let [opts "compress=zstd,noatime"
         mnt! (fn [subvol dst]
                (fs/create-dirs dst)
@@ -454,46 +659,52 @@
       (fs/create-dirs "/mnt/boot")
       (when-not (zero? (:exit (sh {:continue true} "mount" "-o" "umask=0077" esp-part "/mnt/boot")))
         (die "failed to mount ESP at /mnt/boot")))
-    (when swap-part
-      (let [r   (sh {:out :string :err :string :continue true} "swapon" swap-part)
+    (doseq [sp swap-parts]
+      (let [r   (sh {:out :string :err :string :continue true} "swapon" sp)
             err (str/trim (str (:err r)))]
         (cond
-          (zero? (:exit r))             (println (str "Swap activated: " swap-part))
-          (str/includes? err "already") (println (str "Swap active: " swap-part))
-          :else (stderr (str "Warning: could not activate swap on " swap-part ": " err)))))))
+          (zero? (:exit r))             (println (str "Swap activated: " sp))
+          (str/includes? err "already") (println (str "Swap active: " sp))
+          :else (stderr (str "Warning: could not activate swap on " sp ": " err)))))))
 
 (defn reinstall-flow!
   "The keep-data reinstall path: review, confirm, wipe @, remount. Returns
   after /mnt is ready for `setup install` (which reuses the preserved
   config repo on /home -- no `setup host` needed)."
-  [{:keys [device uefi?] :as layout}]
-  (println)
-  (println "================ Reinstall ================")
-  (println "Target disk:  " device)
-  (println "Keep:          @home -> /home, @nix -> /nix   (data preserved)")
-  (println "Recreate:      @ -> /                         (root WIPED)")
-  (println "Bootloader:   " (if uefi?
-                              (str "reformat ESP " (:esp-part layout))
-                              "GRUB to existing bios_grub partition"))
-  (println "Swap:         " (or (:swap-part layout) "none"))
-  (println "===========================================")
-  (println)
-  (println (str "⚠️  This ERASES the root filesystem (@) on " device ", but keeps"))
-  (println "    /home and /nix. Your config repo under /home survives.")
-  (println)
-  (when-not (sw/confirm "Proceed with reinstall?" :default :no)
-    (println "Aborted.")
-    (System/exit 0))
-  ;; Drop any stale mounts from a previous run before touching @.
-  (sh {:err :string :continue true} "umount" "-R" "/mnt")
-  (recreate-root-subvol! (:btrfs-part layout))
-  (mount-reinstall! layout)
-  (println)
-  (println "✅ Root wiped and target mounted under /mnt (/home and /nix preserved).")
-  (println)
-  (println "Next step:")
-  (println "  setup install   # rebuild your EXISTING config and reinstall the bootloader")
-  (println "  (skip `setup host` -- the config repo in /home/<user>/nixos is preserved.)"))
+  [{:keys [devices uefi?] :as layout}]
+  (let [n         (count devices)
+        target    (if (= 1 n)
+                    (:device (first devices))
+                    (str "raid (" n " disks): "
+                         (str/join ", " (map :device devices))))]
+    (println)
+    (println "================ Reinstall ================")
+    (println "Target:       " target)
+    (println "Keep:          @home -> /home, @nix -> /nix   (data preserved)")
+    (println "Recreate:      @ -> /                         (root WIPED)")
+    (println "Bootloader:   " (if uefi?
+                                (str "reformat ESP " (:esp-part layout))
+                                "GRUB to existing bios_grub partition"))
+    (println "Swap:         " (let [sps (:swap-parts layout)]
+                                (if (seq sps) (str/join ", " sps) "none")))
+    (println "===========================================")
+    (println)
+    (println (str "⚠️  This ERASES the root filesystem (@) on " target ", but keeps"))
+    (println "    /home and /nix. Your config repo under /home survives.")
+    (println)
+    (when-not (sw/confirm "Proceed with reinstall?" :default :no)
+      (println "Aborted.")
+      (System/exit 0))
+    ;; Drop any stale mounts from a previous run before touching @.
+    (sh {:err :string :continue true} "umount" "-R" "/mnt")
+    (recreate-root-subvol! (:btrfs-part layout))
+    (mount-reinstall! layout)
+    (println)
+    (println "✅ Root wiped and target mounted under /mnt (/home and /nix preserved).")
+    (println)
+    (println "Next step:")
+    (println "  setup install   # rebuild your EXISTING config and reinstall the bootloader")
+    (println "  (skip `setup host` -- the config repo in /home/<user>/nixos is preserved.)")))
 
 ;;; ============================================================
 ;;; /mnt guard
@@ -608,26 +819,32 @@
 (defn usage []
   (println "Usage: setup-disk [options]   (or: setup disk [options])")
   (println)
-  (println "Partition, format, and mount a disk for NixOS install (btrfs).")
+  (println "Partition, format, and mount disk(s) for NixOS install (btrfs).")
+  (println "Supports either a single disk or a multi-disk btrfs raid.")
   (println)
   (println "Options:")
   (println "  --output FILE       Write disko.nix to FILE and exit (no changes made).")
   (println "  --no-apply          Generate the config but do not run disko.")
-  (println "  --encrypt           Encrypt the root (LUKS) without prompting.")
+  (println "  --encrypt           Encrypt the disk(s) (LUKS) without prompting.")
   (println "  --no-encrypt        Skip encryption without prompting.")
   (println "                      (Default: ask interactively.)")
+  (println "  --raid-level LEVEL  Btrfs raid level for multi-disk layouts:")
+  (println "                      raid1 (2+), raid1c3 (3+), raid10 (4+), raid1c4 (4+).")
+  (println "                      (Default: ask interactively when 2+ disks picked.)")
   (println "  --include-mounted   Also list disks with active mounts (e.g. the")
   (println "                      live boot medium). Off by default for safety.")
   (println "  -h, --help          Show help."))
 
 (defn parse-args [args]
-  (loop [args args opts {:apply true :output nil :include-mounted false :encrypt nil}]
+  (loop [args args opts {:apply true :output nil :include-mounted false
+                         :encrypt nil :raid-level nil}]
     (if-let [a (first args)]
       (case a
-        "--output"   (recur (drop 2 args) (assoc opts :output (second args) :apply false))
-        "--no-apply" (recur (rest args) (assoc opts :apply false))
+        "--output"     (recur (drop 2 args) (assoc opts :output (second args) :apply false))
+        "--no-apply"   (recur (rest args) (assoc opts :apply false))
         "--encrypt"    (recur (rest args) (assoc opts :encrypt true))
         "--no-encrypt" (recur (rest args) (assoc opts :encrypt false))
+        "--raid-level" (recur (drop 2 args) (assoc opts :raid-level (second args)))
         "--include-mounted" (recur (rest args) (assoc opts :include-mounted true))
         ("-h" "--help") (do (usage) (System/exit 0))
         (do (stderr "Unknown option:" a) (usage) (System/exit 2)))
@@ -667,9 +884,89 @@
   "Ask whether to encrypt the disk with LUKS. Returns a boolean. We only
   decide whether to generate the encrypted layout here -- disko itself
   prompts for and confirms the passphrase during formatting."
-  []
-  (sw/confirm "Encrypt the disk with LUKS? (disko will prompt for a passphrase during formatting)"
+  [n-disks]
+  (sw/confirm (if (= 1 n-disks)
+                "Encrypt the disk with LUKS? (disko will prompt for a passphrase during formatting)"
+                (str "Encrypt each disk with LUKS? (disko will prompt " n-disks " times during formatting -- one per disk)"))
               :default :no))
+
+(defn valid-raid-levels
+  "Btrfs raid levels appropriate for N disks. raid1 works with any 2+,
+  raid1c3 needs 3+ copies, raid10 needs 4+ (pairs), raid1c4 needs 4+."
+  [n]
+  (cond-> []
+    (>= n 2) (conj "raid1")
+    (>= n 3) (conj "raid1c3")
+    (>= n 4) (conj "raid10" "raid1c4")))
+
+(defn ask-raid-level
+  "Prompt for the btrfs raid level. Data and metadata are set to the same
+  profile (`-d LEVEL -m LEVEL`) -- keeping them aligned is the common
+  recommendation and avoids mixed-profile surprises."
+  [n]
+  (let [levels (valid-raid-levels n)]
+    (when (empty? levels)
+      (die "no valid btrfs raid level for" n "disks"))
+    (sw/choose (str "Btrfs raid level (across " n " disks):") levels)))
+
+(defn ask-layout
+  "Choose single-disk vs multi-disk btrfs raid. Only offers raid when
+  there are 2+ installable disks. Returns :single or :raid."
+  [n-installable]
+  (if (< n-installable 2)
+    :single
+    (let [single "Single disk (btrfs)"
+          raid   "Multi-disk btrfs raid (raid1 / raid1c3 / raid10 / raid1c4)"]
+      (if (= single (sw/choose "How do you want to lay out the disks?" [single raid]))
+        :single :raid))))
+
+(defn select-disks-multi
+  "Pick 2+ disks in order for a btrfs raid. The FIRST pick carries the
+  ESP/bios_grub (bootloader); subsequent picks are additional pool
+  members. Returns the vector of chosen disk maps in pick order. Warns
+  (but does not block) on significant size mismatch -- btrfs raid1
+  sizes down to the smallest member."
+  [disks]
+  (let [done-label "Done -- I'm finished picking disks"
+        pick-one   (fn [available prompt allow-done?]
+                     (let [labels (disk-labels available)
+                           opts   (if allow-done?
+                                    (conj (vec labels) done-label)
+                                    (vec labels))
+                           chosen (sw/choose prompt opts)
+                           idx    (.indexOf opts chosen)]
+                       (cond
+                         (nil? chosen)                (do (println "Aborted.") (System/exit 0))
+                         (and allow-done?
+                              (= idx (count labels))) nil
+                         :else                        (nth available idx))))]
+    (loop [remaining disks
+           picked    []]
+      (let [n          (count picked)
+            allow-done (>= n 2)
+            prompt     (cond
+                         (zero? n) "Select the FIRST disk (this one carries the bootloader):"
+                         (= 1 n)   "Select the SECOND disk (raid member):"
+                         :else     (str "Add another disk (" n " picked), or finish:"))
+            _          (when (and (not allow-done) (empty? remaining))
+                         (die "not enough disks to build a raid (need 2+)."))
+            pick       (pick-one remaining prompt allow-done)]
+        (if (nil? pick)
+          (do
+            ;; Size mismatch warning: btrfs raid1 sizes down to the
+            ;; smallest member, so a lopsided set wastes space.
+            (let [sizes (map :size picked)
+                  mn    (apply min sizes)
+                  mx    (apply max sizes)]
+              (when (and (pos? mn) (> (/ (- mx mn) (double mn)) 0.05))
+                (println)
+                (println "⚠️  Selected disks vary in size (>5%):")
+                (doseq [d picked]
+                  (println (str "     " (:name d) "  " (human-size (:size d)))))
+                (println "    btrfs raid1 sizes down to the smallest member.")))
+            picked)
+          (recur (remove #(= (:name %) (:name pick)) remaining)
+                 (conj picked pick)))))))
 
 (defn -main []
   (let [opts (parse-args *command-line-args*)]
@@ -707,30 +1004,56 @@
       (when (empty? disks)
         (die "No installable disks found (every disk is in use)."))
 
-      (let [labels  (disk-labels disks)
-            chosen  (sw/choose "Select the target disk:" labels)
-            disk    (nth disks (.indexOf labels chosen))
-            device  (:name disk)
-            _       (println)
-            ;; If the disk already carries the @/@home/@nix layout this tool
+      ;; Layout fork: single disk (existing behavior) or multi-disk btrfs
+      ;; raid. Raid is only offered when 2+ installable disks exist.
+      (let [layout   (ask-layout (count disks))
+            _        (println)
+            selected (case layout
+                       :single
+                       (let [labels (disk-labels disks)
+                             chosen (sw/choose "Select the target disk:" labels)]
+                         [(nth disks (.indexOf labels chosen))])
+                       :raid
+                       (select-disks-multi disks))
+            devices  (mapv (fn [d] {:device (:name d) :size (:size d)}) selected)
+            n        (count devices)
+            _        (println)
+            ;; If the disks already carry the @/@home/@nix layout this tool
             ;; creates, offer to reinstall (keep /home + /nix, wipe only /)
-            ;; instead of erasing everything. Only when actually applying --
+            ;; instead of erasing everything. For raid, all pool members
+            ;; must be in the selected set. Only when actually applying --
             ;; --output/--no-apply just generate a fresh-install config.
-            existing (when (:apply opts) (detect-reinstall device))
-            _       (when existing
-                      (let [reinstall "Reinstall -- keep /home and /nix, wipe / and reinstall the bootloader"
-                            fresh     "Fresh install -- ERASE the entire disk and recreate everything"]
-                        (println (str "⚠️  " device " already has a NixOS btrfs layout (@, @home, @nix)."))
-                        (when (= reinstall (sw/choose "How do you want to install?" [reinstall fresh]))
-                          (reinstall-flow! (assoc existing :device device :uefi? uefi?))
-                          (System/exit 0))
-                        (println)))
+            existing (when (:apply opts) (detect-reinstall devices))
+            _        (when existing
+                       (let [reinstall "Reinstall -- keep /home and /nix, wipe / and reinstall the bootloader"
+                             fresh     "Fresh install -- ERASE and recreate everything"
+                             target    (if (= 1 n)
+                                         (:device (first devices))
+                                         (str "raid: " (str/join ", " (map :device devices))))]
+                         (println (str "⚠️  " target " already carries a NixOS btrfs layout (@, @home, @nix)."))
+                         (when (= reinstall (sw/choose "How do you want to install?" [reinstall fresh]))
+                           (reinstall-flow! (assoc existing :uefi? uefi?))
+                           (System/exit 0))
+                         (println)))
             ;; Encryption is fresh-install only: an existing encrypted
             ;; disk shows crypto_LUKS (not a btrfs with @/@home/@nix), so
             ;; detect-reinstall above returns nil and we land here.
-            encrypt?  (if (nil? (:encrypt opts)) (ask-encrypt) (:encrypt opts))
-            swap-size (ask-swap)
-            config  (disko-nix {:device device :uefi? uefi? :swap-size swap-size :encrypt? encrypt?})]
+            encrypt?   (if (nil? (:encrypt opts)) (ask-encrypt n) (:encrypt opts))
+            ;; Raid level: prompt only for multi-disk. --raid-level lets
+            ;; scripting override the interactive choice.
+            raid-level (when (= :raid layout)
+                         (let [cli (:raid-level opts)
+                               ok  (set (valid-raid-levels n))]
+                           (cond
+                             (nil? cli)     (ask-raid-level n)
+                             (contains? ok cli) cli
+                             :else (die (str "--raid-level " cli " is not valid for "
+                                             n " disks. Valid: "
+                                             (str/join ", " ok))))))
+            swap-size  (ask-swap)
+            config     (disko-nix {:devices devices :uefi? uefi?
+                                   :swap-size swap-size :encrypt? encrypt?
+                                   :raid-level raid-level})]
 
         ;; Config-only mode: write and exit.
         (when (:output opts)
@@ -738,18 +1061,25 @@
           (println "Wrote disko config to:" (:output opts))
           (System/exit 0))
 
-        ;; Strong confirmation: make the user re-type the device path.
+        ;; Strong confirmation: make the user re-type each device path.
+        ;; One at a time (safer to read one path than a comma-joined list).
         (println)
-        (println (str "About to DESTROY everything on: " device))
-        (let [typed (sw/ask (str "Type '" device "' to confirm"))]
-          (when-not (= (str/trim typed) device)
-            (die "Confirmation did not match. Aborting.")))
+        (println (if (= 1 n)
+                   (str "About to DESTROY everything on: " (:device (first devices)))
+                   (str "About to DESTROY everything on all " n " disks below.")))
+        (doseq [{:keys [device]} devices]
+          (let [typed (sw/ask (str "Type '" device "' to confirm"))]
+            (when-not (= (str/trim typed) device)
+              (die "Confirmation did not match. Aborting."))))
 
         (let [workdir     (str (fs/create-temp-dir {:prefix "nixos-disk-"}))
               config-path (str (fs/path workdir "disko.nix"))]
           (spit config-path config)
 
-          (when-not (confirm-review {:device device :uefi? uefi? :swap-size swap-size :encrypt? encrypt? :config-path config-path})
+          (when-not (confirm-review {:devices devices :uefi? uefi?
+                                     :swap-size swap-size :encrypt? encrypt?
+                                     :raid-level raid-level
+                                     :config-path config-path})
             (println "Aborted.")
             (System/exit 0))
 
@@ -761,7 +1091,7 @@
 
           ;; disko activates swap during mount; confirm it's live (and
           ;; activate as a fallback) so nixos-install can use it.
-          (when swap-size (ensure-swap-active! device))
+          (when swap-size (ensure-swap-active! devices))
 
           ;; Persist the layout into the new system so it can be
           ;; imported by the host's NixOS configuration later. /mnt was
