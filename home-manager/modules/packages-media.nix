@@ -6,4 +6,5 @@
 with pkgs; [
   yt-dlp
   ffmpeg
+  pavucontrol
 ]
