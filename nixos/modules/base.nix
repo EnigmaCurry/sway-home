@@ -40,6 +40,13 @@
   # per-user interactive shells get their own completion via home-manager).
   programs.bash.completion.enable = true;
 
+  # Stub dynamic linker so generic-Linux binaries can run on NixOS. Needed
+  # because babashka pods (e.g. the ones auto-downloaded by `vm`/`pve` from
+  # nixos-vm-template when loaded by qualified name+version) ship prebuilt
+  # ELF binaries expecting /lib64/ld-linux-x86-64.so.2.
+  # See: https://nix.dev/permalink/stub-ld
+  programs.nix-ld.enable = true;
+
   # The `admin` alias (run `just` in ~/nixos with full recipe + argument
   # tab completion) is set up by home-manager on every host now --
   # home-manager/modules/baseline.nix wires it directly, and on a sway host
