@@ -4,6 +4,7 @@
 # Part of the `dotfiles` profile.
 
 with pkgs; [
+  openssl
   curl
   wget
   nmap
