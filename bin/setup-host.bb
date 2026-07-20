@@ -224,6 +224,20 @@
    "  # programs.gnupg.agent = { enable = true; enableSSHSupport = true; };\n"
    "}\n"))
 
+;; sway-home's shell startup runs a git-identity wizard (config/bash/git-setup.sh)
+;; on first interactive login when ~/.config/git/config.local is missing
+;; user.name or user.email. Writing that file here from the answers we already
+;; have keeps the first NixOS login non-interactive.
+(defn git-config-local [{:keys [name email branch]}]
+  (str
+   "# Written by setup-host from the answers given at install time.\n"
+   "# Local git identity for this user; not committed to ~/nixos.\n"
+   "[user]\n"
+   "\tname = " name "\n"
+   "\temail = " email "\n"
+   "[init]\n"
+   "\tdefaultBranch = " branch "\n"))
+
 (defn justfile [{:keys [host]}]
   (str
    "set shell := [\"bash\", \"-eu\", \"-o\", \"pipefail\", \"-c\"]\n"
@@ -270,6 +284,10 @@
   (println "  --user NAME           Primary username (prompted; --adopt defaults to you).")
   (println "  --profiles LIST       Comma-separated profiles to enable: sway,sound,podman,flatpak,libvirt.")
   (println "                        Multi-select prompt if omitted; none = minimal server.")
+  (println "  --git-name NAME       Git user.name for the first user's ~/.config/git/config.local")
+  (println "                        (skips the first-login git identity wizard).")
+  (println "  --git-email EMAIL     Git user.email (required if --git-name is given).")
+  (println "  --git-branch NAME     Git init.defaultBranch (default: master).")
   (println "  --adopt               Adopt the running system instead of a /mnt install target.")
   (println "  --sway-home-ref REF   Override the sway-home flake ref.")
   (println "  --root DIR            Target mount (default: /mnt; ignored with --adopt).")
@@ -283,6 +301,9 @@
         "--user"          (recur (drop 2 args) (assoc opts :user (second args)))
         "--profiles"      (recur (drop 2 args) (assoc opts :profiles (set (remove str/blank? (str/split (second args) #",")))))
         "--profile"       (recur (drop 2 args) (update opts :profiles (fnil conj #{}) (second args)))
+        "--git-name"      (recur (drop 2 args) (assoc opts :git-name (second args)))
+        "--git-email"     (recur (drop 2 args) (assoc opts :git-email (second args)))
+        "--git-branch"    (recur (drop 2 args) (assoc opts :git-branch (second args)))
         "--sway-home-ref" (recur (drop 2 args) (assoc opts :ref (second args)))
         "--adopt"         (recur (drop 1 args) (assoc opts :adopt true))
         "--root"          (recur (drop 2 args) (assoc opts :root (second args)))
@@ -331,6 +352,25 @@
                              (do (println "Username is required.") (recur))
                              u)))))
             tz   (str/trim (sw/ask "Time zone" :default "America/Denver"))
+            ;; Git identity for this user's ~/.config/git/config.local. If the
+            ;; caller passed --git-name/--git-email, use those verbatim; else
+            ;; prompt (blank name = skip and let the first-login wizard handle
+            ;; it). We require email whenever name is provided so we never
+            ;; write a half-filled file that would re-trigger the wizard.
+            git-cfg (if-let [n (some-> (:git-name opts) str/trim not-empty)]
+                      {:name   n
+                       :email  (or (some-> (:git-email opts) str/trim not-empty)
+                                   (die "--git-name requires --git-email"))
+                       :branch (or (some-> (:git-branch opts) str/trim not-empty) "master")}
+                      (let [n (str/trim (sw/ask "Git user.name for commits (blank to skip; you'll be prompted on first login)" :default ""))]
+                        (when-not (str/blank? n)
+                          {:name   n
+                           :email  (loop []
+                                     (let [e (str/trim (sw/ask "Git user.email"))]
+                                       (if (str/blank? e)
+                                         (do (println "Email is required.") (recur))
+                                         e)))
+                           :branch (str/trim (sw/ask "Git init.defaultBranch" :default "master"))})))
             profiles (or (:profiles opts)
                          (let [labels     (mapv (fn [[k d]] (str k " - " d)) profile-catalog)
                                label->key (zipmap labels (map first profile-catalog))
@@ -353,6 +393,9 @@
           (println "Username:     " user)
           (println "Profiles:     " (if (seq profiles) (str/join " " (sort profiles)) "(none -- minimal server, sshd only)"))
           (println "Time zone:    " tz)
+          (println "Git identity: " (if git-cfg
+                                      (str (:name git-cfg) " <" (:email git-cfg) ">  (defaultBranch=" (:branch git-cfg) ")")
+                                      "(skipped -- shell will prompt on first login)"))
           (println "System:       " system)
           (println "Disk:         " (if adopt? "reuse existing partitions (no disko)" "disko (from `setup disk`)"))
           (println "SSH keys:     " (if (seq ssh-keys)
@@ -394,6 +437,20 @@
           (doseq [f (cond->> ["flake.nix" "hardware.nix" "config.nix" "Justfile" ".gitignore"]
                       (not adopt?) (cons "disko.nix"))]
             (println (str "  wrote " f)))
+
+          ;; Pre-seed the user's git identity so sway-home's first-login shell
+          ;; wizard (config/bash/git-setup.sh) sees the file populated and
+          ;; stays silent. ISO path writes into /mnt; `setup install` chowns
+          ;; /home/<user> recursively so ownership sorts itself out.
+          (when git-cfg
+            (let [home-dir (if adopt?
+                             (System/getProperty "user.home")
+                             (str (fs/path root "home" user)))
+                  git-dir  (fs/path home-dir ".config" "git")
+                  git-file (fs/path git-dir "config.local")]
+              (fs/create-dirs git-dir)
+              (spit (str git-file) (git-config-local git-cfg))
+              (println (str "  wrote " git-file))))
 
           ;; 3. Show the generated flake (the part that wires it together).
           (println)
