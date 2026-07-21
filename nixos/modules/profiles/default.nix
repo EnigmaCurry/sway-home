@@ -18,5 +18,6 @@
     ./flatpak.nix
     ./sound.nix
     ./dark-mode.nix
+    ./thunar.nix
   ];
 }

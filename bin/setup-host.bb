@@ -129,7 +129,8 @@
    ["sound"   "PipeWire audio"]
    ["podman"  "Podman containers (Docker-compatible)"]
    ["flatpak" "Flatpak + Flathub remote"]
-   ["libvirt" "libvirt/KVM virtualization (the `vm` command, virt-manager)"]])
+   ["libvirt" "libvirt/KVM virtualization (the `vm` command, virt-manager)"]
+   ["thunar"  "Thunar file manager (with GVfs / SMB support)"]])
 
 ;; Render one aligned `my.profiles.<key>.enable = true;` line: uncommented
 ;; when selected, a commented example otherwise.
