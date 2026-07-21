@@ -143,11 +143,11 @@
     "nixos-vm-template": {
       "flake": false,
       "locked": {
-        "lastModified": 1784674842,
-        "narHash": "sha256-QU7Z23+euBTBMfPoCJb3nAUM/FPrJwK160BMsNJKnro=",
+        "lastModified": 1784677913,
+        "narHash": "sha256-tEng2j9x6WaV3cnEJ6Z5FmQIsDvrhm8X8MlxUb7SVlY=",
         "owner": "EnigmaCurry",
         "repo": "nixos-vm-template",
-        "rev": "a8eb722f37900614d226a5d4b7c65e80af4de39e",
+        "rev": "dcb4b45dda944e7be6c24f38e9acf2faf707b305",
         "type": "github"
       },
       "original": {
