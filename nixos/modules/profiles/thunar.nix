@@ -15,7 +15,7 @@ in
 
   config = mkIf cfg.enable {
     programs.thunar.enable = true;
-    programs.thunar.plugins = with pkgs.xfce; [
+    programs.thunar.plugins = with pkgs; [
       thunar-volman            # mount/eject removable media
       thunar-archive-plugin    # right-click extract/create archives
     ];
