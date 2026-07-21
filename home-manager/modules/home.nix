@@ -25,6 +25,7 @@ in {
       ++ (import ./packages-net.nix { inherit pkgs; })
       ++ (import ./packages-shell.nix { inherit pkgs; })
       ++ (import ./packages-media.nix { inherit pkgs; })
+      ++ (import ./packages-input.nix { inherit pkgs; })
       ++ [ scriptWizard ];
 
     programs.git = {

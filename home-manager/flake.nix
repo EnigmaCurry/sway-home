@@ -68,6 +68,7 @@
         packages-shell = ./modules/packages-shell.nix;
         packages-media = ./modules/packages-media.nix;
         packages-gui = ./modules/packages-gui.nix;
+        packages-input = ./modules/packages-input.nix;
         emacs = ./modules/emacs.nix;
         nixos-vm-template = ./modules/nixos-vm-template.nix;
         flatpak = ./modules/flatpak.nix;
