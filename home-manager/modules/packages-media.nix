@@ -7,4 +7,6 @@ with pkgs; [
   yt-dlp
   ffmpeg
   pavucontrol
+  qjackctl
+  helvum
 ]
