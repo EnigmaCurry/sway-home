@@ -8,5 +8,5 @@ with pkgs; [
   ffmpeg
   pavucontrol
   qjackctl
-  helvum
+  crosspipe
 ]
