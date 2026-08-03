@@ -8,6 +8,7 @@ with pkgs; [
   curl
   wget
   nmap
+  ipcalc
   tcpdump
   socat
   sshfs
