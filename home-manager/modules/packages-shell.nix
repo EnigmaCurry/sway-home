@@ -17,6 +17,7 @@ with pkgs; [
   tmux
   pv
   moreutils
+  gettext
   rlwrap
   unar
   ispell
