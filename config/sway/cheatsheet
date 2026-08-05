@@ -143,9 +143,10 @@ Return or Escape
 # Multimedia Keys (be aware that these may not work for every keyboard):
 They are enabled -  you may need to hold down the function key while doing so.
   
-   # Screenshots:
-    PrintSrc for full screenshot
-    Shift+PrintSrc for screenshot options
+   # Screenshots (saved to ~/Images/Screenshots):
+    PrintScr for active window screenshot (image to clipboard)
+    Shift+PrintScr for area screenshot (image to clipboard)
+    Alt+PrintScr for area screenshot (file path to clipboard)
 
 # App Shortcuts:
 +n thunar
