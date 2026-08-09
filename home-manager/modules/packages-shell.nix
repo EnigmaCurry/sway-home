@@ -22,4 +22,6 @@ with pkgs; [
   unar
   ispell
   conceal
+  unzip
+  p7zip
 ]
