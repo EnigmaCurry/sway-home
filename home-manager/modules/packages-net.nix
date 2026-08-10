@@ -18,4 +18,5 @@ with pkgs; [
   apacheHttpd
   irssi
   keychain
+  dig
 ]
