@@ -61,6 +61,7 @@
 
       # Export modules for NixOS flake to import
       homeModules = {
+        baseline = ./modules/baseline.nix;
         home = ./modules/home.nix;
         packages-dev = ./modules/packages-dev.nix;
         packages-devops = ./modules/packages-devops.nix;
