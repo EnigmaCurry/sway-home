@@ -13,6 +13,7 @@ with pkgs; [
   sway-contrib.grimshot   # screenshot helper
   wl-clipboard            # clipboard
   wdisplays               # display layout GUI
+  networkmanagerapplet    # nm-applet tray icon
   glib                    # gsettings CLI
   nerd-fonts.jetbrains-mono
 ]
