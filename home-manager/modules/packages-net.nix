@@ -19,4 +19,5 @@ with pkgs; [
   irssi
   keychain
   dig
+  wireguard-tools         # wg, wg-quick; also lets NM import wg .conf files
 ]
