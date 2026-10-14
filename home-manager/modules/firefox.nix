@@ -143,7 +143,7 @@ in
         "privacy.trackingprotection.fingerprinting.enabled" = true;
         "extensions.formautofill.addresses.enabled" = false;
         "extensions.formautofill.creditCards.enabled" = false;
-        "signon.rememberSignons" = false;
+        "signon.rememberSignons" = true;
 
         # HTTPS-only mode
         "dom.security.https_only_mode" = true;

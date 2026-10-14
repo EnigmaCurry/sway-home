@@ -16,5 +16,6 @@
     ./flatpak.nix
     ./fluidsynth.nix
     ./firefox.nix
+    ./speechd.nix
   ];
 }
