@@ -97,11 +97,11 @@
       "locked": {
         "narHash": "sha256-kV63N7WFRfPMN1VbBqzEdaskUfkCDb+ZpvggScfuJ3c=",
         "type": "file",
-        "url": "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"
+        "url": "https://raw.githubusercontent.com/git/git/v2.56.0/contrib/completion/git-prompt.sh"
       },
       "original": {
         "type": "file",
-        "url": "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"
+        "url": "https://raw.githubusercontent.com/git/git/v2.56.0/contrib/completion/git-prompt.sh"
       }
     },
     "home-manager": {
