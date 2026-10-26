@@ -34,6 +34,16 @@
       # Get current user from $USER env var (requires --impure flag)
       currentUser = builtins.getEnv "USER";
 
+      # Standalone means a non-NixOS host. Whether it runs NetworkManager is
+      # read from the host itself (this flake is always evaluated --impure,
+      # for $USER). Each is only a default; set the option in an
+      # extraModules module to override it.
+      nonNixosDefaults = { lib, ... }: {
+        my.home.genericLinux.enable = lib.mkDefault true;
+        my.home.nmApplet.enable = lib.mkDefault
+          (builtins.pathExists "/usr/lib/systemd/system/NetworkManager.service");
+      };
+
       mkHomeConfiguration = { userName, system ? defaultSystem, extraModules ? [] }:
         let
           pkgs = nixpkgs.legacyPackages.${system};
@@ -47,7 +57,7 @@
           # all.nix pulls in baseline + the sway desktop content. home.nix
           # provides home.packages, gated by my.home.sway.enable which
           # defaults true here (standalone).
-          modules = [ ./modules/all.nix ] ++ extraModules;
+          modules = [ ./modules/all.nix nonNixosDefaults ] ++ extraModules;
         };
     in
     {

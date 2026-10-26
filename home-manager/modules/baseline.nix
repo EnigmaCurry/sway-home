@@ -1,4 +1,4 @@
-{ lib, inputs, userName, ... }:
+{ config, lib, inputs, userName, ... }:
 
 # Always-on home-manager baseline -- loaded on EVERY host (minimal server or
 # sway desktop, NixOS or standalone). It owns the home-manager identity that
@@ -45,6 +45,29 @@
     '';
   };
 
+  options.my.home.genericLinux.enable = lib.mkOption {
+    type = lib.types.bool;
+    # Off under NixOS (lib.mkHost). The standalone flake turns it on: it is
+    # for non-NixOS hosts (HOME_MANAGER.md).
+    default = false;
+    description = ''
+      Whether this is a non-NixOS host: sets home-manager's
+      targets.genericLinux (XDG paths, and GPU drivers for programs from
+      Nix -- run `sudo non-nixos-gpu-setup` once after switching).
+    '';
+  };
+
+  options.my.home.nmApplet.enable = lib.mkOption {
+    type = lib.types.bool;
+    # On under NixOS. The standalone flake turns it off when the host has no
+    # NetworkManager to manage (e.g. systemd-networkd and iwd).
+    default = true;
+    description = ''
+      Whether to install nm-applet, the NetworkManager tray icon (sway
+      starts it when it is installed).
+    '';
+  };
+
   options.my.home.darkMode.enable = lib.mkOption {
     type = lib.types.bool;
     default = true;
@@ -63,6 +86,8 @@
 
     # Let home-manager manage itself (esp. when running standalone).
     programs.home-manager.enable = true;
+
+    targets.genericLinux.enable = config.my.home.genericLinux.enable;
 
     # `admin` = run `just` in ~/nixos (this host's NixOS config repo, created
     # by `setup host`) with recipe + argument tab completion. On a sway host

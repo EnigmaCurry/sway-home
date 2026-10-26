@@ -185,6 +185,55 @@ To disable Emacs, edit `home-manager/flake.nix` and remove
  * **Backup your config**: Keep your configuration safe by committing
    to git and pushing to a remote repository regularly.
 
+## Non-NixOS hosts
+
+The standalone flake (`home-manager/flake.nix`) assumes it is not on
+NixOS, and reads a few things from the host itself (it is always
+evaluated `--impure`):
+
+| Option                          | Standalone default                                   | What it does |
+|---------------------------------|------------------------------------------------------|--------------|
+| `my.home.genericLinux.enable`   | on                                                   | Sets home-manager's `targets.genericLinux`: XDG paths, and GPU drivers for programs from Nix |
+| `my.home.nmApplet.enable`       | on if the host has `NetworkManager.service`          | Installs nm-applet, which sway starts when it is installed |
+
+On NixOS (`lib.mkHost`) the first is off and nm-applet is on, as
+before.
+
+### GPU drivers
+
+Programs from Nix use Nix's own Mesa, which cannot load the host's
+drivers. With `targets.genericLinux` on, home-manager (25.11 and
+later) builds matching drivers from nixpkgs -- firefox, emacs and
+everything else from Nix then use the GPU. Link them into place once,
+as root, after the first `hm-install`, and again whenever `hm-switch`
+says the drivers changed:
+
+```bash
+sudo ~/.nix-profile/bin/non-nixos-gpu-setup
+```
+
+That writes `/etc/tmpfiles.d/non-nixos-gpu.conf`, which links
+`/run/opengl-driver` to them at every boot. Without it, programs from
+Nix fall back to software rendering.
+
+### Arch Linux
+
+On Arch, sway, swaylock, swayidle, greetd, PipeWire and Nix itself
+come from pacman, and this repository provides the rest, firefox
+included. The
+[Arch Workstation](https://book.rymcg.tech/arch-workstation/desktop/)
+book's Desktop chapter installs that system half (`pacman -S nix`,
+`nix-daemon.socket`, flakes on) and then runs `just hm-install` as the
+desktop user.
+
+A few things the sway config expects are not from Nix, and come from
+pacman there: `swayidle`, `swaylock`, `kanshi`, `pamixer`, `pactl`
+(pipewire-pulse), `playerctl` and `brightnessctl`. The sway config also
+starts `dinit --user`, which runs PipeWire and D-Bus on systems
+without systemd. Arch has systemd's user manager for that, and dinit
+is not packaged for Arch or Arch Linux ARM: that `exec` just fails at
+login (sway logs it and carries on).
+
 ## Keyboard setup
 
 See the keyboard configuration section in [FEDORA.md](FEDORA.md#keyboard-setup)

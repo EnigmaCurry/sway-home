@@ -164,7 +164,8 @@ EOF
    })
    (lib.mkIf config.my.home.sway.enable {
      # GUI desktop packages (Wayland/Sway) -- added on top of the dotfiles.
-     home.packages = import ./packages-gui.nix { inherit pkgs; };
+     home.packages = import ./packages-gui.nix { inherit pkgs; }
+       ++ lib.optional config.my.home.nmApplet.enable pkgs.networkmanagerapplet;
    })
    (lib.mkIf (config.my.home.sway.enable && config.my.home.darkMode.enable) {
      # Dark mode preference for GTK4/libadwaita apps, including sandboxed

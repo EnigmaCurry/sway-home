@@ -1,5 +1,9 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
+# The home-manager CLI for the hm-* recipes: the same release as the
+# home-manager input in home-manager/flake.nix. Move them together.
+hm := "home-manager/release-26.05"
+
 # print help for Just targets
 help:
     @just -l
@@ -24,11 +28,11 @@ metadata:
 
 # Initial home-manager installation (run once, then use hm-switch)
 hm-install: _ensure-git-config
-    cd home-manager; nix run home-manager/release-25.11 -- switch --flake .#default --impure -b backup
+    cd home-manager; nix run {{hm}} -- switch --flake .#default --impure -b backup
 
 # Switch home-manager configuration (use on Fedora/other Linux)
 hm-switch: _ensure-git-config
-    cd home-manager; nix run home-manager -- switch --flake .#default --impure -b backup
+    cd home-manager; nix run {{hm}} -- switch --flake .#default --impure -b backup
 
 # Ensure git local config exists (prompts user if missing)
 _ensure-git-config:
@@ -71,7 +75,7 @@ hm-metadata:
 
 # Show home-manager news
 hm-news:
-    cd home-manager; nix run home-manager -- news --flake .#default --impure
+    cd home-manager; nix run {{hm}} -- news --flake .#default --impure
 
 # Update flake, pull repo, and switch home-manager
 hm-upgrade: hm-pull hm-update hm-switch
