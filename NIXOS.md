@@ -357,9 +357,53 @@ admin git commit -am "update flake inputs"
 ```
 
 Run `admin help` to list all recipes: `switch`, `test`, `update`,
-`upgrade`, and `git` (which is `git -C ~/nixos`, so `admin git …` works
-from anywhere). Each is the matching `just` recipe run in `~/nixos`, so
-`just switch` from inside the repo still works too.
+`upgrade`, `upgrade-force`, `flake-check`, `flake-upgrade`, and `git`
+(which is `git -C ~/nixos`, so `admin git …` works from anywhere). Each
+is the matching `just` recipe run in `~/nixos`, so `just switch` from
+inside the repo still works too.
+
+### Keeping the pins in sync (`flake-check` / `flake-upgrade`)
+
+`admin update` only moves this repo's **direct** inputs. Transitive ones
+are inherited from the input flake's own lockfile, so the revs of
+`emacs`, `script-wizard`, `nixos-vm-template` and `blog.rymcg.tech` come
+from **sway-home's** `flake.lock` (and `home-manager/flake.lock`), not
+from yours. `nix flake update emacs_enigmacurry` in `~/nixos` cannot
+reach them either — it just warns *"does not match any input of this
+flake"*. So a commit pushed to one of those repos does not reach the
+machine until sway-home's locks are bumped **and pushed** as well.
+
+That is three repos deep, and forgetting a step silently rebuilds the
+old pin. `admin flake-check` compares every pin against its git
+upstream and names what is behind, plus any local checkout with
+uncommitted or unpushed work:
+
+```
+admin flake-check
+```
+
+`admin upgrade` runs that check first and asks before rebuilding with
+stale pins, so you notice before the switch rather than after. Set
+`NO_FLAKE_CHECK=1`, or use `admin upgrade-force`, to skip it (offline,
+or when you want the current pins on purpose).
+
+`admin flake-upgrade` does the whole juggle: push your source repos,
+`nix flake update` + commit + push each of sway-home's locks, then
+relock `~/nixos`. It prints the plan and asks once before doing any of
+it, and refuses when sway-home has unrelated uncommitted changes that a
+lock commit would sweep up. Then `admin upgrade` picks up everything:
+
+```
+admin flake-upgrade
+admin upgrade
+```
+
+Both recipes are thin wrappers around sway-home's
+[`bin/flake-sync.bb`](bin/flake-sync.bb) (`flake-sync --help`), which
+they find in your sway-home checkout — `$SWAY_HOME`, else
+`~/git/vendor/<org>/sway-home` — falling back to the `~/bin` symlink.
+A host with no sway-home checkout cannot bump the upstream locks, so
+`admin upgrade` skips the check there rather than failing.
 
 ## Important concepts and reminders
 

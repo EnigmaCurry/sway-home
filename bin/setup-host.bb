@@ -273,27 +273,99 @@
    "[init]\n"
    "\tdefaultBranch = " branch "\n"))
 
-(defn justfile [{:keys [host]}]
-  (str
-   "set shell := [\"bash\", \"-eu\", \"-o\", \"pipefail\", \"-c\"]\n"
-   "set positional-arguments\n\n"
-   "# print help\n"
-   "help:\n"
-   "    @just -l\n\n"
-   "# Rebuild NixOS and switch to the new generation\n"
-   "switch:\n"
-   "    sudo nixos-rebuild switch --flake .#" host "\n\n"
-   "# Rebuild and test (reverts on reboot)\n"
-   "test:\n"
-   "    sudo nixos-rebuild test --flake .#" host "\n\n"
-   "# Update the sway-home pin (and other inputs)\n"
-   "update:\n"
-   "    nix flake update\n\n"
-   "# Update inputs, then rebuild and switch\n"
-   "upgrade: update switch\n\n"
-   "# Run git in this config repo from any directory (e.g. admin git status)\n"
-   "git *args:\n"
-   "    @git -C \"{{justfile_directory()}}\" \"$@\"\n"))
+(defn sway-home-vendor-dir
+  "Path, relative to $HOME, where `git vendor` would clone the sway-home
+  ref: ~/git/vendor/{org}/{repo} with the org lowercased. Derived from the
+  ref so a fork's generated Justfile points at the fork's own checkout."
+  [ref]
+  (if-let [[_ owner repo] (re-matches #"(?:github|gitlab):([^/]+)/([^/?#]+).*" (str ref))]
+    (str "git/vendor/" (str/lower-case owner) "/" repo)
+    "git/vendor/enigmacurry/sway-home"))
+
+(defn justfile
+  "The per-host Justfile. `admin` (sway-home's config/bash alias) points
+  just at it, so these recipe names are the host's admin verbs.
+
+  The flake-* recipes and the `upgrade` pre-check delegate to sway-home's
+  bin/flake-sync.bb, which compares every pin against its git upstream.
+  They exist because this repo's `nix flake update` cannot pull a
+  transitive input forward on its own: sway-home's lockfile is what pins
+  emacs, script-wizard and friends, so a commit pushed to one of those
+  reaches the machine only once sway-home's lock is bumped and pushed too."
+  [{:keys [host ref]}]
+  (let [vendor (sway-home-vendor-dir ref)]
+    (str/join
+     "\n"
+     ["set shell := [\"bash\", \"-eu\", \"-o\", \"pipefail\", \"-c\"]"
+      "set positional-arguments"
+      ""
+      "# flake-sync.bb keeps the pin chain (this repo -> sway-home -> source"
+      "# repos) in sync. Prefer the sway-home checkout over the ~/bin symlink:"
+      "# the checkout is editable, and is the newer copy right after you change"
+      "# it. Both are optional -- only the flake-* recipes require it."
+      (str "sway_home := env(\"SWAY_HOME\", home_directory() / \"" vendor "\")")
+      (str "flake_sync := if path_exists(sway_home / \"bin/flake-sync.bb\") == \"true\" "
+           "{ sway_home / \"bin/flake-sync.bb\" } else { home_directory() / \"bin/flake-sync.bb\" }")
+      ""
+      "# print help"
+      "help:"
+      "    @just -l"
+      ""
+      "# Rebuild NixOS and switch to the new generation"
+      "switch:"
+      (str "    sudo nixos-rebuild switch --flake .#" host)
+      ""
+      "# Rebuild and test (reverts on reboot)"
+      "test:"
+      (str "    sudo nixos-rebuild test --flake .#" host)
+      ""
+      "# Update the sway-home pin (and other inputs)"
+      "update:"
+      "    nix flake update"
+      ""
+      "# Update inputs, then rebuild and switch (warns first if a pin is behind upstream)"
+      "upgrade: _flake-preflight update switch"
+      ""
+      "# Upgrade without the pin check (offline, or to deliberately keep the pins)"
+      "upgrade-force: update switch"
+      ""
+      "# Report which flake pins are behind their github upstreams"
+      "flake-check: _have-flake-sync"
+      "    #!/usr/bin/env bash"
+      "    set -uo pipefail"
+      "    {{ flake_sync }} check"
+      "    status=$?"
+      "    # 3 means \"a pin is stale\": a finding to act on, not a failure to report."
+      "    if [ \"$status\" = 3 ]; then exit 0; else exit \"$status\"; fi"
+      ""
+      "# Pull every pin forward (push source repos, bump sway-home's locks, relock here)"
+      "flake-upgrade: _have-flake-sync"
+      "    @{{ flake_sync }} upgrade"
+      ""
+      "# Warn before a rebuild that would silently use stale pins. Skipped without"
+      "# complaint when flake-sync.bb is absent (a host with no sway-home checkout"
+      "# cannot bump the upstream locks anyway) -- so `upgrade` still works there."
+      "_flake-preflight:"
+      "    #!/usr/bin/env bash"
+      "    set -euo pipefail"
+      "    if [ -x \"{{ flake_sync }}\" ]; then"
+      "        {{ flake_sync }} preflight"
+      "    fi"
+      ""
+      "_have-flake-sync:"
+      "    #!/usr/bin/env bash"
+      "    set -euo pipefail"
+      "    if [ ! -x \"{{ flake_sync }}\" ]; then"
+      "        echo \"flake-sync.bb not found at {{ flake_sync }}\" >&2"
+      "        echo \"Clone sway-home to {{ sway_home }}, set SWAY_HOME to where it lives,\" >&2"
+      "        echo \"or use 'upgrade-force' to rebuild without the pin check.\" >&2"
+      "        exit 1"
+      "    fi"
+      ""
+      "# Run git in this config repo from any directory (e.g. admin git status)"
+      "git *args:"
+      "    @git -C \"{{justfile_directory()}}\" \"$@\""
+      ""])))
 
 (def gitignore "result\nresult-*\n")
 
@@ -467,7 +539,7 @@
           (spit (str (fs/path repo "flake.nix"))
                 (flake-nix {:host host :user user :system system :ref (:ref opts) :adopt? adopt?}))
           (spit (str (fs/path repo "config.nix")) (config-nix {:user user :ssh-keys ssh-keys :tz tz :profiles profiles}))
-          (spit (str (fs/path repo "Justfile")) (justfile {:host host}))
+          (spit (str (fs/path repo "Justfile")) (justfile {:host host :ref (:ref opts)}))
           (spit (str (fs/path repo ".gitignore")) gitignore)
           (doseq [f (cond->> ["flake.nix" "hardware.nix" "config.nix" "Justfile" ".gitignore"]
                       (not adopt?) (cons "disko.nix"))]
