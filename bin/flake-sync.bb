@@ -98,6 +98,10 @@
                  "git" args)]
     {:exit (:exit r)
      :out (str/trim (or (:out r) ""))
+     ;; Untrimmed, for output whose leading whitespace is significant --
+     ;; `status --porcelain` encodes staged/unstaged in two columns, so the
+     ;; first line of an unstaged change begins with a space.
+     :raw (or (:out r) "")
      :err (str/trim (or (:err r) ""))}))
 
 (defn git-ok?
@@ -159,16 +163,67 @@
        :rev (:rev locked)
        :lock label})))
 
-(defn root-inputs
-  "Map of input-name -> locked node for the lock's direct (root) inputs."
+(defn lock-graph
+  "The lock's node table plus its root input map, for walking the graph."
   [lockfile]
-  (let [lock (json/parse-string (slurp (str lockfile)) true)
-        root (get-in lock [:nodes :root :inputs])]
-    (into {}
-          (for [[in-name node-name] root
-                :let [node (get-in lock [:nodes (keyword (str node-name))])]
-                :when node]
-            [(name in-name) (:locked node)]))))
+  (let [lock (json/parse-string (slurp (str lockfile)) true)]
+    {:nodes (:nodes lock)
+     :root (get-in lock [:nodes :root :inputs])}))
+
+(defn- node-locked [nodes node-name]
+  (get-in nodes [(keyword (str node-name)) :locked]))
+
+(defn root-input-nodes
+  "The lock's direct (root) inputs, one map each."
+  [{:keys [nodes root]}]
+  (for [[in-name node-name] root
+        :let [node (get nodes (keyword (str node-name)))]
+        :when node]
+    {:input (name in-name)
+     :locked (:locked node)
+     ;; A lock node carries "flake": false for an input declared
+     ;; `flake = false`; a real flake omits the key entirely.
+     :flake? (not (false? (:flake node)))
+     :inputs (:inputs node)}))
+
+(defn library-input?
+  "True for a config library of ours: a flake we own whose own lockfile
+  pins other repos we own. Those transitive pins can only be moved by
+  bumping that repo's lock, which is the whole reason this tool exists.
+
+  The last clause is what keeps this honest. In sway-home's standalone
+  home-manager flake, script-wizard is also a flake we own -- but it
+  pins nothing of ours, so relocking, committing and pushing it would be
+  none of our business. And emacs et al are `flake = false` source
+  inputs with no lock to bump at all."
+  [{:keys [nodes]} mine? {:keys [locked flake? inputs]}]
+  (and flake?
+       (contains? #{"github" "gitlab"} (:type locked))
+       (boolean (mine? (:owner locked)))
+       ;; An input's value is a node name, or a vector for a `follows`
+       ;; path -- only the former names a node to inspect.
+       (boolean (some (fn [[_ node-name]]
+                        (when (string? node-name)
+                          (mine? (:owner (node-locked nodes node-name)))))
+                      inputs))))
+
+(defn infer-owner
+  "Whose repos count as yours. Inferred rather than hardcoded so a fork
+  of sway-home reports on the fork's own repos."
+  [graph flake]
+  (or
+   ;; A forge-pinned sway-home input names its owner outright (the
+   ;; per-host NixOS repo case).
+   (->> (root-input-nodes graph)
+        (map :locked)
+        (filter #(contains? #{"github" "gitlab"} (:type %)))
+        (some (fn [{:keys [owner repo]}] (when (= "sway-home" repo) owner))))
+   ;; sway-home's own standalone home-manager flake pins sway-home as
+   ;; `path:..`, which names no owner -- so fall back to the owner of the
+   ;; repo the flake itself lives in.
+   (some->> (git-out flake "remote" "get-url" "origin")
+            (re-find #"[:/]([^/:]+)/([^/]+?)(?:\.git)?/?$")
+            second)))
 
 (defn nested-locks
   "Every flake.lock in `repo`: the root one plus any one level down
@@ -229,9 +284,14 @@
     (let [head (git-out dir "rev-parse" "HEAD")
           branch (git-out dir "rev-parse" "--abbrev-ref" "HEAD")
           tracking (git-out dir "rev-parse" "--abbrev-ref" "@{u}")
-          dirty (git-out dir "status" "--porcelain")
-          dirty-paths (when dirty
-                        (->> (str/split-lines dirty)
+          status (git dir "status" "--porcelain")
+          dirty-paths (when (zero? (:exit status))
+                        (->> (str/split-lines (:raw status))
+                             (remove str/blank?)
+                             ;; porcelain v1 is "XY PATH": a two-column
+                             ;; status then a space. Split the raw output,
+                             ;; never a trimmed blob -- trimming would eat
+                             ;; the first line's leading status column.
                              (map #(str/trim (subs % (min 3 (count %)))))
                              (remove str/blank?)
                              vec))
@@ -276,25 +336,20 @@
   (let [host-lock (str (fs/path flake "flake.lock"))]
     (when-not (fs/exists? host-lock)
       (die "no flake.lock in" (tilde flake) "-- is this a flake repo?"))
-    (let [host-inputs (root-inputs host-lock)
-          ;; Owner of the sway-home-style library input: whoever that is,
-          ;; their repos are the ones we can push. Survives a fork.
+    (let [graph (lock-graph host-lock)
           owner (or owner
-                    (->> (vals host-inputs)
-                         (filter #(contains? #{"github" "gitlab"} (:type %)))
-                         (some (fn [{:keys [owner repo]}]
-                                 (when (= "sway-home" repo) owner))))
+                    (infer-owner graph flake)
                     (die "could not infer your github owner from"
                          (tilde host-lock) "-- pass --owner NAME"))
           mine? (fn [o] (and o (= (str/lower-case (str o)) (str/lower-case owner))))
-          ;; Direct inputs you own are "library" repos: their locks are
-          ;; what pin everything else, so they are what must be bumped.
-          libraries (->> host-inputs
-                         vals
-                         (filter #(mine? (:owner %)))
-                         (map (fn [{:keys [owner repo] :as node}]
+          ;; The repos whose locks must be bumped and pushed. Often just
+          ;; sway-home; empty for a flake that reads it from the working
+          ;; tree (`path:..`), where there is no upstream lock to move.
+          libraries (->> (root-input-nodes graph)
+                         (filter #(library-input? graph mine? %))
+                         (map (fn [{{:keys [owner repo] :as locked} :locked}]
                                 (let [dir (vendor-path vendor owner repo)]
-                                  (assoc node :dir (when (fs/directory? dir) dir)))))
+                                  (assoc locked :dir (when (fs/directory? dir) dir)))))
                          distinct
                          vec)
           ;; Pins from the host lock plus every lock inside each library
@@ -380,8 +435,13 @@
        (sort-by (juxt :owner :repo :ref))))
 
 (defn report!
-  "Print the staleness report. Returns a map of what needs attention."
-  [{:keys [groups checkouts owner flake] :as s} {:keys [verbose]}]
+  "Print the staleness report. Returns a map of what needs attention.
+
+  With :relock the caller is about to regenerate the lock itself (that is
+  what sway-home's `hm-update` does), so a stale pin is not a finding --
+  it is about to move. Only local work that the relock would leave behind
+  counts."
+  [{:keys [groups checkouts owner flake] :as s} {:keys [verbose relock]}]
   (let [mine (filter :mine? groups)
         theirs (collapse-by-repo (remove :mine? groups))
         stale (filter #(= :stale (:state %)) mine)
@@ -397,7 +457,9 @@
     (doseq [{:keys [rev state locks upstream-rev upstream-error] :as g} mine]
       (println "  "
                (case state
-                 :stale (red "STALE ")
+                 ;; Under :relock this pin is about to be bumped by the
+                 ;; caller, so name it as pending work, not as a problem.
+                 :stale (if relock (blue "bump  ") (red "STALE "))
                  :current (green "ok    ")
                  :unknown (yellow "?     "))
                (pad (map pin-name mine) (pin-name g))
@@ -406,7 +468,7 @@
                              (when-let [d (commit-distance s g)] (str "  " (dim d))))
                  :current (dim (short-rev rev))
                  :unknown (str (dim (short-rev rev)) "  " (yellow upstream-error))))
-      (when (or verbose (= state :stale))
+      (when (or verbose (and (= state :stale) (not relock)))
         (println "         " (dim (str "pinned by " (str/join ", " locks))))))
     (when (empty? mine) (println "   " (dim "(none)")))
 
@@ -458,7 +520,15 @@
 
     (println)
     {:stale stale :to-push to-push :dirty dirty :unknown unknown
-     :actionable? (boolean (or (seq stale) (seq to-push)))}))
+     :actionable? (boolean (or (and (not relock) (seq stale)) (seq to-push)))}))
+
+(defn findings
+  "What needs attention, computed without printing. Lets `preflight` stay
+  silent on a clean run instead of dumping the whole table in front of
+  every rebuild."
+  [s opts]
+  (binding [*out* (java.io.StringWriter.)]
+    (report! s opts)))
 
 ;;; ============================================================
 ;;; Plan + execute (upgrade)
@@ -503,10 +573,12 @@
               :desc (str "commit + push the lock changes in " (tilde dir))
               :why "the host flake pins this repo by commit, so the bump must be on the remote"}])))
        libraries)
-      ;; 3. The host repo last: only now can it see sway-home's new commit.
+      ;; 3. The host repo last: only now can it see the library's new commit.
       [{:kind :update :dir (str flake)
         :desc (str "nix flake update in " (tilde flake))
-        :why "picks up the new sway-home rev and, through it, every repin"}]))))
+        :why (if (seq libraries)
+               "picks up the new library rev and, through it, every repin"
+               "repins the source repos straight from their remotes")}]))))
 
 (defn confirm?
   "Ask once. Without a tty, refuse rather than guess."
@@ -604,6 +676,9 @@
   (println "  --owner NAME   Github owner whose repos are yours (default: inferred from")
   (println "                 the sway-home input in the host flake.lock).")
   (println "  --vendor DIR   Local checkout root (default: ~/git/vendor).")
+  (println "  --relock       The caller regenerates the lock itself (sway-home's")
+  (println "                 hm-update), so a stale pin is not a finding -- only")
+  (println "                 local work the relock would leave behind is.")
   (println "  --verbose      Also show which locks pin each up-to-date repo.")
   (println "  --yes          Skip the confirmation prompt (upgrade).")
   (println "  -h, --help     Show this help."))
@@ -616,6 +691,7 @@
         "--flake"   (recur (drop 2 args) (assoc opts :flake (str (fs/absolutize (second args)))))
         "--owner"   (recur (drop 2 args) (assoc opts :owner (second args)))
         "--vendor"  (recur (drop 2 args) (assoc opts :vendor (str (fs/absolutize (second args)))))
+        "--relock"  (recur (rest args) (assoc opts :relock true))
         "--verbose" (recur (rest args) (assoc opts :verbose true))
         "--yes"     (recur (rest args) (assoc opts :yes true))
         ("-h" "--help") (do (usage) (System/exit 0))
@@ -634,8 +710,12 @@
       (let [{:keys [actionable? unknown]} (report! (survey opts) opts)]
         (cond
           actionable?
-          (do (println "Run" (bold "`admin flake-upgrade`")
-                       "to update the pins, then" (bold "`admin upgrade`."))
+          (do (if (:relock opts)
+                ;; The caller relocks, so pushing is the only thing left
+                ;; for a human to do.
+                (println "Push the checkouts above first; the relock reads their remotes.")
+                (println "Run" (bold "`admin flake-upgrade`")
+                         "to update the pins, then" (bold "`admin upgrade`.")))
               (System/exit 3))
           (seq unknown)
           (do (println (yellow "Some upstreams were unreachable; everything else is current."))
@@ -646,22 +726,33 @@
       "preflight"
       (if (System/getenv "NO_FLAKE_CHECK")
         (System/exit 0)
-        (let [{:keys [actionable? stale to-push]} (report! (survey opts) opts)]
+        (let [s (survey opts)
+              {:keys [actionable? stale to-push]} (findings s opts)]
           (if-not actionable?
             ;; Nothing to say: fall through to the rebuild silently.
             (System/exit 0)
             (do
-              (println (yellow "This rebuild will NOT include:")
-                       (dim (str (count stale) " stale pin(s), "
-                                 (count to-push) " unpushed checkout(s)")))
-              (println "Run" (bold "`admin flake-upgrade`") "first to pull everything forward.")
+              (report! s opts)
+              (if (:relock opts)
+                (do (println (yellow "The lock about to be written will NOT include:")
+                             (dim (str (count to-push) " unpushed checkout(s)")))
+                    (println "It is rebuilt from the remotes, so push those first to include them."))
+                (do (println (yellow "This rebuild will NOT include:")
+                             (dim (str (count stale) " stale pin(s), "
+                                       (count to-push) " unpushed checkout(s)")))
+                    (println "Run" (bold "`admin flake-upgrade`")
+                             "first to pull everything forward.")))
               (println)
               (cond
                 (System/getenv "FLAKE_CHECK_WARN_ONLY") (System/exit 0)
                 ;; Unattended (cron, piped shell): warn, never block.
                 (not tty?) (do (println (dim "Not a tty; continuing without asking."))
                                (System/exit 0))
-                (confirm? (str "Rebuild with the current pins anyway?" (dim " [y/N]")) opts)
+                (confirm? (str (if (:relock opts)
+                                 "Continue without that work?"
+                                 "Rebuild with the current pins anyway?")
+                               (dim " [y/N]"))
+                          opts)
                 (System/exit 0)
                 :else (do (println "Aborted.") (System/exit 1)))))))
 

@@ -4,6 +4,11 @@ set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 # home-manager input in home-manager/flake.nix. Move them together.
 hm := "home-manager/release-26.05"
 
+# The pin checker, used by the hm-* recipes below. It lives in this repo,
+# so unlike the per-host Justfile there is nothing to locate.
+flake_sync := justfile_directory() / "bin/flake-sync.bb"
+hm_flake := justfile_directory() / "home-manager"
+
 # print help for Just targets
 help:
     @just -l
@@ -77,8 +82,31 @@ hm-metadata:
 hm-news:
     cd home-manager; nix run {{hm}} -- news --flake .#default --impure
 
+# Report local work the home-manager lock would leave behind
+hm-flake-check:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    "{{ flake_sync }}" check --flake "{{ hm_flake }}" --relock
+    status=$?
+    # 3 means "something of yours is unpushed": a finding, not a failure.
+    if [ "$status" = 3 ]; then exit 0; else exit "$status"; fi
+
+# Warn before hm-update rewrites the lock from the remotes, leaving any
+# unpushed local work out of it. --relock because hm-update bumps every pin
+# anyway, so a stale pin is not worth mentioning here -- only work that
+# would silently not make it in.
+#
+# Skipped when babashka is missing: on a fresh non-NixOS host bb arrives
+# *from* this home-manager generation, so the first hm-upgrade predates it.
+_hm-preflight:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if command -v bb >/dev/null 2>&1 && [ -x "{{ flake_sync }}" ]; then
+        "{{ flake_sync }}" preflight --flake "{{ hm_flake }}" --relock
+    fi
+
 # Update flake, pull repo, and switch home-manager
-hm-upgrade: hm-pull hm-update hm-switch
+hm-upgrade: _hm-preflight hm-pull hm-update hm-switch
     @echo ""
     @echo "Run 'hm-news' to read home-manager news."
     @echo "NOTE: Restart your shell to pick up all changes."

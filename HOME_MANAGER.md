@@ -118,6 +118,37 @@ hm-update
 hm-switch
 ```
 
+### Your own repos, and unpushed work
+
+`hm-update` rewrites `home-manager/flake.lock` by fetching each input
+**from its remote**. The config repos pinned there — `emacs`,
+`script-wizard`, `nixos-vm-template`, `blog.rymcg.tech` — are therefore
+picked up at whatever is on GitHub, not at whatever is in your local
+checkout. So a commit you made but never pushed is silently left out of
+the generation you are about to build.
+
+`hm-upgrade` now checks for exactly that before it relocks, and asks
+before continuing:
+
+```bash
+hm-flake-check          # report it without rebuilding
+```
+
+It only flags work that would be left behind — unpushed commits and
+uncommitted changes in `~/git/vendor/<org>/*`. Pins that are merely
+behind upstream are shown as `bump`, not as a problem, because
+`hm-update` is about to move them anyway. Push what you want included,
+then re-run.
+
+Unlike the NixOS flow (see [NIXOS.md](NIXOS.md)), there is nothing to
+bump in a second repo here: this flake takes sway-home as `path:..`, the
+working tree you are standing in, so no commit or push of sway-home is
+needed for its own content to take effect.
+
+The check is skipped silently when `babashka` is not yet on `$PATH` —
+on a fresh host `bb` arrives *from* the generation you are building, so
+the very first `hm-upgrade` runs before it exists.
+
 See all available commands:
 
 ```bash
@@ -128,12 +159,14 @@ just help
 
 ```
 Available recipes:
+    hm-flake-check           # Report local work the home-manager lock would leave behind
     hm-generations           # List home-manager generations
     hm-metadata              # Show home-manager flake inputs
     hm-pull                  # Pull latest sway-home config from git
     hm-rollback              # Rollback to previous home-manager generation
     hm-switch                # Switch home-manager configuration (use on Fedora/other Linux)
     hm-update                # Update home-manager flake.lock
+    hm-upgrade               # Update flake, pull repo, and switch home-manager
 ```
 
 ## Customizing packages
