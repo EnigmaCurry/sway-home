@@ -1,0 +1,4 @@
+mode passthrough {
+    bindsym $mod+Pause mode default; floating_modifier $mod normal
+}
+bindsym $mod+Pause mode passthrough; floating_modifier none
